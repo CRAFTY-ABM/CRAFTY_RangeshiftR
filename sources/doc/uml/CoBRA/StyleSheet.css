@@ -1,0 +1,12 @@
+@charset "UTF-8";
+
+Association.hideMembers {
+	fontName: "Segoe UI";
+	lineColor: #000000}
+
+*.transparentText {
+	 fontColor: #FFFFFF;
+	 opacity: 0.0;
+	 fontSize: 1;
+	 fontName: "Segoe UI";
+	 lineColor: #000000}

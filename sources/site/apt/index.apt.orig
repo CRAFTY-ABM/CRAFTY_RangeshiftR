@@ -1,0 +1,24 @@
+	----------------
+	CRAFTY
+	----------------
+	Sascha Holzhauer
+	----------------
+	2014-11-04
+	
+Documentation
+
+	The elaborated documentation is at {{{https://www.wiki.ed.ac.uk/display/CRAFTY/Home}this wiki}}.
+
+Versions
+	
+	Currently, there are several editions/branches maintained:
+	
+*----------------+----------------+
+CRAFTY_Trunk      | Basic version                
+*----------------+----------------+
+CRAFTY_Social    |Supports social networks and social interaction 
+*----------------+----------------+
+CRAFTY Parallel  |Supports cluster runs and includes code of CRAFTY_Social
+*----------------+----------------+
+
+	JavaDoc and the wiki usually relate to the CRAFTY_Social version.

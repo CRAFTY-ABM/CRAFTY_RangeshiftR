@@ -1,0 +1,41 @@
+<project xmlns="http://maven.apache.org/DECORATION/1.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/DECORATION/1.1.0 http://maven.apache.org/xsd/decoration-1.1.0.xsd"
+  name="CRAFTY Social">
+  <publishDate position="right"/>
+  <version position="right"/>
+  <bannerRight>
+    <src>images/UoE_Geosciences.jpeg</src>
+    <height>150px</height>
+    <href>http://www.ed.ac.uk/schools-departments/geosciences/</href>
+  </bannerRight>
+  <body>
+    <links>
+      <item name="OpenABM" href="http://www.openabm.org" />
+    </links>
+
+    <menu name="CRAFTY">
+      <item name="Introduction" href="index.html"/>
+      <item name="Downloads" href="https://sourceforge.net/projects/crafty-abm/files"/>
+      <item name="JavaDoc" href="../apidocs/index.html" target="new"/>
+      <item name="Source code" href="https://bitbucket.org/mo_seph/crafty"/>
+      <item name="FAQ" href="faq.html"/>         
+      <item name="Tickets" href="https://sourceforge.net/p/crafty-abm/tickets"/>
+      <item name="Mailing lists" href="https://sourceforge.net/p/crafty-abm/mailman"/>
+    </menu>
+    
+    <menu name="Usage">
+    	<item name="Docs" href="https://www.wiki.ed.ac.uk/display/CRAFTY"/>
+    </menu>
+    
+   <menu name="Related Projects">
+      <item name="MoRe" href="http://more4abm.sourceforge.net" target="new"/>
+      <item name="LARA" href="http://lara-framework.sourceforge.net" target="new"/>
+      <item name="ParMa" href="http://parma.sourceforge.net" target="new"/>
+      <item name="URaNuS" href="http://uranus4abm.sourceforge.net" target="new"/>
+    </menu>
+	
+    <menu ref="reports"/>
+
+  </body>
+</project>
+

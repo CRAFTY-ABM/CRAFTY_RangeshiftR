@@ -1,0 +1,153 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>de.cesr</groupId>
+  <artifactId>CRAFTY_CoBRA</artifactId>
+  <version>0.2.34</version>
+  <name>CRAFTY CoBRA</name>
+  <description>Competition for Resources between Agent Functional Types (CRAFTY) Component Based Role Agents (CoBRA)</description>
+  
+  <developers>
+    <developer>
+      <id>sascha</id>
+      <name>Sascha Holzhauer</name>
+      <email>holzhauer@cesr.de</email>
+      <url>http://www.ed.ac.uk/schools-departments/geosciences</url>
+      <organization>School of GeoSciences, University of Edinburgh</organization>
+      <organizationUrl>http://www.ed.ac.uk/schools-departments/geosciences</organizationUrl>
+      <roles>
+        <role>architect</role>
+        <role>developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>dave</id>
+      <name>Dave Murray-Rust</name>
+      <email>d.murray-rust@ed.ac.uk</email>
+      <url>http://www.inf.ed.ac.uk/people/staff/David_Murray-Rust.html</url>
+      <organization>School of Informatics, University of Edinburgh</organization>
+      <organizationUrl>http://www.ed.ac.uk/schools-departments/informatics/</organizationUrl>
+      <roles>
+        <role>architect</role>
+        <role>developer</role>
+      </roles>
+    </developer>
+  </developers>
+  
+  <licenses>
+  	<license>
+  		<name>GNU General Public License (GPL) 3.0</name>
+  		<url>http://www.gnu.org/licenses/gpl-3.0.html</url>
+  	</license>
+  </licenses>
+  
+  <build>
+  <plugins>
+  			<plugin>
+				<artifactId>maven-site-plugin</artifactId>
+				<version>3.3</version>
+				<executions>
+					<execution>
+						<id>attach-descriptor</id>
+						<goals>
+							<goal>attach-descriptor</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>default-site</id>
+						<phase>site</phase>
+						<goals>
+							<goal>site</goal>
+						</goals>
+						<configuration>
+							<siteDirectory>${basedir}\sources\site</siteDirectory>
+							<outputDirectory>${basedir}\target\doc</outputDirectory>
+							<reportPlugins>
+								<reportPlugin>
+									<groupId>org.apache.maven.plugins</groupId>
+									<artifactId>maven-project-info-reports-plugin</artifactId>
+								</reportPlugin>
+							</reportPlugins>
+						</configuration>
+					</execution>
+					<execution>
+						<id>default-deploy</id>
+						<phase>site-deploy</phase>
+						<goals>
+							<goal>deploy</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}\target\site</outputDirectory>
+							<reportPlugins>
+								<reportPlugin>
+									<groupId>org.apache.maven.plugins</groupId>
+									<artifactId>maven-project-info-reports-plugin</artifactId>
+								</reportPlugin>
+							</reportPlugins>
+						</configuration>
+					</execution>
+				</executions>
+				<configuration>
+					<siteDirectory>${basedir}\sources\site</siteDirectory>
+					<outputDirectory>${basedir}\target\doc</outputDirectory>
+					<reportPlugins>
+						<reportPlugin>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-project-info-reports-plugin</artifactId>
+							<version>2.4</version>
+							<reportSets>
+								<reportSet>
+									<reports>
+										<report>dependencies</report>
+										<report>project-team</report>
+										<report>cim</report>
+										<report>issue-tracking</report>
+										<report>license</report>
+										<report>scm</report>
+									</reports>
+								</reportSet>
+							</reportSets>
+						</reportPlugin>
+					</reportPlugins>
+				</configuration>
+			</plugin>
+			
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+        		<artifactId>maven-javadoc-plugin</artifactId>
+        		<version>2.8</version>
+				<configuration>
+					<reportOutputDirectory>${basedir}\docs</reportOutputDirectory>
+					
+					<!-- switch on dependency-driven aggregation -->
+		            <includeDependencySources>true</includeDependencySources>
+						<dependencySourceIncludes>
+		                <!-- include ONLY dependencies I control -->
+		                <dependencySourceInclude>de.cesr:*</dependencySourceInclude>
+		              </dependencySourceIncludes>
+				</configuration>
+			</plugin>	
+  </plugins>
+  
+  		<sourceDirectory> src </sourceDirectory>
+		<scriptSourceDirectory>sources\main\scripts</scriptSourceDirectory>
+		<testSourceDirectory>test</testSourceDirectory>
+		<resources>
+			<resource>
+				<directory>sources\main\resources</directory>
+			</resource>
+		</resources>
+		<testResources>
+			<testResource>
+				<directory>sources\test\resources</directory>
+			</testResource>
+		</testResources>
+		
+  </build>
+  
+  <reporting>
+  	<plugins>
+
+  	</plugins>
+  
+  </reporting>
+</project>
