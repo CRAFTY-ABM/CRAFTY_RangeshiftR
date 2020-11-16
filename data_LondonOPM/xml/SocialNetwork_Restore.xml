@@ -1,0 +1,10 @@
+<socialNetworks>
+	<socialNetwork name="SocialNetwork-WSBetaRestored">
+		<networkGeneratorClass>de.cesr.more.building.network.MRestoreNetworkService</networkGeneratorClass>
+		
+		<String  param="de.cesr.more.param.MNetworkBuildingPa:RESTORE_NETWORK_SOURCE_FILE">data/graphml/SocialNetwork-WsBeta.graphml</String>
+		<Boolean  param="de.cesr.more.param.MNetworkBuildingPa:BUILD_DIRECTED">TRUE</Boolean>
+		<String param="de.cesr.more.param.MNetworkBuildingPa:MAINTAINING_NETWORK_SERVICE">
+		de.cesr.more.building.network.MOneTimeWattsBetaSwBuilder</String>		
+	</socialNetwork>
+</socialNetworks>

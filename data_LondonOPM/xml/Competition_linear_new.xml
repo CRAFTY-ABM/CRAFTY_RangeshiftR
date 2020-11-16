@@ -1,0 +1,32 @@
+<competition class="org.volante.abm.example.NormalisedCurveCompetitivenessModel" removeNegative="true">  <!-- normaliseCellResidual="false" normaliseCellSupply="false" -->
+	<curve service="Meat">
+		<curve class="com.moseph.modelutils.curve.LinearFunction" a="0.0" b="0.00125" />
+<!-- 		<curve class="com.moseph.modelutils.curve.LinearFunction" a="0.0" b="0.0125" /> -->
+<!-- 		<curve class="com.moseph.modelutils.curve.ExponentialFunction" A="0.1" B="0.1" C="2" /> -->
+	</curve>
+	<curve service="Crops">
+		<curve class="com.moseph.modelutils.curve.LinearFunction" a="0.0" b="0.000439" />
+<!-- 		<curve class="com.moseph.modelutils.curve.LinearFunction" a="0.0" b="0.00439" /> -->
+<!-- 		<curve class="com.moseph.modelutils.curve.ExponentialFunction" A="0.1" B="0.1" C="2" /> -->
+	</curve>
+	<curve service="Diversity">
+		<curve class="com.moseph.modelutils.curve.LinearFunction" a="0.0" b="1.1236" />
+<!-- 		<curve class="com.moseph.modelutils.curve.LinearFunction" a="0.0" b="0.0001" /> -->
+	</curve>
+	<curve service="Timber">
+		<curve class="com.moseph.modelutils.curve.LinearFunction" a="0.0" b="0.00926" />
+	</curve>
+	<curve service="Carbon">
+		<curve class="com.moseph.modelutils.curve.LinearFunction" a="0.0" b="0.000398" />
+<!-- 		<curve class="com.moseph.modelutils.curve.LinearFunction" a="0.0" b="0.00001" /> -->
+	</curve>
+	<curve service="Urban">
+		<curve class="com.moseph.modelutils.curve.LinearFunction" a="0.0" b="100" />
+<!-- 		<curve class="com.moseph.modelutils.curve.LinearFunction" a="0.0" b="0" /> -->
+
+	</curve>
+	<curve service="Recreation">
+		<curve class="com.moseph.modelutils.curve.LinearFunction" a="0.0" b="1.0" />
+<!-- 		<curve class="com.moseph.modelutils.curve.LinearFunction" a="0.0" b="0.0001" /> -->
+	</curve>
+</competition>
