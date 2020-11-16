@@ -1,0 +1,31 @@
+<scenario startTick="2016" endTick="2090" world="EU"
+ version="Paramset1" 
+ regionalisation="28"
+  scenario="Baseline">
+  <capitals class="org.volante.abm.serialization.CSVCapitalLoader" file="csv/Capitals.csv" indexed="true"/>
+  <services class="org.volante.abm.serialization.CSVServiceLoader" file="csv/Services.csv" indexed="true"/>
+   <outputs outputDirectory="output/%v/%s" filePattern="%s-%i-%r-%o" tickPattern="%s-%i-%r-%o-%y">
+    <output class="org.volante.abm.output.CellTable" perRegion="true" addRegion="false" addCellRegion="false" addServices="true" addCapitals="true" addCompetitiveness="false" addLandUseIndex="true" addLandUse="false" addAgent="true" addPreAllocCompetitiveness="false" addPreAllocLandUse="false" addGiThreshold="false" addPreAllocGuThreshold="false"  doubleFormat="0.000" startYear="2016" everyNYears="10"/>
+    <output class="org.volante.abm.output.AggregateAFTCompositionCSVOutputter" outputSums="true" perRegion="true" startYear="2016" everyNYears="10"/>
+    <output class="org.volante.abm.output.AggregateAFTCompetitivenessCSVOutputter" perRegion="true" startYear="2016" everyNYears="10"/>
+    <output class="org.volante.abm.output.AggregateDemandSupplyCSVOutputter" perRegion="true" startYear="2016" everyNYears="10"/>
+    <output class="org.volante.abm.output.TakeoverCellOutputter" perRegion="true" everyNYears="10" filePerTick="false" addRegion="false"/>
+    <output class="org.volante.abm.output.GivingInStatisticsOutputter" startYear="2016" perRegion="true" everyNYears="10" filePerTick="false" addRegion="false"/>
+    <output class="org.volante.abm.output.ActionCSVOutputter" agentpattern=".*Inst" filePerTick="false" perRegion="true" startYear="2016" everyNYears="10"/>
+ 
+   </outputs>
+  
+ 
+   <displays  class="org.volante.abm.visualisation.DefaultModelDisplays">
+    <display class="org.volante.abm.visualisation.CapitalDisplay" initial="Crop.productivity" title="Capitals"/>
+    <display class="org.volante.abm.visualisation.ProductionDisplay" initial="Meat" title="Production"/>
+    <display class="org.volante.abm.comi.visualisation.TestAgents" title="AgentTypes"/>
+    <display class="org.volante.abm.visualisation.CompetitivenessDisplay" initial="IA" title="Competitiveness"/>
+    <display class="org.volante.abm.visualisation.SubmodelDisplays" title="Submodels"/>
+</displays>
+
+  <globalBtReposFile>./institutions/global/GlobalInstitutionsBtRepos.xml</globalBtReposFile>
+  <globalInstitutionFile>./institutions/global/GlobalInstitutionsMonitoring.xml</globalInstitutionFile>
+  
+   <worldLoaderFile>xml/World_withoutSN_multiplicativeNoise_linearcompetition_relative.xml</worldLoaderFile>
+  </scenario>
