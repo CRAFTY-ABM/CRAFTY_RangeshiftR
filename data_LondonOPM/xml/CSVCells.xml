@@ -4,5 +4,5 @@
 	<xColumn>x</xColumn>
 	<yColumn>y</yColumn>
 	<unmanagedIdentifier>UNMANAGED</unmanagedIdentifier>
-	<csvFile>./worlds/%r/capitals/%r_capitals - 2016.csv</csvFile>
+	<csvFile>./worlds/%r/LondonBoroughs.csv</csvFile>
 </cellInitialiser>

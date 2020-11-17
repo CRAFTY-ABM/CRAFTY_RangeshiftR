@@ -5,7 +5,7 @@
 	<allocation class="org.volante.abm.example.GiveUpGiveInAllocationModel" percentageCells="5" percentageTakeOvers="5" relativeThresholding="true"/> 
    
 	<demandFile>xml/RegionalDemand.xml</demandFile>
-   <competitionFile>xml/Competition_linear_new.xml</competitionFile>
+   <competitionFile>xml/Competition_linear_London.xml</competitionFile>
    <btFile>agents/BehaviouralTypes.xml</btFile>
    <frFile>agents/FunctionalRoles_multiplicative.xml</frFile>
    
