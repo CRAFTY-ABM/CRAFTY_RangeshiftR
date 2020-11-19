@@ -26,12 +26,13 @@
 
  <!--	<institution
 		class="org.volante.abm.institutions.LanduseControllingInstitution">
-		<csvFileProhibitedLanduse>worlds/%w/regionalisations/%k/LandUseControl/UrbanMask/%s/UrbanMask2016.csv</csvFileProhibitedLanduse>
+		<csvFileProhibitedLanduse>worlds/%r/LandUseControl/UrbanMask/%s/UrbanMask2020.csv</csvFileProhibitedLanduse>
 		<xColumn>x</xColumn>
 		<yColumn>y</yColumn>
 		<prohibitedColumn>Urban.mask</prohibitedColumn>
 		<maskChar>1</maskChar> 
 	</institution> -->
+	
 	<!-- FR restricting instititon (FR to FR) -->
 <!--	<institution class="org.volante.abm.institutions.FrRestrictingInsitution">
     	<csvFileRestrictedAllocations>csv/AllocationTypeRestrictions.csv</csvFileRestrictedAllocations>
