@@ -1,1 +1,1 @@
-<demand class="org.volante.abm.example.RegionalMarketPseudoWorldDemandModel" demandCSV="worlds/Demand.csv"/>
+<demand class="org.volante.abm.example.RegionalMarketPseudoWorldDemandModel" demandCSV="worlds/%r/Demand.csv"/>

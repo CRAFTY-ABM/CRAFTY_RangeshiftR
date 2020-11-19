@@ -1,5 +1,5 @@
 <world>
-	<region id="EU">
+	<region id="LondonBoroughs">
 	
 	
 	<allocation class="org.volante.abm.example.GiveUpGiveInAllocationModel" percentageCells="5" percentageTakeOvers="5" relativeThresholding="true"/> 

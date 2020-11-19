@@ -1,5 +1,5 @@
-  <updater class="org.volante.abm.update.CSVCapitalUpdater" X_COL="x" Y_COL="y" yearInFilename="false" reapplyPreviousFile="true"> -->
+ <updater class="org.volante.abm.update.CSVCapitalUpdater" X_COL="x" Y_COL="y" yearInFilename="false" reapplyPreviousFile="true"> -->
 <!--		<csvFile year="2016">worlds/EU/regionalisations/28/capitals/EU_capitals_empty.csv</csvFile> -->
- 				<csvFile year="2020">worlds/LondonBoroughs/LondonBoroughs.csv</csvFile> 
+ 				<csvFile year="2020">worlds/%r/LondonBoroughs.csv</csvFile> 
  
 </updater>

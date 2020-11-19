@@ -1,5 +1,5 @@
-<scenario startTick="2020" endTick="2030" world="LondonBoroughs"
-  scenario="Baseline">
+<scenario startTick="2020" endTick="2030" world="LondonBoroughs" 
+  scenario="Baseline" version="V1">
   <capitals class="org.volante.abm.serialization.CSVCapitalLoader" file="csv/Capitals.csv" indexed="true"/>
   <services class="org.volante.abm.serialization.CSVServiceLoader" file="csv/Services.csv" indexed="true"/>
    <outputs outputDirectory="output/%v/%s" filePattern="%s-%i-%r-%o" tickPattern="%s-%i-%r-%o-%y">
@@ -8,7 +8,7 @@
    </outputs>
   
  
-   <displays  class="org.volante.abm.visualisation.DefaultModelDisplays">
+   <displays class="org.volante.abm.visualisation.DefaultModelDisplays">
     <display class="org.volante.abm.visualisation.CapitalDisplay" initial="OPMpresence" title="Capitals"/>
     <display class="org.volante.abm.visualisation.ProductionDisplay" initial="biodiversity" title="Production"/>
     <display class="org.volante.abm.comi.visualisation.TestAgents" title="AgentTypes"/>
