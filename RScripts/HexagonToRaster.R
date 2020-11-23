@@ -3,9 +3,9 @@ library(rgeos)
 library(rgdal)
 
 setwd("~/git/CRAFTY_RangeshiftR2/")
+setwd("~/R/CRAFTY-OPM")
 
-
-hx = readOGR("data_LondonOPM/shp/hexGrid40m/hexGrid40m.shp")
+hx = readOGR("data-processed/hexgrids/hexGrid40m.shp")
 
 # plot(hx)
 
@@ -45,16 +45,41 @@ cells = raster::cellFromRowCol(r, rev(y_ord), x_ord) # must reverse the y_ord
 table(is.na(cells))
 
 val = getValues(r)
-val[cells] =  ( hx$borough)
+val[cells] =  (hx$joinID)
+#val[cells] = as.numeric(as.factor(hx$borough))
 r2 = setValues(r, val)
 
-plot(r2, col =viridis::viridis(4))
+plot(r2)
 
 writeRaster(r2, filename = "borough.tif", overwrite=T)
 
 
+r_points <- rasterToPoints(r2)
+head(r_points)
+colnames(r_points)[3] <- "joinID"
+r_points <- as.data.frame(r_points)
 
+library(sf)
+hx2 <- st_as_sf(hx)
+head(hx2)
 
+library(tidyverse)
+hx2 <- hx2 %>%
+  mutate(Long = st_coordinates(st_centroid(.))[,1],
+         Lat = st_coordinates(st_centroid(.))[,2]) %>% 
+  st_drop_geometry()
+
+tst1 <- left_join(hx2,r_points,by="joinID")
+
+ggplot(tst1)+
+  geom_raster(aes(Long,Lat,fill=borough))
+
+# joing back to hex?
+hx <- st_as_sf(hx)
+tst2 <- left_join(hx,r_points,by="joinID")
+
+ggplot() +
+  geom_sf(tst2, mapping = aes(fill = borough), col = NA)
 
 # todo 
 # https://stackoverflow.com/questions/61414897/how-can-i-bin-data-into-hexagons-of-a-shapefile-and-plot-it
