@@ -3,7 +3,7 @@ library(rgeos)
 library(rgdal)
 
 setwd("~/git/CRAFTY_RangeshiftR2/")
-setwd("~/R/CRAFTY-OPM")
+# setwd("~/R/CRAFTY-OPM")
 
 hx = readOGR("data-processed/hexgrids/hexGrid40m.shp")
 
