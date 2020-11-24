@@ -54,6 +54,36 @@ plot(r2)
 writeRaster(r2, filename = "borough.tif", overwrite=T)
 
 
+cells
+
+hx$X = x_ord 
+hx$Y = y_ord
+names(hx)[1] = "Cell_ID"
+
+cellids = data.frame(hx[, c("Cell_ID", "X", "Y")])
+cellids$geometry = NULL
+
+write.csv(cellids, "data-processed/Cell_ID_XY_Borough.csv", quote = F, row.names = F)
+
+### London Boroughs
+
+london = read.csv("data_LondonOPM/worlds/LondonBoroughs/LondonBoroughs_original.csv")
+colnames(london)[3:4] = c("Lon", "Lat")
+london$x  = hx$X[match(london$joinID, hx$Cell_ID)]
+london$y  = hx$Y[match(london$joinID, hx$Cell_ID)]
+
+london$id = NULL
+london$joinID = NULL
+london$Lon = NULL
+london$Lat = NULL
+london$FR = london$Agent 
+london$Agent = NULL
+london$BT = 0
+
+write.csv(london, "data_LondonOPM/worlds/LondonBoroughs/LondonBoroughs_XY.csv",  quote=F, row.names=F)
+          
+
+           
 r_points <- rasterToPoints(r2)
 head(r_points)
 colnames(r_points)[3] <- "joinID"

@@ -1,8 +1,8 @@
 <cellInitialiser class="org.volante.abm.serialization.CsvAftPopulator">
 	<taggedHomeCells>false</taggedHomeCells>
 	<manageEveryHomeCell>true</manageEveryHomeCell>
-	<xColumn>X</xColumn>
-	<yColumn>Y</yColumn>
+	<xColumn>x</xColumn>
+	<yColumn>y</yColumn>
 	<unmanagedIdentifier>UNMANAGED</unmanagedIdentifier>
-	<csvFile>./worlds/%r/LondonBoroughs.csv</csvFile>
+	<csvFile>./worlds/%r/LondonBoroughs_XY.csv</csvFile>
 </cellInitialiser>
