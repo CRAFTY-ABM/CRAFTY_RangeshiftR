@@ -1,3 +1,5 @@
+
+library(rgdal)
 library(viridis)
 library(raster)
 library(sp)
@@ -34,6 +36,7 @@ y_coords_v = sort(unique(london_xy_df$Y))
 y_coords_bng_v =london_xy_df[match(y_coords_v, london_xy_df$Y), "y_coord"]
 
 
+hx = readOGR("data-processed/hexgrids", layer = "hexGrid40m")
 
 
 proj4.BNG =  "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs"
@@ -205,6 +208,15 @@ if (doProcessFR) { # visiaulisation
   colnames(val_xy) = c("X", "Y")
   x_coord = london_xy_df[match(val_xy$X, london_xy_df$X), "x_coord"]
   y_coord = london_xy_df[match(val_xy$Y, london_xy_df$Y), "y_coord"]
+   
+  cellid = foreach(rowid = 1:nrow(val_xy), .combine = "c") %do% { 
+    which((as.numeric(val_xy[rowid, 1]) == london_xy_df$X) & (as.numeric(val_xy[rowid, 2]) == london_xy_df$Y))
+  }
+  
+  
+  
+  
+  help(match)
   
   crafty_coords = cbind(x_coord, y_coord)
   na_idx = is.na(crafty_coords[,1]) | is.na(crafty_coords[,2])
@@ -272,7 +284,9 @@ for (tick in start_year_idx:end_year_idx) {
     
     val_fr_fac = factor(val_fr,  labels = aft_names_fromzero, levels = aft_names_fromzero)
     
-    
+
+ 
+     
     fr_spdf = SpatialPixelsDataFrame(crafty_sp, data =data.frame( as.numeric(val_fr_fac )), tolerance = 0.0011)
     fr_r = raster(fr_spdf)
     # plot(fr_r)
@@ -286,6 +300,15 @@ for (tick in start_year_idx:end_year_idx) {
     
     
     plot_return_list[[tick]] = fr_r
+    
+    ####
+    # find hexagons 
+    hx_idx = match(cellid, hx$joinID )
+    
+    hx$fr = NA
+    # add FR to the hexagonal grid
+    hx$fr[hx_idx] = val_fr
+    
   }
   
   
@@ -314,13 +337,13 @@ dev.off()
 
 pdf("output/AFTmap.pdf", width = 12, height = 12, onefile = T)
 
-par(mfrow=c(3,2))
 
 for (tick in 1:nticks) { 
+  par(mfrow=c(3,2))
   
   for (aft in 1:5) {
-    
-    plot(fr_returned[[tick]]==aft, main = paste0("Tick=", tick, "(", aft_names_fromzero[aft], ")"), xlab = "lon", ylab = "lat", legend=F, col = c("red", "grey"))
+    col_tmp = ifelse(getValues(fr_returned[[tick]]==aft), col2rgb("red"),col2rgb("grey"))
+    plot(fr_returned[[tick]]==aft, main = paste0("Tick=", tick, "(", aft_names_fromzero[aft], ")"), xlab = "lon", ylab = "lat", legend=F, col = col_tmp)
   }
   plot.new()
   # legend("topright", legend = aft_names_fromzero, fill = aft_cols)
