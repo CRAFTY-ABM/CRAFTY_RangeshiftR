@@ -1,1 +1,10 @@
 /bin/
+
+.DS_Store
+
+RScripts/.Rhistory
+
+output/
+
+data-processed/Cell_ID_LatLong_EU.csv
+.Rproj.user

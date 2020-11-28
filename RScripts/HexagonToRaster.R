@@ -60,8 +60,9 @@ hx$X = x_ord
 hx$Y = y_ord
 names(hx)[1] = "Cell_ID"
 
-cellids = data.frame(hx[, c("Cell_ID", "X", "Y")])
+cellids = data.frame(hx[, c("Cell_ID", "X", "Y")], hx_coords)
 cellids$geometry = NULL
+colnames(cellids)[4:5] = c("x_coord", "y_coord")
 
 write.csv(cellids, "data-processed/Cell_ID_XY_Borough.csv", quote = F, row.names = F)
 

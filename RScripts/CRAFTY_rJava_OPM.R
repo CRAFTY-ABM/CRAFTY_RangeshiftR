@@ -1,35 +1,51 @@
+library(viridis)
 library(raster)
 library(sp)
 library(jdx)
 library(xml2)
-library(doSNOW) # doMC unavailable for Windows
+# library(doSNOW) # doMC unavailable for Windows
 
 
 ###################################### 
 # location of the cloned repository 
-path_base = "~/git/CRAFTY_RangeshiftR/"
-# Jar files
-path_crafty_package = path_base 
+path_base = "~/git/CRAFTY_RangeshiftR2/"
 # Input data
-path_crafty_data = path_base
-path_crafty_inputdata = path.expand(paste0(path_crafty_data, "data_LondonOPM/"))
+path_crafty_inputdata = path.expand(paste0(path_base, "data_LondonOPM/"))
 
 # Output folder 
 path_crafty_batch_run = path.expand(paste0("~/tmp"))
 
 
+
 setwd(path_base) 
 
 source("RScripts/Functions_CRAFTY_rJava.R")
-source("RScripts/Functions_CRAFTY_common.R")
+# source("RScripts/Functions_CRAFTY_common.R")
+
+###### OPM meta data
+aft_names_fromzero = c("mgmt_highInt", "mgmt_lowInt", "mgmt_medInt", "no_mgmt_NOPM", "no_mgmt_unable")
+aft_cols = viridis::viridis(5)
+london_xy_df = read.csv(paste0(path_base, "data-processed/Cell_ID_XY_Borough.csv"))
+
+x_coords_v = sort(unique(london_xy_df$X))
+x_coords_bng_v =london_xy_df[match(x_coords_v, london_xy_df$X), "x_coord"]
+
+y_coords_v = sort(unique(london_xy_df$Y))
+y_coords_bng_v =london_xy_df[match(y_coords_v, london_xy_df$Y), "y_coord"]
+
+
+
+
+proj4.BNG =  "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs"
+
 
 
 
 #############################################################
 # Location of the CRAFTY Jar file
-path_crafty_jar = path.expand(paste0(path_crafty_package, "lib/CRAFTY_KIT_engineOct2020.jar"))
+path_crafty_jar = path.expand(paste0(path_base, "lib/CRAFTY_KIT_engineOct2020.jar"))
 # Location of the CRAFTY lib files
-path_crafty_libs = path.expand(paste0(path_crafty_package, "lib/"))
+path_crafty_libs = path.expand(paste0(path_base, "lib/"))
 crafty_libs = list.files(paste0(path_crafty_libs), pattern = "jar")
 
 # Make sure that in the classpath setting , gt-opengis-9.0.jar must be included before geoapi-20050403.jar. Otherwise it throws an uncatchable error during the giving up process: loading libraries without ordering them particularly, the opengis library is loaded after the geoapi library following alphabetical order.
@@ -37,6 +53,7 @@ crafty_libs = list.files(paste0(path_crafty_libs), pattern = "jar")
 
 crafty_libs = crafty_libs[crafty_libs != "geoapi-20050403.jar"  ] 
 crafty_libs = c(crafty_libs,  "geoapi-20050403.jar")
+
 
 
 
@@ -58,17 +75,10 @@ crafty_jclasspath = c(
 
 
 
-start_year_idx = 1 # first year of the input data
-end_year_idx = 10 # 10th year of the input data 
-
-
-doProcessFR = F # visualisation
-
-
 # change wd to the output folder to store output files
 setwd(path_crafty_batch_run) 
 
-# initialise jvm in forked processes / not before parallelism is initiated
+# (When parallelising) initialise jvm in forked processes / not before parallelism is initiated
 # https://stackoverflow.com/questions/24337383/unloading-rjava-and-or-restarting-jvm
 # "There is a way to run expressions using rJava in parallel based on running the parallel processes to get and assemble all results BEFORE you load the rJava library in the main process. As the main R process has not initiated jvm then java is started in each single subprocess and this particular instance will die together with subprocess as well."
 
@@ -90,49 +100,57 @@ for (i in 1:length(crafty_jclasspath)) {
   .jaddClassPath(crafty_jclasspath[i])
 }
 
-.jcall( 'java/lang/System', 'S', 'setProperty', 'user.dir', path_crafty_batch_run )
+# set the batch run folder (path_crafty_batch_run)
+.jcall( 'java/lang/System', 'S', 'setProperty', 'user.dir',  path_crafty_batch_run )
 
-print(  .jcall( 'java/lang/System', 'S', 'getProperty', 'user.dir' ))
-
-
-
- 
-# change the content of the scenario xml file
-modifyScenario = FALSE
-if (modifyScenario) {
-
-  scenario.filename.template = "Scenario_Baseline_noGUI.xml"  
-  # Read the scenario file
-  scenario.xml <- xml2::read_xml(paste0(path_crafty_inputdata, scenario.filename.template))
-  # str(scenario.xml)
-  scenario.l <- xml2::as_list(scenario.xml)
+# assertion
+stopifnot(path_crafty_batch_run== .jcall( 'java/lang/System', 'S', 'getProperty', 'user.dir' ))
 
 
-  # e.g. Replace scenario name
-  attr(scenario.l$scenario, "scenario") <- "USER_SCENARIO_NAME"
-  # Replace version info
-  attr(scenario.l$scenario, "version") <- "USER_VERSION_NAME"
- 
-  ## Write the modified competition file
-  scenario.xml.modified <- xml2::as_xml_document(scenario.l)
 
-  xml2::write_xml(scenario.xml.modified, paste0(path_crafty_inputdata, scenario.filename), options = "no_empty_tags")
 
-  
-  # Can also edit other xml files 
-  # e.g. competiton file
-  # for (u.idx in 1:length(utility.b)) {
-  #     print(  attr(competition.l$competition[[u.idx]]$curve, "b") <- as.character(utility.b[u.idx]))
-  # }
- 
-}
+# # If needs to change the content of the scenario xml file on the fly
+# modifyScenario = FALSE
+# if (modifyScenario) {
+#   
+#   scenario.filename.template = "Scenario_Baseline_noGUI.xml"  
+#   # Read the scenario file
+#   scenario.xml <- xml2::read_xml(paste0(path_crafty_inputdata, scenario.filename.template))
+#   # str(scenario.xml)
+#   scenario.l <- xml2::as_list(scenario.xml)
+#   
+#   
+#   # e.g. Replace scenario name
+#   attr(scenario.l$scenario, "scenario") <- "USER_SCENARIO_NAME"
+#   # Replace version info
+#   attr(scenario.l$scenario, "version") <- "USER_VERSION_NAME"
+#   
+#   ## Write the modified competition file
+#   scenario.xml.modified <- xml2::as_xml_document(scenario.l)
+#   
+#   xml2::write_xml(scenario.xml.modified, paste0(path_crafty_inputdata, scenario.filename), options = "no_empty_tags")
+#   
+#   # Can edit other xml files in the same manner
+#   # e.g. competiton file
+#   # for (u.idx in 1:length(utility.b)) {
+#   #     print(  attr(competition.l$competition[[u.idx]]$curve, "b") <- as.character(utility.b[u.idx]))
+#   # }
+#   
+# }
+
 
 ############# CRAFTY configuration
 # Model run 
 
 # Scenario  
-CRAFTY_sargs =   c("-d", path_crafty_inputdata, "-f", scenario.filename, "-o", "99", "-r", "1",  "-n", "1", "-sr", "0") # change the argument as you wish 
+CRAFTY_sargs =   c("-d", path_crafty_inputdata, "-f", scenario.filename, "-o", "99", "-r", "1",  "-n", "1", "-sr", "0") # change the argument as you wish. 
+# -ed: end of the simulation (overriding the parameter in the scenario file)
 
+start_year_idx = 1 # first year of the input data
+end_year_idx = 10 # 10th year of the input data 
+
+
+parallelize = FALSE
 
 ########### Model running 
 print(paste0("============CRAFTY JAVA-R API: Create the instance"))
@@ -140,20 +158,19 @@ print(paste0("============CRAFTY JAVA-R API: Create the instance"))
 CRAFTY_jobj = new(J(CRAFTY_main_name)) # Create a new instance (to call non-static methods)
 
 # prepares a run and returns run information 
-# CRAFTY_RunInfo_jobj = CRAFTY_jobj$EXTprepareRrun(CRAFTY_sargs)
+CRAFTY_RunInfo_jobj = CRAFTY_jobj$EXTprepareRrun(CRAFTY_sargs)
 print(paste0("============CRAFTY JAVA-R API: Run preparation done"))
 
-# running from the first timestep to the fifth
-# CRAFTY_loader_jobj = CRAFTY_jobj$EXTsetSchedule(as.integer(start_year_idx), as.integer(end_year_idx))
-
-CRAFTY_jobj$main(CRAFTY_sargs)
-
-# print(  .jcall( 'java/lang/System', 'S', 'getProperty', 'user.dir' ))
+# set the schedule
+CRAFTY_loader_jobj = CRAFTY_jobj$EXTsetSchedule(as.integer(start_year_idx), as.integer(end_year_idx))
 
 
-# Yet experimental as rJava frequently hangs.. 
-if (doProcessFR) { 
-  
+# To visualise output
+doProcessFR = T # visualisation
+
+
+# rJava occasionally hangs.. it has something to do with the JVM initialisation (don't initialise more than once)
+if (doProcessFR) { # visiaulisation
   
   # slower..  
   # system.time({ 
@@ -166,16 +183,10 @@ if (doProcessFR) {
   
   region = CRAFTY_loader_jobj$getRegions()$getAllRegions()$iterator()$'next'()
   
-  
   # # alloc_m = region$getAllocationModel()
   # # .jmethods(alloc_m)
   # # btmap = region$getBehaviouralTypeMapByLabel() 
-  # 
-  # a = region$getFunctionalRoleMapByLabel()
-  # a$values()
-  # a2 = a$get("Ur")
-  # a2$getAlternativeFrId()
-  # a2$getSampledGivingInThreshold()
+  
   
   allcells_uset = region$getAllCells() 
   allcells_l =   as.list(allcells_uset)
@@ -188,24 +199,25 @@ if (doProcessFR) {
     val_xy =foreach(c = allcells_l, .combine = "rbind") %do% { 
       c(X=c$getX(), Y=c$getY())
     }
-    val_xy = data.frame(val_xy)
-    colnames(val_xy) = c("X", "Y")
-    x_coord = x.lat.v[val_xy$X]
-    y_coord = y.lon.v[val_xy$Y]
   })
   
-  crafty_sp =SpatialPoints(cbind(x_coord, y_coord))
-  proj4string(crafty_sp) = proj4.LL
+  val_xy = data.frame(val_xy)
+  colnames(val_xy) = c("X", "Y")
+  x_coord = london_xy_df[match(val_xy$X, london_xy_df$X), "x_coord"]
+  y_coord = london_xy_df[match(val_xy$Y, london_xy_df$Y), "y_coord"]
   
+  crafty_coords = cbind(x_coord, y_coord)
+  na_idx = is.na(crafty_coords[,1]) | is.na(crafty_coords[,2])
+  crafty_coords = crafty_coords[!na_idx,]
+  
+  crafty_sp =SpatialPoints(crafty_coords)
+  proj4string(crafty_sp) = proj4.BNG
+  # plot(crafty_sp)  
 }
 
+nticks = length(start_year_idx:end_year_idx)
+plot_return_list = vector("list", nticks)
 
-
-
-
-
-
-#
 # crafty main loop
 for (tick in start_year_idx:end_year_idx) {
   
@@ -214,8 +226,11 @@ for (tick in start_year_idx:end_year_idx) {
   stopifnot(nextTick == (tick + 1 )) # assertion
   
   
-  # safe to alter capital csv files here
-  
+  ######
+  ######
+  # safe to alter capital files here
+  ######
+  ######
   
   
   
@@ -233,23 +248,6 @@ for (tick in start_year_idx:end_year_idx) {
     
     # visualise something
     
-    # allregions_iter = CRAFTY_loader_jobj$getRegions()$getAllRegions()$iterator()
-    # region = allregions_iter$'next'()
-    # for all regions
-    
-    # allcells_uset = r$getAllCells() # UnmodifiableSet
-    # a = allcells_uset$forEach()
-    #
-    #
-    # allcells_stream = allcells_uset$stream()
-    
-    # aa = allcells_stream$toArray()
-    # str(aa[[1]]$getX())
-    # .jmethods(allcells_stream$forEach())
-    # x= allcells_stream$sorted()
-    # x2 = x$forEach()$getX()
-    
-    # allcells_l =  as.list(r$getAllCells()) # faster with as.list
     print(Sys.time())
     
     if (parallelize) {
@@ -272,17 +270,22 @@ for (tick in start_year_idx:end_year_idx) {
     
     
     
-    val_fr_fac = factor(val_fr, levels = aft.names.fromzero)
+    val_fr_fac = factor(val_fr,  labels = aft_names_fromzero, levels = aft_names_fromzero)
     
     
     fr_spdf = SpatialPixelsDataFrame(crafty_sp, data =data.frame( as.numeric(val_fr_fac )), tolerance = 0.0011)
     fr_r = raster(fr_spdf)
     # plot(fr_r)
     # par(mfrow=c(3,3))
-    plot(fr_r, main = paste0("Tick=", tick), xlab = "lon", ylab = "lat")
+    val_cols = aft_cols[val_fr_fac]
     
+    plot(fr_r, main = paste0("Tick=", tick), xlab = "lon", ylab = "lat", col = val_cols, legend=F)
+    legend("topright", legend = aft_names_fromzero, fill = aft_cols)
     # rm(allregions_iter)
     rm(allcells_l)
+    
+    
+    plot_return_list[[tick]] = fr_r
   }
   
   
