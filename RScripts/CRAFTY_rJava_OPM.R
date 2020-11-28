@@ -279,7 +279,7 @@ for (tick in start_year_idx:end_year_idx) {
     # par(mfrow=c(3,3))
     val_cols = aft_cols[val_fr_fac]
     
-    plot(fr_r, main = paste0("Tick=", tick), xlab = "lon", ylab = "lat", col = val_cols, legend=F)
+    plot(fr_r, main = paste0("Tick=", tick), xlab = "X_BNG", ylab = "Y_BNG", col = val_cols, legend=F)
     legend("topright", legend = aft_names_fromzero, fill = aft_cols)
     # rm(allregions_iter)
     rm(allcells_l)
@@ -298,6 +298,35 @@ for (tick in start_year_idx:end_year_idx) {
 }
 
 
+fr_returned = stack(plot_return_list)
+
+
+
+fr_tb = apply( getValues(fr_returned), MARGIN = 2, FUN = function(x)  table(factor(x, levels = 1:5, labels = aft_names_fromzero)))
+colnames(fr_tb) = 2020:2029
+
+pdf("output/AFTtable.pdf", width = 12, height = 12, onefile = T)
+
+barplot(fr_tb, col = aft_cols, beside=T, ylim=c(0, 3E4))
+legend("topright", legend = aft_names_fromzero, fill = aft_cols)
+dev.off()
+
+
+pdf("output/AFTmap.pdf", width = 12, height = 12, onefile = T)
+
+par(mfrow=c(3,2))
+
+for (tick in 1:nticks) { 
+  
+  for (aft in 1:5) {
+    
+    plot(fr_returned[[tick]]==aft, main = paste0("Tick=", tick, "(", aft_names_fromzero[aft], ")"), xlab = "lon", ylab = "lat", legend=F, col = c("red", "grey"))
+  }
+  plot.new()
+  # legend("topright", legend = aft_names_fromzero, fill = aft_cols)
+  # rm(allregions_iter)
+}
+dev.off()
 
 print("Close run")
 
