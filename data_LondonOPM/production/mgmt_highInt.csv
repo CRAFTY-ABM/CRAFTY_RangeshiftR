@@ -1,4 +1,4 @@
-"Service","OPMpresence","riskPerc","budget","knowledge","nature","access","Production"
-"biodiversity",0,0,0,0,1,0,0.5
-"recreation",0,0,0,0,0,1,0.9
-"management",1,1,1,0.8,0,0,1
+"Service","OPMpresence","OPMinverted","riskPerc","budget","knowledge","nature","access","Production"
+"biodiversity",0,0,0,0,0,1,0,0.5
+"recreation",0,0,0,0,0,0,1,0.9
+"management",1,0,1,1,0.8,0,0,1
