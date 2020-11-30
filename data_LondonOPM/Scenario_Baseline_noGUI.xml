@@ -1,16 +1,16 @@
-<scenario startTick="2020" endTick="2030" world="LondonBoroughs" 
+<scenario startTick="1" endTick="10" world="LondonBoroughs" 
   scenario="Baseline" version="V1">
   <capitals class="org.volante.abm.serialization.CSVCapitalLoader" file="csv/Capitals.csv" indexed="true"/>
   <services class="org.volante.abm.serialization.CSVServiceLoader" file="csv/Services.csv" indexed="true"/>
    <outputs outputDirectory="output" filePattern="%s-%i-%r-%o" tickPattern="%s-%i-%r-%o-%y">
      
-      <output class="org.volante.abm.output.CellTable" perRegion="true" addRegion="false" addCellRegion="false" addServices="true" addCapitals="true" addCompetitiveness="false" addLandUseIndex="true" addLandUse="false" addAgent="true" addPreAllocCompetitiveness="false" addPreAllocLandUse="false" addGiThreshold="false" addPreAllocGuThreshold="false"  doubleFormat="0.000" startYear="2020" everyNYears="1"/>
-      <output class="org.volante.abm.output.AggregateAFTCompositionCSVOutputter" outputSums="true" perRegion="true" startYear="2020" everyNYears="1"/>
-      <output class="org.volante.abm.output.AggregateAFTCompetitivenessCSVOutputter" perRegion="true" startYear="2020" everyNYears="1"/>
-      <output class="org.volante.abm.output.AggregateDemandSupplyCSVOutputter" perRegion="true" startYear="2020" everyNYears="1"/>
-      <output class="org.volante.abm.output.TakeoverCellOutputter" perRegion="true" startYear="2020" everyNYears="1" filePerTick="false" addRegion="false"/>
-      <output class="org.volante.abm.output.GivingInStatisticsOutputter" startYear="2020" perRegion="true" everyNYears="1" filePerTick="false" addRegion="false"/>
-      <output class="org.volante.abm.output.ActionCSVOutputter" agentpattern=".*Inst" filePerTick="false" perRegion="true" startYear="2020" everyNYears="1"/>
+      <output class="org.volante.abm.output.CellTable" perRegion="true" addRegion="false" addCellRegion="false" addServices="true" addCapitals="true" addCompetitiveness="false" addLandUseIndex="true" addLandUse="false" addAgent="true" addPreAllocCompetitiveness="false" addPreAllocLandUse="false" addGiThreshold="false" addPreAllocGuThreshold="false"  doubleFormat="0.000" startYear="1" everyNYears="1"/>
+      <output class="org.volante.abm.output.AggregateAFTCompositionCSVOutputter" outputSums="true" perRegion="true" startYear="1" everyNYears="1"/>
+      <output class="org.volante.abm.output.AggregateAFTCompetitivenessCSVOutputter" perRegion="true" startYear="1" everyNYears="1"/>
+      <output class="org.volante.abm.output.AggregateDemandSupplyCSVOutputter" perRegion="true" startYear="1" everyNYears="1"/>
+      <output class="org.volante.abm.output.TakeoverCellOutputter" perRegion="true" startYear="1" everyNYears="1" filePerTick="false" addRegion="false"/>
+      <output class="org.volante.abm.output.GivingInStatisticsOutputter" startYear="1" perRegion="true" everyNYears="1" filePerTick="false" addRegion="false"/>
+      <output class="org.volante.abm.output.ActionCSVOutputter" agentpattern=".*Inst" filePerTick="false" perRegion="true" startYear="1" everyNYears="1"/>
  
    </outputs>
   
