@@ -91,4 +91,11 @@ london$BT = 0
 head(london)
 summary(london)
 
-write.csv(london, "~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/LondonBoroughs_XY.csv")
+write.csv(london, "~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/LondonBoroughs_XY.csv", row.names = F)
+
+# change initial agents type
+
+london <- read.csv("~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/LondonBoroughs_XY.csv", row.names = F)
+head(london)
+london$FR <- "no_mgmt"
+write.csv(london, "~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/LondonBoroughs_XY.csv", row.names = F)
