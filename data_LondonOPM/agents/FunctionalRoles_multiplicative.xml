@@ -73,7 +73,7 @@
 	givingUpMean="${@(agents/AftParams_no_mgmt.csv, givingUpDistributionMean)}"
 	givingInMean="${@(agents/AftParams_no_mgmt.csv, givingInDistributionMean)}"
 	givingUpProbability = "${@(agents/AftParams_no_mgmt.csv, givingUpProb)}">
-	<alternativeFr>no_mgmt_NOPM</alternativeFr>
+	<alternativeFr>no_mgmt</alternativeFr>
 
 	 <givingUpDistribution class="com.moseph.modelutils.distribution.NormalDistribution" 
 		 mean="${@(agents/AftParams_no_mgmt.csv, givingUpDistributionMean)}" 
