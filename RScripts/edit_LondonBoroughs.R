@@ -74,7 +74,7 @@ london$y  = hx$Y[match(london$joinID, hx$Cell_ID)]
 
 head(london)
 london$OPMpresence <- capitals$OPMpresence[match(london$joinID, capitals$joinID)]
-london$OPMabsence <- capitals$OPMinv[match(london$joinID, capitals$joinID)]
+london$OPMinverted <- capitals$OPMinv[match(london$joinID, capitals$joinID)]
 london$riskPerc <- capitals$riskPrc[match(london$joinID, capitals$joinID)]
 london$budget <- capitals$budget[match(london$joinID, capitals$joinID)]
 london$OPMpresence <- capitals$OPMpresence[match(london$joinID, capitals$joinID)]
@@ -84,7 +84,7 @@ london$access <- capitals$access[match(london$joinID, capitals$joinID)]
 
 # check
 ggplot(london)+
-  geom_tile(mapping = aes(x,y,fill=OPMabsence))
+  geom_tile(mapping = aes(x,y,fill=OPMinverted))
 
 # tidy up
 london$id = NULL
