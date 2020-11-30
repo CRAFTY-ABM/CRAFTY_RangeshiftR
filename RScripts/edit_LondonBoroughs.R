@@ -21,7 +21,7 @@ natural <- st_read(paste0(dirOut,"/capitals/hexG_bio_access.shp"))
 
 social <- social %>% st_drop_geometry()
 capitals <- merge(natural,social,by="joinID")
-
+head(capitals)
 capitals <- capitals[,c(1,6,8,2,3)] %>% st_drop_geometry()
 
 capitals$OPMpresence <- OPMpresence$rep0_year9[match(capitals$joinID, OPMpresence$joinID)]
@@ -32,6 +32,7 @@ capitals$knowledge <- NA
 capitals$knowledge[which(capitals$OPMpresence>0)] <- 1
 capitals$knowledge[which(is.na(capitals$knowledge))] <- 0
 
+head(capitals)
 
 # normalise --------------------------------------------------------------------
 summary(capitals)
@@ -45,6 +46,11 @@ hist(data)
 hist(normalised)
 normalised[which(is.na(normalised))]<-0
 capitals$OPMpresence <- normalised
+
+# inverted OPM presence capital 
+invert <- capitals$OPMpresence - 1
+z <- abs(invert)
+capitals$OPMinv <- z
 
 # nature
 data <- capitals$nature
@@ -68,6 +74,7 @@ london$y  = hx$Y[match(london$joinID, hx$Cell_ID)]
 
 head(london)
 london$OPMpresence <- capitals$OPMpresence[match(london$joinID, capitals$joinID)]
+london$OPMabsence <- capitals$OPMinv[match(london$joinID, capitals$joinID)]
 london$riskPerc <- capitals$riskPrc[match(london$joinID, capitals$joinID)]
 london$budget <- capitals$budget[match(london$joinID, capitals$joinID)]
 london$OPMpresence <- capitals$OPMpresence[match(london$joinID, capitals$joinID)]
@@ -77,25 +84,20 @@ london$access <- capitals$access[match(london$joinID, capitals$joinID)]
 
 # check
 ggplot(london)+
-  geom_tile(mapping = aes(x,y,fill=riskPerc))
+  geom_tile(mapping = aes(x,y,fill=OPMabsence))
 
 # tidy up
 london$id = NULL
 london$joinID = NULL
 london$Lon = NULL
 london$Lat = NULL
-london$FR = london$Agent 
+london$FR = "no_mgmt"
 london$Agent = NULL
 london$BT = 0
 
 head(london)
+london <- london[,c(7,8,1,9,2,3,4,5,6,10,11)]
 summary(london)
 
 write.csv(london, "~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/LondonBoroughs_XY.csv", row.names = F)
 
-# change initial agents type
-
-london <- read.csv("~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/LondonBoroughs_XY.csv", row.names = F)
-head(london)
-london$FR <- "no_mgmt"
-write.csv(london, "~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/LondonBoroughs_XY.csv", row.names = F)
