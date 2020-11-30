@@ -1,5 +1,5 @@
 library(parallel)
-library(doMC)
+#library(doMC)
 library(raster)
 library(sp)
 
@@ -28,13 +28,13 @@ java.ms <- "1g -d64"
 # .jclassPath() # print out the current class path settings. 
 
 
-aft.names.fromzero <- c( "Ext_AF", "IA", "Int_AF", "Int_Fa", "IP", "MF", "Min_man", "Mix_Fa", "Mix_For", "Mix_P", "Multifun", "P-Ur", "UL", "UMF", "Ur", "VEP", "EP")
+#aft.names.fromzero <- c( "Ext_AF", "IA", "Int_AF", "Int_Fa", "IP", "MF", "Min_man", "Mix_Fa", "Mix_For", "Mix_P", "Multifun", "P-Ur", "UL", "UMF", "Ur", "VEP", "EP")
 
 
 
 CRAFTY_main_name = "org.volante.abm.serialization.ModelRunner" # Better using the reflection based API in rJava.  
 
-crafty_sp =NA 
+#crafty_sp =NA 
 
 
 

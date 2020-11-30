@@ -5,17 +5,19 @@ library(raster)
 library(sp)
 library(jdx)
 library(xml2)
+library(foreach) # for %do%
 # library(doSNOW) # doMC unavailable for Windows
 
 
 ###################################### 
 # location of the cloned repository 
 path_base = "~/git/CRAFTY_RangeshiftR2/"
+path_base <- "~/eclipse-workspace/CRAFTY_RangeshiftR/"
 # Input data
 path_crafty_inputdata = path.expand(paste0(path_base, "data_LondonOPM/"))
 
 # Output folder 
-path_crafty_batch_run = path.expand(paste0("~/tmp"))
+path_crafty_batch_run = path.expand(paste0(path_base, "output/"))
 
 
 
@@ -25,8 +27,8 @@ source("RScripts/Functions_CRAFTY_rJava.R")
 # source("RScripts/Functions_CRAFTY_common.R")
 
 ###### OPM meta data
-aft_names_fromzero = c("mgmt_highInt", "mgmt_lowInt", "mgmt_medInt", "no_mgmt_NOPM", "no_mgmt_unable")
-aft_cols = viridis::viridis(5)
+aft_names_fromzero = c("mgmt_highInt", "mgmt_lowInt", "mgmt_medInt", "no_mgmt")
+aft_cols = viridis::viridis(4)
 london_xy_df = read.csv(paste0(path_base, "data-processed/Cell_ID_XY_Borough.csv"))
 
 x_coords_v = sort(unique(london_xy_df$X))
@@ -227,11 +229,15 @@ if (doProcessFR) { # visiaulisation
   # plot(crafty_sp)  
 }
 
+
 nticks = length(start_year_idx:end_year_idx)
 plot_return_list = vector("list", nticks)
+timesteps <- start_year_idx:end_year_idx
 
 # crafty main loop
-for (tick in start_year_idx:end_year_idx) {
+for (tick in timesteps) {
+  
+  #tick <-timesteps[1]
   
   nextTick = CRAFTY_jobj$EXTtick()
   
@@ -325,8 +331,8 @@ fr_returned = stack(plot_return_list)
 
 
 
-fr_tb = apply( getValues(fr_returned), MARGIN = 2, FUN = function(x)  table(factor(x, levels = 1:5, labels = aft_names_fromzero)))
-colnames(fr_tb) = 2020:2029
+fr_tb = apply( getValues(fr_returned), MARGIN = 2, FUN = function(x)  table(factor(x, levels = 1:4, labels = aft_names_fromzero)))
+colnames(fr_tb) = 1:10
 
 pdf("output/AFTtable.pdf", width = 12, height = 12, onefile = T)
 
@@ -339,9 +345,9 @@ pdf("output/AFTmap.pdf", width = 12, height = 12, onefile = T)
 
 
 for (tick in 1:nticks) { 
-  par(mfrow=c(3,2))
+  par(mfrow=c(2,2))
   
-  for (aft in 1:5) {
+  for (aft in 1:4) {
     col_tmp = ifelse(getValues(fr_returned[[tick]]==aft), col2rgb("red"),col2rgb("grey"))
     plot(fr_returned[[tick]]==aft, main = paste0("Tick=", tick, "(", aft_names_fromzero[aft], ")"), xlab = "lon", ylab = "lat", legend=F, col = col_tmp)
   }
