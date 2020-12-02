@@ -16,6 +16,7 @@ library(sf)
 library(viridis)
 library(ggplot2)
 library(sp)
+library(rJava)
 library(jdx)
 library(xml2)
 library(foreach)
@@ -34,18 +35,12 @@ dirRsftr <- file.path('C:/Users/vanessa.burton.sb/Documents/eclipse-workspace/CR
 #dir.create(dirRsftrOutput)
 #dir.create(dirRsftrOutputMaps)
 
-dirCRAFTYInput <- path.expand(paste0(dirWorking, "data_LondonOPM/"))
-dirCRAFTYOutput <- path.expand(paste0(dirWorking, "output/"))
+dirCRAFTYInput <- path.expand(paste0(dirWorking, "/data_LondonOPM/"))
+dirCRAFTYOutput <- path.expand(paste0(dirWorking, "/output/"))
 
 setwd(dirWorking)
 
 source("RScripts/Functions_CRAFTY_rJava.R")
-
-
-### Global paramaters ----------------------------------------------------------
-
-# british national grid crs
-proj4.BNG <- "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs"
 
 
 ### RangeshiftR set-up ---------------------------------------------------------
@@ -68,6 +63,10 @@ disp <-  Dispersal(Emigration = Emigration(EmigProb = 0.2),
                    Transfer   = DispersalKernel(Distances = 1500), # test getting to top of landscape while keeping other params low
                    Settlement = Settlement() )
 
+# for storing rangeshiftR output data
+dfRangeShiftrData <- data.frame()
+outRasterStack <- stack()
+
 
 ### CRAFTY set-up --------------------------------------------------------------
 
@@ -75,13 +74,73 @@ disp <-  Dispersal(Emigration = Emigration(EmigProb = 0.2),
 hexPoints <- st_read(paste0(dirWorking,"/data-processed/hexGrids/hexPoints40m.shp"))
 hexPointsSP <- as_Spatial(hexPoints)
 
+# agent names
+aft_names_fromzero = c("mgmt_highInt", "mgmt_lowInt", "mgmt_medInt", "no_mgmt")
+aft_cols = viridis::viridis(4)
+
+# for coordinate matching
+london_xy_df <- read.csv(paste0(dirWorking, "/data-processed/Cell_ID_XY_Borough.csv"))
+x_coords_v <- sort(unique(london_xy_df$X))
+x_coords_bng_v <- london_xy_df[match(x_coords_v, london_xy_df$X), "x_coord"]
+y_coords_v <- sort(unique(london_xy_df$Y))
+y_coords_bng_v <- london_xy_df[match(y_coords_v, london_xy_df$Y), "y_coord"]
+hx <- readOGR("data-processed/hexgrids", layer = "hexGrid40m")
+proj4.BNG <- "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs"
+
+# location of the CRAFTY Jar file
+path_crafty_jar <- path.expand(paste0(dirWorking, "/lib/CRAFTY_KIT_engineOct2020.jar"))
+# location of the CRAFTY lib files
+path_crafty_libs <- path.expand(paste0(dirWorking, "/lib/"))
+crafty_libs <- list.files(paste0(path_crafty_libs), pattern = "jar")
+# make sure that in the classpath setting , gt-opengis-9.0.jar must be included before geoapi-20050403.jar. Otherwise it throws an uncatchable error during the giving up process: loading libraries without ordering them particularly, the opengis library is loaded after the geoapi library following alphabetical order.
+# related commit - https://github.com/CRAFTY-ABM/CRAFTY_CoBRA/commit/4ce1041cae349572032fc7e25be49652781f5866
+crafty_libs <- crafty_libs[crafty_libs != "geoapi-20050403.jar"  ] 
+crafty_libs <- c(crafty_libs,  "geoapi-20050403.jar")
+
+# name of the scenario file
+scenario.filename <- "Scenario_Baseline_noGUI.xml" # no display
+
+# java configuration
+crafty_jclasspath <- c(path_crafty_jar, paste0(path_crafty_libs, crafty_libs))
+
+# scenario file
+CRAFTY_sargs <- c("-d", dirCRAFTYInput, "-f", scenario.filename, "-o", "99", "-r", "1",  "-n", "1", "-sr", "0") 
+# CRAFTY timesteps
+start_year_idx <- 1 # first year of the input data
+end_year_idx <- 10 # 10th year of the input data 
+
+parallelize <- FALSE # not loads of data so don't need to run in parallel
+
+# change wd to the output folder to store output files
+# unsure when to do this...
+# rangeshiftR needs to be running in same place if both running in same loop.
+setwd(dirCRAFTYOutput) 
+
+# initialise Java
+if (!rJava::.jniInitialized) { # initialize only once 
+  
+  .jinit(parameters="-Dlog4j.configuration=log4j2020_normal.properties")
+  .jinit(parameters = "-Dfile.encoding=UTF-8", silent = FALSE, force.init = FALSE)
+  .jinit( parameters=paste0("-Xms", java.ms, " -Xmx", java.mx)) # The .jinit returns 0 if the JVM got initialized and a negative integer if it did not. A positive integer is returned if the JVM got initialized partially. Before initializing the JVM, the rJava library must be loaded.
+  
+  # .jinit(parameters = paste0("user.dir=", path_crafty_batch_run )) # does not work.. 
+}
 
 
-### Model loop -----------------------------------------------------------------
+# add java classpath
+.jclassPath() # print out the current class path settings.
+for (i in 1:length(crafty_jclasspath)) { 
+  .jaddClassPath(crafty_jclasspath[i])
+}
 
-# for storing output data
-dfRangeShiftrData <- data.frame()
-outRasterStack <- stack()
+# set the batch run folder (dirCRAFTYOutput)
+.jcall( 'java/lang/System', 'S', 'setProperty', 'user.dir',  dirCRAFTYOutput )
+
+# assertion
+stopifnot(dirCRAFTYOutput == .jcall( 'java/lang/System', 'S', 'getProperty', 'user.dir' ))
+
+
+### RangeshiftR first model loop -----------------------------------------------------------------
 
 for (iteration in 1:10) {
   
@@ -97,14 +156,14 @@ for (iteration in 1:10) {
   s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init)
   validateRSparams(s)
   
-  # run RangeShiftR - use result to store our output population raster.
+  # run RangeShiftR - use result to store output population raster.
   result <- RunRS(s, sprintf('%s/', dirRsftr))
   crs(result) <- crs(rstHabitat)
   extent(result) <- extent(rstHabitat)
   #plot(result[[rangeshiftrYears]])
-  # store RangeShiftR's population raster in output stack.
+  # store population raster in output stack.
   outRasterStack <- addLayer(outRasterStack, result[[rangeshiftrYears]])
-  # store RangeShiftR's population data in output data frame.
+  # store population data in output data frame.
   dfRange <- readRange(s, sprintf('%s/',dirRsftr))
   dfRange$iteration <- iteration
   dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[1,])
@@ -140,23 +199,165 @@ for (iteration in 1:10) {
   
   #dfOPM %>% dplyr::filter(population>0)
   
-  # add to/edit capitals file
-  capitals <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_original.csv"))
-  hx <- read.csv(paste0(dirWorking,"/data-processed/Cell_ID_XY_Borough.csv"))
+  # edit capitals file
   
-    head(capitals)
-  colnames(capitals)[3:4] = c("Lon", "Lat")
-  capitals$x  = hx$X[match(capitals$joinID, hx$Cell_ID)]
-  capitals$y  = hx$Y[match(capitals$joinID, hx$Cell_ID)]
+  # read in capitals file
+  capitals <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY.csv"))
+  head(capitals)
   
+  # read in look-up for joinID
+  lookUp <- read.csv(paste0(dirWorking,"/data-processed/joinID_lookup.csv"))
+  
+  # update OPM capitals
+  lookUp$OPMpresence <- dfOPM$population[match(lookUp$joinID, dfOPM$joinID)]
+  capitals$joinID <- lookUp$joinID
   head(capitals)
   capitals$OPMpresence <- dfOPM$OPMpresence[match(capitals$joinID, dfOPM$joinID)]
   capitals$OPMinverted <- dfOPM$OPMinv[match(capitals$joinID, dfOPM$joinID)]
   
   # check
   #ggplot(capitals)+
-    #geom_tile(mapping = aes(x,y,fill=OPMpresence))
+    #geom_tile(mapping = aes(x,y,fill=OPMinverted))
+  
+  #head(capitals)
+  capitals$joinID <- NULL
+  # write to file. overwrite or new? try both for now
+  write.csv(capitals, paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY.csv"))
+  write.csv(capitals, paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep",iteration,".csv"))
   
   }
   
 
+### CRAFTY first model loop ----------------------------------------------------
+
+# clear objects when testing
+rm(tick)
+rm(CRAFTY_jobj)
+
+print(paste0("============CRAFTY JAVA-R API: Create the instance"))
+
+CRAFTY_jobj <- new(J(CRAFTY_main_name)) # Create a new instance (to call non-static methods)
+
+# prepares a run and returns run information 
+CRAFTY_RunInfo_jobj <- CRAFTY_jobj$EXTprepareRrun(CRAFTY_sargs)
+print(paste0("============CRAFTY JAVA-R API: Run preparation done"))
+
+# set the schedule
+CRAFTY_loader_jobj <- CRAFTY_jobj$EXTsetSchedule(as.integer(start_year_idx), as.integer(end_year_idx))
+
+# option to visualise as model runs
+doProcessFR = FALSE
+
+nticks <- length(start_year_idx:end_year_idx)
+plot_return_list <- vector("list", nticks)
+timesteps <- start_year_idx:end_year_idx
+
+
+
+# crafty main loop
+for (tick in timesteps) {
+  
+  #tick <-timesteps[1]
+  
+  nextTick = CRAFTY_jobj$EXTtick()
+  
+  stopifnot(nextTick == (tick + 1 )) # assertion
+  
+  
+  ######
+  ######
+  # safe to alter capital files here
+  ######
+  ######
+  
+  # run RangeshiftR here to add in OPM capitals
+  # set up RangeShiftR for current iteration
+  sim <- Simulation(Simulation = tick,
+                    Years = rangeshiftrYears,
+                    Replicates = 1,
+                    OutIntPop = 1,
+                    OutIntInd = 1,
+                    ReturnPopRaster=TRUE)
+  s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init)
+  validateRSparams(s)
+  
+  print(paste0("============CRAFTY JAVA-R API: Running RangeshiftR tick=", tick))
+  # run RangeShiftR - use result to store output population raster.
+  result <- RunRS(s, sprintf('%s/', dirRsftr))
+  crs(result) <- crs(rstHabitat)
+  extent(result) <- extent(rstHabitat)
+  #plot(result[[rangeshiftrYears]])
+  # store population raster in output stack.
+  outRasterStack <- addLayer(outRasterStack, result[[rangeshiftrYears]])
+  # store population data in output data frame.
+  dfRange <- readRange(s, sprintf('%s/',dirRsftr))
+  dfRange$iteration <- iteration
+  dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[1,])
+  
+  # extract the population raster to a shapefile of the individuals
+  shpIndividuals <- rasterToPoints(result[[rangeshiftrYears]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
+  shpIndividuals <- st_transform(shpIndividuals, crs(rstHabitat))
+  shpIndividuals$id <- 1:nrow(shpIndividuals)
+  
+  # extract OPM population raster and use as OPM presence capital (+ OPM inverted capital)
+  result2 <- result[[rangeshiftrYears]]
+  hexPointsOPM <- raster::extract(result2, hexPointsSP)
+  dfOPM <- cbind(hexPointsSP,hexPointsOPM) %>% as.data.frame()
+  colnames(dfOPM)[2] <- "population"
+  dfOPM$population[which(is.na(dfOPM$population))] <- 0
+  
+  # normalise and created inverted version
+  # OPM presence
+  data <- dfOPM$population
+  data[which(data==0)]<-NA
+  normalised <- (data-min(data,na.rm = T))/(max(data, na.rm = T)-min(data,na.rm=T))
+  hist(data)
+  hist(normalised)
+  normalised[which(is.na(normalised))]<-0
+  dfOPM$OPMpresence <- normalised
+  
+  # inverted OPM presence
+  invert <- dfOPM$OPMpresence - 1
+  z <- abs(invert)
+  dfOPM$OPMinv <- z
+  
+  #dfOPM %>% dplyr::filter(population>0)
+  
+  # edit capitals file
+  
+  # read in capitals file
+  capitals <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY.csv"))
+  head(capitals)
+  
+  # read in look-up for joinID
+  lookUp <- read.csv(paste0(dirWorking,"/data-processed/joinID_lookup.csv"))
+  
+  # update OPM capitals
+  lookUp$OPMpresence <- dfOPM$population[match(lookUp$joinID, dfOPM$joinID)]
+  capitals$joinID <- lookUp$joinID
+  head(capitals)
+  capitals$OPMpresence <- dfOPM$OPMpresence[match(capitals$joinID, dfOPM$joinID)]
+  capitals$OPMinverted <- dfOPM$OPMinv[match(capitals$joinID, dfOPM$joinID)]
+  
+  # check
+  #ggplot(capitals)+
+  #geom_tile(mapping = aes(x,y,fill=OPMinverted))
+  
+  #head(capitals)
+  capitals$joinID <- NULL
+  # write to file. overwrite or new? try both for now
+  write.csv(capitals, paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY.csv"))
+  write.csv(capitals, paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep",tick,".csv"))
+  
+  
+  # insert code for visualising here if wanted (lines 177-230 in CRAFTY_rJava_OPM)
+  # (think it will be easier just to work with output csv files)
+  
+  
+  if (nextTick <= end_year_idx) {
+    print(paste0("============CRAFTY JAVA-R API: NextTick=", nextTick))
+  } else {
+    print(paste0("============CRAFTY JAVA-R API: Simulation done (tick=", tick, ")"))
+    
+  }
+}
