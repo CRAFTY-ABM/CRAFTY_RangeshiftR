@@ -64,13 +64,18 @@ capitals$nature <- normalised
 
 # join to CRAFTY coords ---------------------------------------------------------
 # original LondonBoroughs file and cellIDs for matching to CRAFTY coordinates
-london <- read_csv("~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/LondonBoroughs_original.csv")
-hx <- read_csv("~/eclipse-workspace/CRAFTY_RangeshiftR/data-processed/Cell_ID_XY_Borough.csv")
+london <- read.csv("~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/LondonBoroughs_original.csv")
+hx <- read.csv("~/eclipse-workspace/CRAFTY_RangeshiftR/data-processed/Cell_ID_XY_Borough.csv")
 
 head(london)
 colnames(london)[3:4] = c("Lon", "Lat")
 london$x  = hx$X[match(london$joinID, hx$Cell_ID)]
 london$y  = hx$Y[match(london$joinID, hx$Cell_ID)]
+
+# create look-up file
+head(london)
+lookUp <- london[,c(2,12,13)]
+write.csv(lookUp,"~/eclipse-workspace/CRAFTY_RangeshiftR/data-processed/joinID_lookup.csv", row.names = F)
 
 head(london)
 london$OPMpresence <- capitals$OPMpresence[match(london$joinID, capitals$joinID)]
