@@ -25,18 +25,19 @@ library(foreach)
 
 dirWorking<- "~/eclipse-workspace/CRAFTY_RangeshiftR"
 
-dirRsftr <- file.path(dirWorking, 'RangeshiftR')
+dirCRAFTYInput <- path.expand(paste0(dirWorking, "/data_LondonOPM/"))
+dirCRAFTYOutput <- path.expand(paste0(dirWorking, "/output"))
+
+# store RangeshiftR files within CRAFTY output folder as it is the directory CRAFTY will need to run in
+dirRsftr <- file.path(dirCRAFTYOutput, 'RangeshiftR')
+# specific file structure needed for RangeshiftR to run
 dirRsftrInput <- file.path(dirRsftr,"Inputs")
 dirRsftrOutput <- file.path(dirRsftr,"Outputs")
 dirRsftrOutputMaps <- file.path(dirRsftr,"Output_Maps")
-dirRsftr <- file.path('C:/Users/vanessa.burton.sb/Documents/eclipse-workspace/CRAFTY_RangeshiftR/RangeshiftR/') # need to add the / for this path to work in RunRS
-
 #dir.create(dirRsftrInput)
 #dir.create(dirRsftrOutput)
 #dir.create(dirRsftrOutputMaps)
-
-dirCRAFTYInput <- path.expand(paste0(dirWorking, "/data_LondonOPM/"))
-dirCRAFTYOutput <- path.expand(paste0(dirWorking, "/output/"))
+dirRsftr <- file.path("C:/Users/vanessa.burton.sb/Documents/eclipse-workspace/CRAFTY_RangeshiftR/output/RangeshiftR/") # need to add the / for this path to work in RunRS
 
 setwd(dirWorking)
 
@@ -105,6 +106,7 @@ crafty_jclasspath <- c(path_crafty_jar, paste0(path_crafty_libs, crafty_libs))
 
 # scenario file
 CRAFTY_sargs <- c("-d", dirCRAFTYInput, "-f", scenario.filename, "-o", "99", "-r", "1",  "-n", "1", "-sr", "0") 
+
 # CRAFTY timesteps
 start_year_idx <- 1 # first year of the input data
 end_year_idx <- 10 # 10th year of the input data 
@@ -112,8 +114,6 @@ end_year_idx <- 10 # 10th year of the input data
 parallelize <- FALSE # not loads of data so don't need to run in parallel
 
 # change wd to the output folder to store output files
-# unsure when to do this...
-# rangeshiftR needs to be running in same place if both running in same loop.
 setwd(dirCRAFTYOutput) 
 
 # initialise Java
@@ -257,7 +257,7 @@ timesteps <- start_year_idx:end_year_idx
 # crafty main loop
 for (tick in timesteps) {
   
-  #tick <-timesteps[1]
+  tick <-timesteps[1]
   
   nextTick = CRAFTY_jobj$EXTtick()
   
@@ -352,6 +352,10 @@ for (tick in timesteps) {
   
   # insert code for visualising here if wanted (lines 177-230 in CRAFTY_rJava_OPM)
   # (think it will be easier just to work with output csv files)
+  
+  # extract agent locations, match to hexagonal grid
+  
+  # remove individuals based on management type
   
   
   if (nextTick <= end_year_idx) {
