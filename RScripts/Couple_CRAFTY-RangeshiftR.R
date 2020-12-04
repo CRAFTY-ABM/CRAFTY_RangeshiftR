@@ -183,6 +183,11 @@ for (tick in timesteps) {
   ######
   ######
   
+  # would this be the best place to use agent locations to change OPM individuals?
+  # make conditional so only used once the first tick has been run?
+  # so if tick > 1 (CRAFTY has run once already and there are agent locations to extract)
+  # then use agent locations to edit OPM individuals
+  
   # run RangeshiftR here to add in OPM capitals
   # set up RangeShiftR for current iteration
   sim <- Simulation(Simulation = tick,
@@ -258,7 +263,8 @@ for (tick in timesteps) {
   
   #head(capitals)
   capitals$joinID <- NULL
-  # write to file. overwrite or new? try both for now
+  # write to file. overwrite or write to new file? do both for now
+  # if writing to new file, would need to change CRAFTY scenario file within loop to point to the correct version per tick
   write.csv(capitals, paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY.csv"))
   write.csv(capitals, paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep",tick,".csv"))
   
@@ -266,8 +272,9 @@ for (tick in timesteps) {
   # insert code for visualising here if wanted (lines 177-230 in CRAFTY_rJava_OPM)
   # (think it will be easier just to work with output csv files)
   
+  # can the step to use agent locations to edit RangeshiftR individuals happen here
+  # or should it be a conditional option at the start of the loop?
   # extract agent locations, match to hexagonal grid
-  
   # remove individuals based on management type
   
   
