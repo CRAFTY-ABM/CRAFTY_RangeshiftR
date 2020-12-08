@@ -109,7 +109,7 @@ summary(london)
 head(london)
 
 # remove OPMpresence
-#london$OPMpresence <- NULL
+london$OPMpresence <- NULL
 
 write.csv(london, "~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/LondonBoroughs_XY.csv", row.names = F)
 

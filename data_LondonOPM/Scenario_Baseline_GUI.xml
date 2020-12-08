@@ -16,7 +16,7 @@
   
  
    <displays class="org.volante.abm.visualisation.DefaultModelDisplays">
-    <display class="org.volante.abm.visualisation.CapitalDisplay" initial="OPMpresence" title="Capitals"/>
+    <display class="org.volante.abm.visualisation.CapitalDisplay" initial="OPMinverted" title="Capitals"/>
     <display class="org.volante.abm.visualisation.ProductionDisplay" initial="biodiversity" title="Production"/>
     <display class="org.volante.abm.comi.visualisation.OPMAgents" title="AgentTypes"/>
     <display class="org.volante.abm.visualisation.CompetitivenessDisplay" initial="no_mgmt" title="Competitiveness"/>
