@@ -218,6 +218,7 @@ for (tick in timesteps) {
   dfOPM$population[which(is.na(dfOPM$population))] <- 0
   
   # normalise and created inverted version
+  ### MAKE SURE NORMALISED IN RELATION TO CARRYING CAPACITY ###
   # OPM presence
   data <- dfOPM$population
   data[which(data==0)]<-NA
