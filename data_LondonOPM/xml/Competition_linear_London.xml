@@ -3,9 +3,9 @@
 		<curve class="com.moseph.modelutils.curve.LinearFunction" a="0.0" b="0.1" />
 	</curve>
 
-	<curve service="management">
+	<!-- <curve service="management">
 		<curve class="com.moseph.modelutils.curve.LinearFunction" a="0.0" b="0.1" />
-	</curve>
+	</curve> -->
  
 	<curve service="recreation">
 		<curve class="com.moseph.modelutils.curve.LinearFunction" a="0.0" b="0.1" />

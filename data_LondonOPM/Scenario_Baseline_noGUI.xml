@@ -1,5 +1,5 @@
 <scenario startTick="1" endTick="10" world="LondonBoroughs" 
-  scenario="Baseline" version="V1">
+  scenario="Baseline" version="V3">
   <capitals class="org.volante.abm.serialization.CSVCapitalLoader" file="csv/Capitals.csv" indexed="true"/>
   <services class="org.volante.abm.serialization.CSVServiceLoader" file="csv/Services.csv" indexed="true"/>
    <outputs outputDirectory="output" filePattern="%s-%i-%r-%o" tickPattern="%s-%i-%r-%o-%y">

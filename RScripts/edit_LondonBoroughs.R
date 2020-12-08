@@ -38,6 +38,9 @@ head(capitals)
 summary(capitals)
 # only need to normalise nature and OPM presence, rest are already 0-1
 
+# need to add step here to normalised/standardise using max carrying capacity
+# otherwise normalising rangeshiftR populations in every run of CRAFTY_RangeshiftR will mess things up
+
 # OPM presence
 data <- capitals$OPMpresence
 data[which(data==0)]<-NA

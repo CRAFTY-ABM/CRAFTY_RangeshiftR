@@ -69,7 +69,7 @@
 
 
 			
-	<fRole class="org.volante.abm.comi.fr.ComiVariantProductionFR" label="no_mgmt" serialID="3"
+	<fRole class="org.volante.abm.comi.fr.ComiVariantProductionFR" label="no_mgmt" serialID="2"
 	givingUpMean="${@(agents/AftParams_no_mgmt.csv, givingUpDistributionMean)}"
 	givingInMean="${@(agents/AftParams_no_mgmt.csv, givingInDistributionMean)}"
 	givingUpProbability = "${@(agents/AftParams_no_mgmt.csv, givingUpProb)}">
