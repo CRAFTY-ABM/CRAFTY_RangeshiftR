@@ -45,7 +45,7 @@
 
 	</fRole>
 		
-	<fRole class="org.volante.abm.comi.fr.ComiVariantProductionFR" label="mgmt_medInt" serialID="2"
+	<!-- <fRole class="org.volante.abm.comi.fr.ComiVariantProductionFR" label="mgmt_medInt" serialID="2"
 	givingUpMean="${@(agents/AftParams_mgmt_medInt.csv, givingUpDistributionMean)}"
 	givingInMean="${@(agents/AftParams_mgmt_medInt.csv, givingInDistributionMean)}"
 	givingUpProbability = "${@(agents/AftParams_mgmt_medInt.csv, givingUpProb)}">
@@ -65,7 +65,7 @@
 	 
 	<production class="org.volante.abm.example.SimpleProductionModel"
 		csvFile="${@(agents/AftParams_mgmt_medInt.csv, productionCsvFile)}" multiplyProductionNoise="true" />
-	</fRole>
+	</fRole> -->
 
 
 			
