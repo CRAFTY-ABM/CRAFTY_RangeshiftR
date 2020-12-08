@@ -172,24 +172,18 @@ for (tick in timesteps) {
   
   tick <-timesteps[1]
   
-  nextTick = CRAFTY_jobj$EXTtick()
-  
-  stopifnot(nextTick == (tick + 1 )) # assertion
-  
-  
-  ######
-  ######
-  # safe to alter capital files here
-  ######
-  ######
-  
-  # would this be the best place to use agent locations to change OPM individuals?
-  # make conditional so only used once the first tick has been run?
-  # so if tick > 1 (CRAFTY has run once already and there are agent locations to extract)
-  # then use agent locations to edit OPM individuals
-  
+  # before EXTtick()
+  # run rangeshiftR to get first OPM capitals?
+  #### MOVE TO BEFORE EXTtick()
   # run RangeshiftR here to add in OPM capitals
   # set up RangeShiftR for current iteration
+  print(paste0("============CRAFTY JAVA-R API: Setting up RangeshiftR tick=", tick))
+  # init file updates based on CRAFTY if after tick 1
+  if (tick==1){
+    init <- Initialise(InitType=2, InitIndsFile='initial_inds_2014_n10.txt')
+  }else{
+    init <- Initialise(InitType=2, InitIndsFile=sprintf('inds%s.txt', iteration))
+  }
   sim <- Simulation(Simulation = tick,
                     Years = rangeshiftrYears,
                     Replicates = 1,
@@ -269,15 +263,28 @@ for (tick in timesteps) {
   write.csv(capitals, paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep",tick,".csv"))
   
   
-  # insert code for visualising here if wanted (lines 177-230 in CRAFTY_rJava_OPM)
+  #####
+  #####
+  nextTick = CRAFTY_jobj$EXTtick()
+  #####
+  #####
+  
+  stopifnot(nextTick == (tick + 1 )) # assertion
+  
+  
+  # after EXTtick()
+  # extract agent locations and use them to edit RangeshiftR individuals
+  print(paste0("============CRAFTY JAVA-R API: Extract agent locations tick=", tick))
+  # extract agent locations, match to hexagonal grid
+  
+  print(paste0("============CRAFTY JAVA-R API: Edit RangeshiftR individuals tick=", tick))
+  # remove individuals based on management type
+  # write new individuals file to be used by RangeshiftR on the next loop
+  
+  # could insert code for visualising here if wanted (lines 177-230 in CRAFTY_rJava_OPM)
   # (think it will be easier just to work with output csv files)
   
-  # can the step to use agent locations to edit RangeshiftR individuals happen here
-  # or should it be a conditional option at the start of the loop?
-  # extract agent locations, match to hexagonal grid
-  # remove individuals based on management type
-  
-  
+
   if (nextTick <= end_year_idx) {
     print(paste0("============CRAFTY JAVA-R API: NextTick=", nextTick))
   } else {
