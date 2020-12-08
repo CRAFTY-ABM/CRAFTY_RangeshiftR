@@ -173,9 +173,8 @@ for (tick in timesteps) {
   tick <-timesteps[1]
   
   # before EXTtick()
-  # run rangeshiftR to get first OPM capitals?
-  #### MOVE TO BEFORE EXTtick()
-  # run RangeshiftR here to add in OPM capitals
+  # run RangeshiftR to get first OPM capitals?
+  
   # set up RangeShiftR for current iteration
   print(paste0("============CRAFTY JAVA-R API: Setting up RangeshiftR tick=", tick))
   # init file updates based on CRAFTY if after tick 1
@@ -233,6 +232,7 @@ for (tick in timesteps) {
   z <- abs(invert)
   dfOPM$OPMinv <- z
   
+  #check
   #dfOPM %>% dplyr::filter(population>0)
   
   # edit capitals file
@@ -276,6 +276,17 @@ for (tick in timesteps) {
   # extract agent locations and use them to edit RangeshiftR individuals
   print(paste0("============CRAFTY JAVA-R API: Extract agent locations tick=", tick))
   # extract agent locations, match to hexagonal grid
+  val_df <- t(sapply(allcells_l, FUN = function(c) c(c$getOwnersFrLabel()))) #, c$getEffectiveCapitals()$getAll(), c$getSupply()$getAll()
+  val_fr <- val_df[1,]
+  # find hexagons 
+  hx_idx <-  match(cellid, hx$joinID )
+  
+  hx$fr <- NA
+  # add FR to the hexagonal grid
+  hx$fr[hx_idx] <- val_fr
+  
+  # now use to edit RangeshiftR individuals
+
   
   print(paste0("============CRAFTY JAVA-R API: Edit RangeshiftR individuals tick=", tick))
   # remove individuals based on management type
