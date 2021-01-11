@@ -11,7 +11,13 @@
 
 library(rgdal)
 library(raster)
-library(RangeshiftR)
+
+if (!require(RangeShiftR)) { 
+  # Install RangeShiftR from GitHub:
+  devtools::install_github("RangeShifter/RangeShiftR-package", ref="main")
+  library(RangeshiftR)
+} else {}
+
 library(sf)
 library(viridis)
 library(ggplot2)
@@ -23,7 +29,13 @@ library(foreach)
 
 # directories/ file paths ------------------------------------------------------
 
-dirWorking<- "~/eclipse-workspace/CRAFTY_RangeshiftR"
+if (Sys.info()["user"] %in% c("alan", "seo-b")) { 
+  dirWorking<- "~/git/CRAFTY_RangeshiftR"
+  
+} else { 
+  dirWorking<- "~/eclipse-workspace/CRAFTY_RangeshiftR"
+}
+
 
 dirCRAFTYInput <- path.expand(paste0(dirWorking, "/data_LondonOPM/"))
 dirCRAFTYOutput <- path.expand(paste0(dirWorking, "/output"))
@@ -37,7 +49,7 @@ dirRsftrOutputMaps <- file.path(dirRsftr,"Output_Maps")
 #dir.create(dirRsftrInput)
 #dir.create(dirRsftrOutput)
 #dir.create(dirRsftrOutputMaps)
-dirRsftr <- file.path("C:/Users/vanessa.burton.sb/Documents/eclipse-workspace/CRAFTY_RangeshiftR/output/RangeshiftR/") # need to add the / for this path to work in RunRS
+# dirRsftr <- file.path("C:/Users/vanessa.burton.sb/Documents/eclipse-workspace/CRAFTY_RangeshiftR/output/RangeshiftR/") # need to add the / for this path to work in RunRS
 
 setwd(dirWorking)
 
@@ -54,8 +66,8 @@ init <- Initialise(InitType=2, InitIndsFile='initial_inds_2014_n10.txt')
 
 land <- ImportedLandscape(LandscapeFile=sprintf('Habitat-%sm.asc', habitatRes),
                           Resolution=habitatRes,
-                          HabitatQuality=TRUE,
-                          K=50) # carrying capacity (individuals per hectare) when habitat at 100% quality
+                          HabPercent=TRUE,
+                          K_or_DensDep=50) # carrying capacity (individuals per hectare) when habitat at 100% quality
 
 demo <- Demography(Rmax = 25,
                    ReproductionType = 0) # 0 = asexual / only female; 1 = simple sexual; 2 = sexual model with explicit mating system
@@ -72,7 +84,7 @@ outRasterStack <- stack()
 ### CRAFTY set-up --------------------------------------------------------------
 
 # points for each cell to extract from OPM population results
-hexPoints <- st_read(paste0(dirWorking,"/data-processed/hexGrids/hexPoints40m.shp"))
+hexPoints <- st_read(paste0(dirWorking,"/data-processed/hexgrids/hexPoints40m.shp"))
 hexPointsSP <- as_Spatial(hexPoints)
 
 # agent names
@@ -166,6 +178,8 @@ plot_return_list <- vector("list", nticks)
 timesteps <- start_year_idx:end_year_idx
 
 
+
+iteration=1 
 
 # crafty main loop
 for (tick in timesteps) {
