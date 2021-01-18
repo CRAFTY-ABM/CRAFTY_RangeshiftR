@@ -223,7 +223,7 @@ for (CRAFTY_tick in timesteps) {
   
   
   # before EXTtick()
-  # run RangeshiftR to get first OPM capitals?
+  # run RangeshiftR to get first OPM capital
   
   # set up RangeShiftR for current iteration
   print(paste0("============CRAFTY JAVA-R API: Setting up RangeshiftR tick=", CRAFTY_tick))
@@ -388,10 +388,11 @@ for (CRAFTY_tick in timesteps) {
   print(paste0("============CRAFTY JAVA-R API: Edit RangeshiftR individuals tick=", CRAFTY_tick))
   
   # find where OPM individuals intersect
+  
   st_intersects(sfResult,shpIndividuals)
   
-  
   # remove individuals based on management type
+  
   
   # write new individuals file to be used by RangeshiftR on the next loop
   
