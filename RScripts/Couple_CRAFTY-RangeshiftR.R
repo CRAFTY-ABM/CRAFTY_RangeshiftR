@@ -11,6 +11,7 @@
 
 library(rgdal)
 library(raster)
+library(tidyverse)
 
 if (!require(RangeShiftR)) { 
   # Install RangeShiftR from GitHub:
@@ -331,8 +332,13 @@ for (CRAFTY_tick in timesteps) {
   #val_fr_fac = factor(val_fr,  labels = aft_names_fromzero, levels = aft_names_fromzero)
   
   # read in csv files instead?
+<<<<<<< HEAD
   val_df <- read.csv(paste0(dirCRAFTYOutput,"/output/Baseline-0-99-LondonBoroughs-Cell-",CRAFTY_tick,".csv"))
   val_fr <- val_df[,15]
+=======
+  val_df <- read.csv(paste0(dirCRAFTYOutput,"/output/Baseline-0-100-LondonBoroughs-Cell-",CRAFTY_tick,".csv"))
+  val_fr <- val_df[,"Agent"]
+>>>>>>> 6136243cf47b232382cd8ad9856844d374a7a50b
   val_fr_fac <- factor(val_fr,  labels = aft_names_fromzero, levels = aft_names_fromzero)
   
   # match back to hexGrid
@@ -386,6 +392,12 @@ for (CRAFTY_tick in timesteps) {
   
   # now use to edit RangeshiftR individuals
   print(paste0("============CRAFTY JAVA-R API: Edit RangeshiftR individuals tick=", CRAFTY_tick))
+<<<<<<< HEAD
+=======
+  
+  # find where OPM individuals intersect
+  st_intersects(sfResult,shpIndividuals)
+>>>>>>> 6136243cf47b232382cd8ad9856844d374a7a50b
   
   # find where OPM individuals intersect
   
@@ -393,7 +405,10 @@ for (CRAFTY_tick in timesteps) {
   
   # remove individuals based on management type
   
+<<<<<<< HEAD
   
+=======
+>>>>>>> 6136243cf47b232382cd8ad9856844d374a7a50b
   # write new individuals file to be used by RangeshiftR on the next loop
   
   
@@ -403,4 +418,6 @@ for (CRAFTY_tick in timesteps) {
     print(paste0("============CRAFTY JAVA-R API: Simulation done (tick=", CRAFTY_tick, ")"))
     
   }
+  
+  RR_iteration = RR_iteration + 1 
 }
