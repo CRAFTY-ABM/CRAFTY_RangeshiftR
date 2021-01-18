@@ -321,24 +321,20 @@ for (CRAFTY_tick in timesteps) {
   #####
   
   stopifnot(CRAFTY_nextTick == (CRAFTY_tick + 1 )) # assertion
+  stopifnot(CRAFTY_nextTick ==  RR_iteration) # assertion
   
   # after EXTtick()
   # extract agent locations and use them to edit RangeshiftR individuals
   print(paste0("============CRAFTY JAVA-R API: Extract agent locations tick=", CRAFTY_tick))
   
-    # extract agent locations, match to hexagonal grid
+  # extract agent locations, match to hexagonal grid
   #val_df <- t(sapply(allcells_l, FUN = function(c) c(c$getOwnersFrLabel()))) #, c$getEffectiveCapitals()$getAll(), c$getSupply()$getAll()
   #val_fr <- val_df[1,]
   #val_fr_fac = factor(val_fr,  labels = aft_names_fromzero, levels = aft_names_fromzero)
   
   # read in csv files instead?
-<<<<<<< HEAD
-  val_df <- read.csv(paste0(dirCRAFTYOutput,"/output/Baseline-0-99-LondonBoroughs-Cell-",CRAFTY_tick,".csv"))
-  val_fr <- val_df[,15]
-=======
   val_df <- read.csv(paste0(dirCRAFTYOutput,"/output/Baseline-0-100-LondonBoroughs-Cell-",CRAFTY_tick,".csv"))
   val_fr <- val_df[,"Agent"]
->>>>>>> 6136243cf47b232382cd8ad9856844d374a7a50b
   val_fr_fac <- factor(val_fr,  labels = aft_names_fromzero, levels = aft_names_fromzero)
   
   # match back to hexGrid
@@ -392,12 +388,7 @@ for (CRAFTY_tick in timesteps) {
   
   # now use to edit RangeshiftR individuals
   print(paste0("============CRAFTY JAVA-R API: Edit RangeshiftR individuals tick=", CRAFTY_tick))
-<<<<<<< HEAD
-=======
-  
-  # find where OPM individuals intersect
-  st_intersects(sfResult,shpIndividuals)
->>>>>>> 6136243cf47b232382cd8ad9856844d374a7a50b
+ 
   
   # find where OPM individuals intersect
   
@@ -405,10 +396,7 @@ for (CRAFTY_tick in timesteps) {
   
   # remove individuals based on management type
   
-<<<<<<< HEAD
-  
-=======
->>>>>>> 6136243cf47b232382cd8ad9856844d374a7a50b
+ 
   # write new individuals file to be used by RangeshiftR on the next loop
   
   
