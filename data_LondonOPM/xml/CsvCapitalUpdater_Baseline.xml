@@ -1,3 +1,13 @@
 <updater class="org.volante.abm.update.CSVCapitalUpdater" X_COL="x" Y_COL="y" yearInFilename="true" reapplyPreviousFile="true"> -->
- 				<csvFile year="%y">worlds/%r/LondonBoroughs_XY_tstep_%y.csv</csvFile> 
+ 				<csvFile year="1">worlds/%r/LondonBoroughs_XY_tstep_%y.csv</csvFile> 
+ 				<csvFile year="2">worlds/%r/LondonBoroughs_XY_tstep_%y.csv</csvFile> 
+ 				<csvFile year="3">worlds/%r/LondonBoroughs_XY_tstep_%y.csv</csvFile> 
+ 				<csvFile year="4">worlds/%r/LondonBoroughs_XY_tstep_%y.csv</csvFile> 
+ 				<csvFile year="5">worlds/%r/LondonBoroughs_XY_tstep_%y.csv</csvFile> 
+ 				<csvFile year="6">worlds/%r/LondonBoroughs_XY_tstep_%y.csv</csvFile> 
+ 				<csvFile year="7">worlds/%r/LondonBoroughs_XY_tstep_%y.csv</csvFile> 
+ 				<csvFile year="8">worlds/%r/LondonBoroughs_XY_tstep_%y.csv</csvFile> 
+ 				<csvFile year="9">worlds/%r/LondonBoroughs_XY_tstep_%y.csv</csvFile> 
+ 				<csvFile year="10">worlds/%r/LondonBoroughs_XY_tstep_%y.csv</csvFile> 
+				
 </updater>
