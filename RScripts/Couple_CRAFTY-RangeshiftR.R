@@ -1,6 +1,6 @@
 
 # date: 30/11/20
-# author: VB
+# authors: VB/BS
 # description: script to loosely couple RangeshiftR and CRAFTY. RangeshiftR will 
 # feed in two capitals (OPM presence & OPM inverted). CRAFTY will take these and
 # run for a single timestep. The agent locations from CRAFTY will be used to alter
