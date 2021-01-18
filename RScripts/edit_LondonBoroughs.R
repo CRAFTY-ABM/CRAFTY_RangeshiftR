@@ -1,6 +1,7 @@
 
 library(tidyverse)
 library(raster)
+library(sf)
 library(ggplot2)
 
 #wd <- "~/CRAFTY-opm"# sandbox VM
@@ -25,6 +26,9 @@ head(capitals)
 capitals <- capitals[,c(1,6,8,2,3)] %>% st_drop_geometry()
 
 capitals$OPMpresence <- OPMpresence$rep0_year9[match(capitals$joinID, OPMpresence$joinID)]
+# test making OPM presence completely binary for CRAFTY
+capitals$OPMpresence[which(capitals$OPMpresence>0)]<-1
+unique(capitals$OPMpresence)
 
 capitals$riskPrc[which(is.na(capitals$riskPrc))] <- 0
 
@@ -41,14 +45,15 @@ summary(capitals)
 # need to add step here to normalised/standardise using max carrying capacity
 # otherwise normalising rangeshiftR populations in every run of CRAFTY_RangeshiftR will mess things up
 
+# don't need to do this now testing binary 0/1 OPM
 # OPM presence
-data <- capitals$OPMpresence
-data[which(data==0)]<-NA
-normalised <- (data-min(data,na.rm = T))/(max(data, na.rm = T)-min(data,na.rm=T))
-hist(data)
-hist(normalised)
-normalised[which(is.na(normalised))]<-0
-capitals$OPMpresence <- normalised
+#data <- capitals$OPMpresence
+#data[which(data==0)]<-NA
+#normalised <- (data-min(data,na.rm = T))/(max(data, na.rm = T)-min(data,na.rm=T))
+#hist(data)
+#hist(normalised)
+#normalised[which(is.na(normalised))]<-0
+#capitals$OPMpresence <- normalised
 
 # inverted OPM presence capital 
 invert <- capitals$OPMpresence - 1
