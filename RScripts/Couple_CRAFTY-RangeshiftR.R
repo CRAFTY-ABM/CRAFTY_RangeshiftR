@@ -290,18 +290,30 @@ for (tick in timesteps) {
   # after EXTtick()
   # extract agent locations and use them to edit RangeshiftR individuals
   print(paste0("============CRAFTY JAVA-R API: Extract agent locations tick=", tick))
-  # extract agent locations, match to hexagonal grid
-  val_df <- t(sapply(allcells_l, FUN = function(c) c(c$getOwnersFrLabel()))) #, c$getEffectiveCapitals()$getAll(), c$getSupply()$getAll()
-  val_fr <- val_df[1,]
-  # find hexagons 
-  hx_idx <-  match(cellid, hx$joinID )
   
-  hx$fr <- NA
-  # add FR to the hexagonal grid
-  hx$fr[hx_idx] <- val_fr
+  
+  if (doProcessFR) { # access java objects directly - omnipotent, but potentially risky and slow
+    # extract agent locations, match to hexagonal grid
+    val_df <- t(sapply(allcells_l, FUN = function(c) c(c$getOwnersFrLabel()))) #, c$getEffectiveCapitals()$getAll(), c$getSupply()$getAll()
+    val_fr <- val_df[1,]
+    # find hexagons 
+    hx_idx <-  match(cellid, hx$joinID )
+    
+    hx$fr <- NA
+    # add FR to the hexagonal grid
+    hx$fr[hx_idx] <- val_fr
+  } else { # read the outcome CRAFTY csv files
+    
+    
+    
+    
+  }
+  
+  
+  
   
   # now use to edit RangeshiftR individuals
-
+  
   
   print(paste0("============CRAFTY JAVA-R API: Edit RangeshiftR individuals tick=", tick))
   # remove individuals based on management type
@@ -310,7 +322,7 @@ for (tick in timesteps) {
   # could insert code for visualising here if wanted (lines 177-230 in CRAFTY_rJava_OPM)
   # (think it will be easier just to work with output csv files)
   
-
+  
   if (nextTick <= end_year_idx) {
     print(paste0("============CRAFTY JAVA-R API: NextTick=", nextTick))
   } else {
