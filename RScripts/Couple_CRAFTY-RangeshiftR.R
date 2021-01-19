@@ -1,5 +1,5 @@
 
-# date: 30/11/20
+# date: 19/01/21
 # authors: VB/BS
 # description: script to loosely couple RangeshiftR and CRAFTY. RangeshiftR will 
 # feed in two capitals (OPM presence & OPM inverted). CRAFTY will take these and
@@ -322,7 +322,8 @@ for (CRAFTY_tick in timesteps) {
   
   stopifnot(CRAFTY_nextTick == (CRAFTY_tick + 1 )) # assertion
   print(paste0("============CRAFTY JAVA-R API: CRAFTY run complete = ", CRAFTY_tick))
-  
+  stopifnot(CRAFTY_nextTick ==  RR_iteration) # assertion
+
   # after EXTtick()
   # extract agent locations and use them to edit RangeshiftR individuals
   print(paste0("============CRAFTY JAVA-R API: Extract agent locations tick = ", CRAFTY_tick))
@@ -334,6 +335,7 @@ for (CRAFTY_tick in timesteps) {
   
   # read in csv files instead?
   val_df <- read.csv(paste0(dirCRAFTYOutput,"/output/Baseline-0-99-LondonBoroughs-Cell-",CRAFTY_tick,".csv"))
+  val_df <- read.csv(paste0(dirCRAFTYOutput,"/output/Baseline-0-100-LondonBoroughs-Cell-",CRAFTY_tick,".csv"))
   val_fr <- val_df[,"Agent"]
   val_fr_fac <- factor(val_fr,  labels = aft_names_fromzero, levels = aft_names_fromzero)
   
