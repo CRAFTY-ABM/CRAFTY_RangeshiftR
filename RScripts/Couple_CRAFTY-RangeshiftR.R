@@ -321,29 +321,23 @@ for (CRAFTY_tick in timesteps) {
   #####
   
   stopifnot(CRAFTY_nextTick == (CRAFTY_tick + 1 )) # assertion
+  print(paste0("============CRAFTY JAVA-R API: CRAFTY run complete = ", CRAFTY_tick))
   
   # after EXTtick()
   # extract agent locations and use them to edit RangeshiftR individuals
-  print(paste0("============CRAFTY JAVA-R API: Extract agent locations tick=", CRAFTY_tick))
+  print(paste0("============CRAFTY JAVA-R API: Extract agent locations tick = ", CRAFTY_tick))
   
-    # extract agent locations, match to hexagonal grid
+  # extract agent locations, match to hexagonal grid
   #val_df <- t(sapply(allcells_l, FUN = function(c) c(c$getOwnersFrLabel()))) #, c$getEffectiveCapitals()$getAll(), c$getSupply()$getAll()
   #val_fr <- val_df[1,]
   #val_fr_fac = factor(val_fr,  labels = aft_names_fromzero, levels = aft_names_fromzero)
   
   # read in csv files instead?
-<<<<<<< HEAD
   val_df <- read.csv(paste0(dirCRAFTYOutput,"/output/Baseline-0-99-LondonBoroughs-Cell-",CRAFTY_tick,".csv"))
-  val_fr <- val_df[,15]
-=======
-  val_df <- read.csv(paste0(dirCRAFTYOutput,"/output/Baseline-0-100-LondonBoroughs-Cell-",CRAFTY_tick,".csv"))
   val_fr <- val_df[,"Agent"]
->>>>>>> 6136243cf47b232382cd8ad9856844d374a7a50b
   val_fr_fac <- factor(val_fr,  labels = aft_names_fromzero, levels = aft_names_fromzero)
   
-  # match back to hexGrid
-  hexGrid <- st_read(paste0(dirWorking,"/data-processed/hexgrids/hexGrid40m.shp"))
-  london_xy_df <- read.csv(paste0(dirWorking,"/data-processed/Cell_ID_XY_Borough.csv"))
+  # match back to hexGrid using joinID/cellid
   val_xy <- data.frame(val_df$X,val_df$Y)
   colnames(val_xy) <- c("X", "Y")
   x_coord <- london_xy_df[match(val_xy$X, london_xy_df$X), "x_coord"]
@@ -392,25 +386,52 @@ for (CRAFTY_tick in timesteps) {
   
   # now use to edit RangeshiftR individuals
   print(paste0("============CRAFTY JAVA-R API: Edit RangeshiftR individuals tick=", CRAFTY_tick))
-<<<<<<< HEAD
-=======
-  
+
   # find where OPM individuals intersect
-  st_intersects(sfResult,shpIndividuals)
->>>>>>> 6136243cf47b232382cd8ad9856844d374a7a50b
+  lowInt <- sfResult %>% filter(Agent == "mgmt_lowInt")
+  #lowInt <- sfResult %>% filter(borough == "hammersmith") # use to test as no mgmt agents atm
+  highInt <- sfResult %>% filter(Agent == "mgmt_highInt")
+
+  # find OPM individuals within each agent type
+  # https://gis.stackexchange.com/questions/245136/how-to-subset-point-data-by-outside-of-polygon-data-in-r
+  low <- sapply(st_intersects(shpIndividuals, lowInt),function(x){length(x)>0})
+  high <- sapply(st_intersects(shpIndividuals, highInt),function(x){length(x)>0})
   
-  # find where OPM individuals intersect
+  ggplot() +
+    geom_sf(sfResult, mapping = aes(fill = Agent), col = NA)+
+    geom_sf(data=shpIndividuals[!low,])+
+    scale_fill_brewer(palette="Dark2")
+
+  # edit OPM populations based on management type
+  # reduce population by half if low intensity
+  lowPops <- shpIndividuals$rep0_year1[low]
+  for (pop in c(1:length(lowPops))){
+    lowPops[pop]<-lowPops[pop]/2
+    if (lowPops[pop]<1){
+      lowPops[pop] <- 0
+    }
+  }
+  shpIndividuals$rep0_year1[low] <- lowPops
+  # remove if high intensity
+  shpIndividuals <- shpIndividuals[!high,] 
   
-  st_intersects(sfResult,shpIndividuals)
-  
-  # remove individuals based on management type
-  
-<<<<<<< HEAD
-  
-=======
->>>>>>> 6136243cf47b232382cd8ad9856844d374a7a50b
+  print(paste0("============CRAFTY JAVA-R API: Write new individuals file for RangeShiftR = ", CRAFTY_tick))
+
   # write new individuals file to be used by RangeshiftR on the next loop
+  # need to edit this (extracted from Nick's code)
+  dfNewIndsTable <- extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
+  dfNewIndsTable$Year <- 0
+  dfNewIndsTable$Species <- 0
+  dfNewIndsTable$X <- dfNewIndsTable$cells %% ncol(rstHabitat)
+  dfNewIndsTable$Y <- nrow(rstHabitat) - (floor(dfNewIndsTable$cells / ncol(rstHabitat)))
+  dfNewIndsTable$Ninds <- dfNewIndsTable$layer
+  dfNewIndsTable <- dfNewIndsTable[ , !(names(dfNewIndsTable) %in% c('ID', 'cells', 'layer'))]
+  dfNewIndsTable <- dfNewIndsTable[!is.na(dfNewIndsTable$Ninds),]
   
+  write.table(dfNewIndsTable, file.path(dirRsftrInput, sprintf('inds%s.txt', iteration)),row.names = F, quote = F, sep = '\t')
+  
+  # set init file for next tick
+  init <- Initialise(InitType=2, InitIndsFile=sprintf('inds%s.txt', CRAFTY_tick))
   
   if (CRAFTY_nextTick <= end_year_idx) {
     print(paste0("============CRAFTY JAVA-R API: NextTick=", CRAFTY_nextTick))
