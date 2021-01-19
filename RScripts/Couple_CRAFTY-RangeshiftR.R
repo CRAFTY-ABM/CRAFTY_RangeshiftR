@@ -352,11 +352,12 @@ for (CRAFTY_tick in timesteps) {
   val_df$joinID <- cellid
   sfResult <- left_join(hexGrid, val_df, by="joinID")
   
-  # plot 
-  ggplot() +
+  print(paste0("============CRAFTY JAVA-R API: Show agents & OPM individuals = ", CRAFTY_tick)) 
+  p1 <- ggplot() +
     geom_sf(sfResult, mapping = aes(fill = Agent), col = NA)+
-    geom_sf(data=shpIndividuals)+
+    geom_sf(data=shpIndividuals, color="yellow", pch=4)+
     scale_fill_brewer(palette="Dark2")
+  print(p1)
   
   #if (FALSE) { 
     #crafty_coords = cbind(x_coord, y_coord)
@@ -399,10 +400,11 @@ for (CRAFTY_tick in timesteps) {
   low <- sapply(st_intersects(shpIndividuals, lowInt),function(x){length(x)>0})
   high <- sapply(st_intersects(shpIndividuals, highInt),function(x){length(x)>0})
   
-  ggplot() +
-    geom_sf(sfResult, mapping = aes(fill = Agent), col = NA)+
-    geom_sf(data=shpIndividuals[!low,])+
-    scale_fill_brewer(palette="Dark2")
+  # check
+  #ggplot() +
+    #geom_sf(sfResult, mapping = aes(fill = Agent), col = NA)+
+    #geom_sf(data=shpIndividuals[!low,])+
+    #scale_fill_brewer(palette="Dark2")
 
   # edit OPM populations based on management type
   # reduce population by half if low intensity
@@ -419,9 +421,10 @@ for (CRAFTY_tick in timesteps) {
   
   print(paste0("============CRAFTY JAVA-R API: Write new individuals file for RangeShiftR = ", CRAFTY_tick))
 
-  # write new individuals file to be used by RangeshiftR on the next loop
+  # write new individuals file to be used by RangeShiftR on the next loop
   # need to edit this (extracted from Nick's code)
-  dfNewIndsTable <- extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
+  shpIndividuals <- st_transform(shpIndividuals, crs(rstHabitat))
+  dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
   dfNewIndsTable$Year <- 0
   dfNewIndsTable$Species <- 0
   dfNewIndsTable$X <- dfNewIndsTable$cells %% ncol(rstHabitat)
@@ -430,10 +433,10 @@ for (CRAFTY_tick in timesteps) {
   dfNewIndsTable <- dfNewIndsTable[ , !(names(dfNewIndsTable) %in% c('ID', 'cells', 'layer'))]
   dfNewIndsTable <- dfNewIndsTable[!is.na(dfNewIndsTable$Ninds),]
   
-  write.table(dfNewIndsTable, file.path(dirRsftrInput, sprintf('inds%s.txt', iteration)),row.names = F, quote = F, sep = '\t')
+  write.table(dfNewIndsTable, file.path(dirRsftrInput, sprintf('inds_tick_%s.txt', CRAFTY_tick)),row.names = F, quote = F, sep = '\t')
   
   # set init file for next tick
-  init <- Initialise(InitType=2, InitIndsFile=sprintf('inds%s.txt', CRAFTY_tick))
+  init <- Initialise(InitType=2, InitIndsFile=sprintf('inds_tick_%s.txt', CRAFTY_tick))
   
   if (CRAFTY_nextTick <= end_year_idx) {
     print(paste0("============CRAFTY JAVA-R API: NextTick=", CRAFTY_nextTick))
