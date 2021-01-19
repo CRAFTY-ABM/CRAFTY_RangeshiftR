@@ -1,11 +1,13 @@
 
 # date: 19/01/21
 # authors: VB/BS
-# description: script to loosely couple RangeshiftR and CRAFTY. RangeshiftR will 
-# feed in two capitals (OPM presence & OPM inverted). CRAFTY will take these and
+# description: script to loosely couple RangeShiftR and CRAFTY. RangeShiftR will 
+# feed in two capitals (OPM inverted & knowledge). CRAFTY will take these and
 # run for a single timestep. The agent locations from CRAFTY will be used to alter
-# OPM populations in RangeshiftR. These edited pops will start the next iteration of
+# OPM populations in RangeShiftR. These edited pops will start the next iteration of
 # RangeshiftR, etc...
+
+
 
 ### libraries ------------------------------------------------------------------
 
@@ -13,12 +15,13 @@ library(rgdal)
 library(raster)
 library(tidyverse)
 
-if (!require(RangeShiftR)) { 
+#if (!require(RangeShiftR)) { 
   # Install RangeShiftR from GitHub:
-  devtools::install_github("RangeShifter/RangeShiftR-package", ref="main")
-  library(RangeShiftR)
-} else {}
+  #devtools::install_github("RangeShifter/RangeShiftR-package", ref="main")
+  #library(RangeShiftR)
+#} else {}
 
+library(RangeShiftR)
 library(sf)
 library(viridis)
 library(ggplot2)
@@ -28,7 +31,9 @@ library(jdx)
 library(xml2)
 library(foreach)
 
-# directories/ file paths ------------------------------------------------------
+
+
+### directories/ file paths ----------------------------------------------------
 
 if (Sys.info()["user"] %in% c("alan", "seo-b")) { 
   dirWorking<- "~/git/CRAFTY_RangeshiftR"
@@ -60,6 +65,7 @@ setwd(dirWorking)
 source("RScripts/Functions_CRAFTY_rJava.R")
 
 
+
 ### RangeshiftR set-up ---------------------------------------------------------
 
 rangeshiftrYears <- 2
@@ -85,6 +91,7 @@ dfRangeShiftrData <- data.frame()
 outRasterStack <- stack()
 
 
+
 ### CRAFTY set-up --------------------------------------------------------------
 
 # points for each cell to extract from OPM population results
@@ -100,15 +107,6 @@ lookUp <- read.csv(paste0(dirWorking,"/data-processed/joinID_lookup.csv"))
 # hexGrid for plotting/and cellIDs
 hexGrid <- st_read(paste0(dirWorking,"/data-processed/hexgrids/hexGrid40m.shp"))
 london_xy_df <- read.csv(paste0(dirWorking,"/data-processed/Cell_ID_XY_Borough.csv"))
-
-# for coordinate matching
-#london_xy_df <- read.csv(paste0(dirWorking, "/data-processed/Cell_ID_XY_Borough.csv"))
-#x_coords_v <- sort(unique(london_xy_df$X))
-#x_coords_bng_v <- london_xy_df[match(x_coords_v, london_xy_df$X), "x_coord"]
-#y_coords_v <- sort(unique(london_xy_df$Y))
-#y_coords_bng_v <- london_xy_df[match(y_coords_v, london_xy_df$Y), "y_coord"]
-#hx_org <- readOGR("data-processed/hexgrids", layer = "hexGrid40m")
-#hx = hx_org
 
 proj4.BNG <- "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs"
 
@@ -166,7 +164,7 @@ stopifnot(dirCRAFTYOutput == .jcall( 'java/lang/System', 'S', 'getProperty', 'us
 
 
 
-### CRAFTY first model loop ----------------------------------------------------
+### Set up CRAFTY job ----------------------------------------------------------
 
 # clear objects when testing
 rm(CRAFTY_tick)
@@ -191,47 +189,25 @@ timesteps <- start_year_idx:end_year_idx
 ### pre-process CRAFTY Java object
 region = CRAFTY_loader_jobj$getRegions()$getAllRegions()$iterator()$'next'()
 
-# Get XY coordinates
-# allcells = region$getAllCells()
-#allcells_uset = region$getAllCells() # slower
-# allcells_arr = allcells_uset$toArray() # slower # often throws jave execption/warning
-#allcells_l =   as.list(allcells_uset)
-
-#print("Get XY coords")
-
-#system.time({
-  #val_xy =foreach(c = allcells_l, .combine = "rbind") %do% { 
-    #c(X=c$getX(), Y=c$getY())
-  #}
-#})
-
-#val_xy = data.frame(val_xy)
-#colnames(val_xy) = c("X", "Y")
-#x_coord = london_xy_df[match(val_xy$X, london_xy_df$X), "x_coord"]
-#y_coord = london_xy_df[match(val_xy$Y, london_xy_df$Y), "y_coord"]
-
-#cellid = foreach(rowid = 1:nrow(val_xy), .combine = "c") %do% { 
-  #which((as.numeric(val_xy[rowid, 1]) == london_xy_df$X) & (as.numeric(val_xy[rowid, 2]) == london_xy_df$Y))
-#}
 
 
-CRAFTY_tick = 1
-RR_iteration = 1
+### Run the models -------------------------------------------------------------
 
-# crafty main loop
+CRAFTY_tick <- 1
+#RR_iteration <- 1
+
 for (CRAFTY_tick in timesteps) {
   
-  
   # before EXTtick()
-  # run RangeshiftR to get first OPM capital
+  # run RangeshiftR to get OPM capital
   
-  # set up RangeShiftR for current iteration
   print(paste0("============CRAFTY JAVA-R API: Setting up RangeShiftR tick = ", CRAFTY_tick))
+  # set up RangeShiftR for current iteration
   # init file updates based on CRAFTY if after tick 1
   if (CRAFTY_tick==1){
     init <- Initialise(InitType=2, InitIndsFile='initial_inds_2014_n10.txt')
-  }else{
-    init <- Initialise(InitType=2, InitIndsFile=sprintf('inds%s.txt', RR_iteration))
+    }else{
+    init <- Initialise(InitType=2, InitIndsFile=sprintf('inds_tick_%s.txt', CRAFTY_tick-1))
   }
   sim <- Simulation(Simulation = CRAFTY_tick,
                     Years = rangeshiftrYears,
@@ -244,7 +220,7 @@ for (CRAFTY_tick in timesteps) {
   
   print(paste0("============CRAFTY JAVA-R API: Running RangeShiftR tick = ", CRAFTY_tick))
   # run RangeShiftR - use result to store output population raster.
-  result <- RunRS(s, sprintf('%s/', dirRsftr))
+  result <- RunRS(s, sprintf('%s', dirRsftr))
   crs(result) <- crs(rstHabitat)
   extent(result) <- extent(rstHabitat)
   #plot(result[[rangeshiftrYears]])
@@ -252,16 +228,14 @@ for (CRAFTY_tick in timesteps) {
   outRasterStack <- addLayer(outRasterStack, result[[rangeshiftrYears]])
   # store population data in output data frame.
   dfRange <- readRange(s, sprintf('%s/',dirRsftr))
-  dfRange$iteration <- RR_iteration
+  dfRange$iteration <- CRAFTY_tick
   dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[1,])
   
   print(paste0("============CRAFTY JAVA-R API: Extract RangeShiftR population results = ", CRAFTY_tick))
   # extract the population raster to a shapefile of the individuals
   shpIndividuals <- rasterToPoints(result[[rangeshiftrYears]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
-  shpIndividuals <- st_transform(shpIndividuals, crs(rstHabitat))
+  shpIndividuals <- shpIndividuals %>% st_set_crs(st_crs(rstHabitat))
   shpIndividuals$id <- 1:nrow(shpIndividuals)
-  shpIndividuals <- shpIndividuals %>% st_transform(st_crs(hexGrid))
-  
   # extract OPM population raster and use as OPM capital
   result2 <- result[[rangeshiftrYears]]
   hexPointsOPM <- raster::extract(result2, hexPointsSP)
@@ -270,7 +244,6 @@ for (CRAFTY_tick in timesteps) {
   dfOPM$population[which(is.na(dfOPM$population))] <- 0
   
   print(paste0("============CRAFTY JAVA-R API: Convert RangeShiftR population results to binary capital = ", CRAFTY_tick))
-  
   # make binary version and invert 
   OPMbinary <- dfOPM$population
   OPMbinary[which(OPMbinary>0)] <- 1
@@ -278,29 +251,23 @@ for (CRAFTY_tick in timesteps) {
   OPMinv <- abs(invert)
   dfOPMinv <- tibble(dfOPM$joinID,OPMinv)
   colnames(dfOPMinv)[1] <- "joinID"
-
   #check
   #dfOPM %>% dplyr::filter(population>0)
-  
   # update OPM inverted capital
-  
   if (CRAFTY_tick==1){
     # if first timestep, read in initial capital file
     capitals <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY.csv"))
   }else{
     # if any further timestep, read in correct updater file
-    capitals <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep_",CRAFTY_tick,".csv"))
+    capitals <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep_",CRAFTY_tick-1,".csv"))
   }
- 
   # update OPM capital using lookUp
   lookUp$OPMinverted <- dfOPMinv$OPMinv[match(lookUp$joinID, dfOPMinv$joinID)]
   capitals$joinID <- lookUp$joinID
   capitals$OPMinverted <- dfOPMinv$OPMinv[match(capitals$joinID, dfOPM$joinID)]
-  
   # check
   #ggplot(capitals)+
     #geom_tile(mapping = aes(x,y,fill=knowledge))
-  
   # update knowledge to be dependent on OPM presence
   if (CRAFTY_tick==1){
     capitals$knowledge<-NA # clear previous test capital
@@ -309,31 +276,26 @@ for (CRAFTY_tick in timesteps) {
   }
   capitals$knowledge[which(capitals$OPMinverted==0)]<-1
   capitals$knowledge[which(capitals$OPMinverted==1)]<-0
-  
   capitals$joinID <- NULL
   # write to file
   write.csv(capitals, paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep_",CRAFTY_tick,".csv"))
   
   #####
   #####
+  print(paste0("============CRAFTY JAVA-R API: Running CRAFTY tick = ", CRAFTY_tick))
   CRAFTY_nextTick = CRAFTY_jobj$EXTtick()
   #####
   #####
   
   stopifnot(CRAFTY_nextTick == (CRAFTY_tick + 1 )) # assertion
   print(paste0("============CRAFTY JAVA-R API: CRAFTY run complete = ", CRAFTY_tick))
-  stopifnot(CRAFTY_nextTick ==  RR_iteration) # assertion
+  #stopifnot(CRAFTY_nextTick ==  RR_iteration) # assertion
 
   # after EXTtick()
   # extract agent locations and use them to edit RangeshiftR individuals
   print(paste0("============CRAFTY JAVA-R API: Extract agent locations tick = ", CRAFTY_tick))
   
   # extract agent locations, match to hexagonal grid
-  #val_df <- t(sapply(allcells_l, FUN = function(c) c(c$getOwnersFrLabel()))) #, c$getEffectiveCapitals()$getAll(), c$getSupply()$getAll()
-  #val_fr <- val_df[1,]
-  #val_fr_fac = factor(val_fr,  labels = aft_names_fromzero, levels = aft_names_fromzero)
-  
-  # read in csv files instead?
   val_df <- read.csv(paste0(dirCRAFTYOutput,"/output/Baseline-0-99-LondonBoroughs-Cell-",CRAFTY_tick,".csv"))
   val_df <- read.csv(paste0(dirCRAFTYOutput,"/output/Baseline-0-100-LondonBoroughs-Cell-",CRAFTY_tick,".csv"))
   val_fr <- val_df[,"Agent"]
@@ -359,38 +321,11 @@ for (CRAFTY_tick in timesteps) {
     scale_fill_brewer(palette="Dark2")
   print(p1)
   
-  #if (FALSE) { 
-    #crafty_coords = cbind(x_coord, y_coord)
-    #na_idx = is.na(crafty_coords[,1]) | is.na(crafty_coords[,2])
-    #crafty_coords = crafty_coords[!na_idx,]
-    
-    #crafty_sp =SpatialPoints(crafty_coords)
-    #proj4string(crafty_sp) = proj4.BNG
-    #plot(crafty_sp)
-    
-    #fr_spdf = SpatialPixelsDataFrame(crafty_sp, data =data.frame( as.numeric(val_fr_fac )), tolerance = 0.0011)
-    #fr_r = raster(fr_spdf)
-    #plot(fr_r)
-  #}
-  # par(mfrow=c(3,3))
-  #val_cols = aft_cols[val_fr_fac]
-  
-  # find hexagons 
-  #hx_idx <-  match(cellid, hx$joinID )
-  #hx$fr <- NA
-  # add FR to the hexagonal grid
-  #hx$fr[hx_idx] <- val_fr
-  # table(val_fr)
-  
-  #hx_cols = as.numeric(hx$fr)+1
-  #hx_cols[is.na(hx_cols)] = "lightgrey"
-  # plot(hx[,], col = hx_cols[], lty=0)
-  #plot(hx[1:1000,], col = hx_cols[1:1000], lty=0)
-  
   # now use to edit RangeshiftR individuals
-  print(paste0("============CRAFTY JAVA-R API: Edit RangeshiftR individuals tick=", CRAFTY_tick))
+  print(paste0("============CRAFTY JAVA-R API: Edit RangeshiftR individuals tick = ", CRAFTY_tick))
 
   # find where OPM individuals intersect
+  shpIndividuals <- shpIndividuals %>% st_transform(st_crs(hexGrid))
   lowInt <- sfResult %>% filter(Agent == "mgmt_lowInt")
   #lowInt <- sfResult %>% filter(borough == "hammersmith") # use to test as no mgmt agents atm
   highInt <- sfResult %>% filter(Agent == "mgmt_highInt")
@@ -407,23 +342,27 @@ for (CRAFTY_tick in timesteps) {
     #scale_fill_brewer(palette="Dark2")
 
   # edit OPM populations based on management type
+  
   # reduce population by half if low intensity
   lowPops <- shpIndividuals$rep0_year1[low]
-  for (pop in c(1:length(lowPops))){
+  if (length(lowPops)>1){
+    for (pop in c(1:length(lowPops))){
     lowPops[pop]<-lowPops[pop]/2
     if (lowPops[pop]<1){
-      lowPops[pop] <- 0
+      lowPops[pop] <- 0}
     }
   }
-  shpIndividuals$rep0_year1[low] <- lowPops
+    shpIndividuals$rep0_year1[low] <- lowPops
+  
   # remove if high intensity
   shpIndividuals <- shpIndividuals[!high,] 
+  
   
   print(paste0("============CRAFTY JAVA-R API: Write new individuals file for RangeShiftR = ", CRAFTY_tick))
 
   # write new individuals file to be used by RangeShiftR on the next loop
   # need to edit this (extracted from Nick's code)
-  shpIndividuals <- st_transform(shpIndividuals, crs(rstHabitat))
+  shpIndividuals <- shpIndividuals %>% st_transform(., crs(rstHabitat)) %>% as_Spatial()
   dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
   dfNewIndsTable$Year <- 0
   dfNewIndsTable$Species <- 0
@@ -436,7 +375,7 @@ for (CRAFTY_tick in timesteps) {
   write.table(dfNewIndsTable, file.path(dirRsftrInput, sprintf('inds_tick_%s.txt', CRAFTY_tick)),row.names = F, quote = F, sep = '\t')
   
   # set init file for next tick
-  init <- Initialise(InitType=2, InitIndsFile=sprintf('inds_tick_%s.txt', CRAFTY_tick))
+  #init <- Initialise(InitType=2, InitIndsFile=sprintf('inds_tick_%s.txt', CRAFTY_tick))
   
   if (CRAFTY_nextTick <= end_year_idx) {
     print(paste0("============CRAFTY JAVA-R API: NextTick=", CRAFTY_nextTick))
@@ -445,5 +384,5 @@ for (CRAFTY_tick in timesteps) {
     
   }
   
-  RR_iteration = RR_iteration + 1 
+  #RR_iteration = RR_iteration + 1 
 }
