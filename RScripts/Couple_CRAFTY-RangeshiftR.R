@@ -52,7 +52,7 @@ dirRsftrOutputMaps <- file.path(dirRsftr,"Output_Maps")
 #dir.create(dirRsftrOutputMaps)
 
 # important
-# need to add the / for this path to work in RunRS
+# need to add the / for this path to work in RunRS()
 dirRsftr <- paste0(dirRsftr,"/") 
 
 setwd(dirWorking)
@@ -95,14 +95,20 @@ hexPointsSP <- as_Spatial(hexPoints)
 aft_names_fromzero = c("mgmt_highInt", "mgmt_lowInt", "no_mgmt")
 aft_cols = viridis::viridis(3)
 
+# read in look-up for joinID
+lookUp <- read.csv(paste0(dirWorking,"/data-processed/joinID_lookup.csv"))
+# hexGrid for plotting/and cellIDs
+hexGrid <- st_read(paste0(dirWorking,"/data-processed/hexgrids/hexGrid40m.shp"))
+london_xy_df <- read.csv(paste0(dirWorking,"/data-processed/Cell_ID_XY_Borough.csv"))
+
 # for coordinate matching
-london_xy_df <- read.csv(paste0(dirWorking, "/data-processed/Cell_ID_XY_Borough.csv"))
-x_coords_v <- sort(unique(london_xy_df$X))
-x_coords_bng_v <- london_xy_df[match(x_coords_v, london_xy_df$X), "x_coord"]
-y_coords_v <- sort(unique(london_xy_df$Y))
-y_coords_bng_v <- london_xy_df[match(y_coords_v, london_xy_df$Y), "y_coord"]
-hx_org <- readOGR("data-processed/hexgrids", layer = "hexGrid40m")
-hx = hx_org
+#london_xy_df <- read.csv(paste0(dirWorking, "/data-processed/Cell_ID_XY_Borough.csv"))
+#x_coords_v <- sort(unique(london_xy_df$X))
+#x_coords_bng_v <- london_xy_df[match(x_coords_v, london_xy_df$X), "x_coord"]
+#y_coords_v <- sort(unique(london_xy_df$Y))
+#y_coords_bng_v <- london_xy_df[match(y_coords_v, london_xy_df$Y), "y_coord"]
+#hx_org <- readOGR("data-processed/hexgrids", layer = "hexGrid40m")
+#hx = hx_org
 
 proj4.BNG <- "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs"
 
@@ -183,37 +189,31 @@ nticks <- length(start_year_idx:end_year_idx)
 plot_return_list <- vector("list", nticks)
 timesteps <- start_year_idx:end_year_idx
 
-
-
-
-
 ### pre-process CRAFTY Java object
 region = CRAFTY_loader_jobj$getRegions()$getAllRegions()$iterator()$'next'()
 
+# Get XY coordinates
 # allcells = region$getAllCells()
-allcells_uset = region$getAllCells() # slower
+#allcells_uset = region$getAllCells() # slower
 # allcells_arr = allcells_uset$toArray() # slower # often throws jave execption/warning
-allcells_l =   as.list(allcells_uset)
+#allcells_l =   as.list(allcells_uset)
 
+#print("Get XY coords")
 
-#### Get XY coordinates
-print("Get XY coords")
+#system.time({
+  #val_xy =foreach(c = allcells_l, .combine = "rbind") %do% { 
+    #c(X=c$getX(), Y=c$getY())
+  #}
+#})
 
-system.time({
-  val_xy =foreach(c = allcells_l, .combine = "rbind") %do% { 
-    c(X=c$getX(), Y=c$getY())
-  }
-})
+#val_xy = data.frame(val_xy)
+#colnames(val_xy) = c("X", "Y")
+#x_coord = london_xy_df[match(val_xy$X, london_xy_df$X), "x_coord"]
+#y_coord = london_xy_df[match(val_xy$Y, london_xy_df$Y), "y_coord"]
 
-val_xy = data.frame(val_xy)
-colnames(val_xy) = c("X", "Y")
-x_coord = london_xy_df[match(val_xy$X, london_xy_df$X), "x_coord"]
-y_coord = london_xy_df[match(val_xy$Y, london_xy_df$Y), "y_coord"]
-
-cellid = foreach(rowid = 1:nrow(val_xy), .combine = "c") %do% { 
-  which((as.numeric(val_xy[rowid, 1]) == london_xy_df$X) & (as.numeric(val_xy[rowid, 2]) == london_xy_df$Y))
-}
-
+#cellid = foreach(rowid = 1:nrow(val_xy), .combine = "c") %do% { 
+  #which((as.numeric(val_xy[rowid, 1]) == london_xy_df$X) & (as.numeric(val_xy[rowid, 2]) == london_xy_df$Y))
+#}
 
 
 CRAFTY_tick = 1
