@@ -140,6 +140,7 @@ parallelize <- FALSE # not loads of data so don't need to run in parallel
 # change wd to the output folder to store output files
 setwd(dirCRAFTYOutput) 
 
+# if getting random Java errors, restart Rstudio
 # initialise Java
 if (!rJava::.jniInitialized) { # initialize only once 
   
@@ -171,13 +172,11 @@ stopifnot(dirCRAFTYOutput == .jcall( 'java/lang/System', 'S', 'getProperty', 'us
 rm(CRAFTY_tick)
 rm(CRAFTY_jobj)
 
-print(paste0("============CRAFTY JAVA-R API: Create the instance"))
-
-CRAFTY_jobj <- new(J(CRAFTY_main_name)) # Create a new instance (to call non-static methods)
+# Create a new instance (to call non-static methods)
+CRAFTY_jobj <- new(J(CRAFTY_main_name)) 
 
 # prepares a run and returns run information 
 CRAFTY_RunInfo_jobj <- CRAFTY_jobj$EXTprepareRrun(CRAFTY_sargs)
-print(paste0("============CRAFTY JAVA-R API: Run preparation done"))
 
 # set the schedule
 CRAFTY_loader_jobj <- CRAFTY_jobj$EXTsetSchedule(as.integer(start_year_idx), as.integer(end_year_idx))
