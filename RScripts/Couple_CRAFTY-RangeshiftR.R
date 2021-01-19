@@ -226,7 +226,7 @@ for (CRAFTY_tick in timesteps) {
   # run RangeshiftR to get first OPM capital
   
   # set up RangeShiftR for current iteration
-  print(paste0("============CRAFTY JAVA-R API: Setting up RangeshiftR tick=", CRAFTY_tick))
+  print(paste0("============CRAFTY JAVA-R API: Setting up RangeShiftR tick = ", CRAFTY_tick))
   # init file updates based on CRAFTY if after tick 1
   if (CRAFTY_tick==1){
     init <- Initialise(InitType=2, InitIndsFile='initial_inds_2014_n10.txt')
@@ -242,7 +242,7 @@ for (CRAFTY_tick in timesteps) {
   s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init)
   validateRSparams(s)
   
-  print(paste0("============CRAFTY JAVA-R API: Running RangeshiftR tick=", CRAFTY_tick))
+  print(paste0("============CRAFTY JAVA-R API: Running RangeShiftR tick = ", CRAFTY_tick))
   # run RangeShiftR - use result to store output population raster.
   result <- RunRS(s, sprintf('%s/', dirRsftr))
   crs(result) <- crs(rstHabitat)
@@ -255,32 +255,25 @@ for (CRAFTY_tick in timesteps) {
   dfRange$iteration <- RR_iteration
   dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[1,])
   
+  print(paste0("============CRAFTY JAVA-R API: Extract RangeShiftR population results = ", CRAFTY_tick))
   # extract the population raster to a shapefile of the individuals
   shpIndividuals <- rasterToPoints(result[[rangeshiftrYears]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
   shpIndividuals <- st_transform(shpIndividuals, crs(rstHabitat))
   shpIndividuals$id <- 1:nrow(shpIndividuals)
+  shpIndividuals <- shpIndividuals %>% st_transform(st_crs(hexGrid))
   
-  # extract OPM population raster and use as OPM presence capital (+ OPM inverted capital)
+  # extract OPM population raster and use as OPM capital
   result2 <- result[[rangeshiftrYears]]
   hexPointsOPM <- raster::extract(result2, hexPointsSP)
   dfOPM <- cbind(hexPointsSP,hexPointsOPM) %>% as.data.frame()
   colnames(dfOPM)[2] <- "population"
   dfOPM$population[which(is.na(dfOPM$population))] <- 0
   
-  # OPM presence
-  #data <- dfOPM$population
-  #data[which(data==0)]<-NA
-  #normalised <- (data-min(data,na.rm = T))/(max(data, na.rm = T)-min(data,na.rm=T))
-  #hist(data)
-  #hist(normalised)
-  #normalised[which(is.na(normalised))]<-0
-  #dfOPM$OPMpresence <- normalised
+  print(paste0("============CRAFTY JAVA-R API: Convert RangeShiftR population results to binary capital = ", CRAFTY_tick))
   
   # make binary version and invert 
   OPMbinary <- dfOPM$population
   OPMbinary[which(OPMbinary>0)] <- 1
-
-  # inverted OPM presence
   invert <- OPMbinary - 1
   OPMinv <- abs(invert)
   dfOPMinv <- tibble(dfOPM$joinID,OPMinv)
@@ -289,26 +282,34 @@ for (CRAFTY_tick in timesteps) {
   #check
   #dfOPM %>% dplyr::filter(population>0)
   
-  # edit capitals file
+  # update OPM inverted capital
   
-  # read in capitals file
-  capitals <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY.csv"))
-  head(capitals)
-  
-  # read in look-up for joinID
-  lookUp <- read.csv(paste0(dirWorking,"/data-processed/joinID_lookup.csv"))
-  
-  # update OPM capital
+  if (CRAFTY_tick==1){
+    # if first timestep, read in initial capital file
+    capitals <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY.csv"))
+  }else{
+    # if any further timestep, read in correct updater file
+    capitals <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep_",CRAFTY_tick,".csv"))
+  }
+ 
+  # update OPM capital using lookUp
   lookUp$OPMinverted <- dfOPMinv$OPMinv[match(lookUp$joinID, dfOPMinv$joinID)]
   capitals$joinID <- lookUp$joinID
-  head(capitals)
   capitals$OPMinverted <- dfOPMinv$OPMinv[match(capitals$joinID, dfOPM$joinID)]
   
   # check
   #ggplot(capitals)+
-    #geom_tile(mapping = aes(x,y,fill=OPMinverted))
+    #geom_tile(mapping = aes(x,y,fill=knowledge))
   
-  #head(capitals)
+  # update knowledge to be dependent on OPM presence
+  if (CRAFTY_tick==1){
+    capitals$knowledge<-NA # clear previous test capital
+  }else{
+    capitals$knowledge <- capitals$knowledge
+  }
+  capitals$knowledge[which(capitals$OPMinverted==0)]<-1
+  capitals$knowledge[which(capitals$OPMinverted==1)]<-0
+  
   capitals$joinID <- NULL
   # write to file
   write.csv(capitals, paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep_",CRAFTY_tick,".csv"))
