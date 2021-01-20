@@ -2,7 +2,7 @@
 	<region id="LondonBoroughs">
 	
 	
-	<allocation class="org.volante.abm.example.GiveUpGiveInAllocationModel" percentageCells="50" percentageTakeOvers="50" relativeThresholding="true"/> 
+	<allocation class="org.volante.abm.example.GiveUpGiveInAllocationModel" percentageCells="5" percentageTakeOvers="5" relativeThresholding="true"/> 
    
 	<demandFile>xml/RegionalDemand.xml</demandFile>
    <competitionFile>xml/Competition_linear_London.xml</competitionFile>
