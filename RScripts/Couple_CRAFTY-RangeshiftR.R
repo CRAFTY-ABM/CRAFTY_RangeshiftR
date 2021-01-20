@@ -1,5 +1,5 @@
 
-# date: 19/01/21
+# date: 20/01/21
 # authors: VB/BS
 # description: script to loosely couple RangeShiftR and CRAFTY. RangeShiftR will 
 # feed in two capitals (OPM inverted & knowledge). CRAFTY will take these and
@@ -69,7 +69,11 @@ source("RScripts/Functions_CRAFTY_rJava.R")
 ### RangeshiftR set-up ---------------------------------------------------------
 
 rangeshiftrYears <- 2
-rstHabitat <- raster(file.path(dirRsftrInput, 'Habitat-2m.tif'))
+rstHabitat <- raster(file.path(dirRsftrInput, 'Habitat-100m.tif'))
+# make sure BNG
+hexPoints <- st_read(paste0(dirWorking,"/data-processed/hexgrids/hexPoints40m.shp"))
+rstHabitat <- projectRaster(rstHabitat, crs = crs(hexPoints))
+st_crs(rstHabitat)
 habitatRes <- 100
 
 init <- Initialise(InitType=2, InitIndsFile='initial_inds_2014_n10.txt')
@@ -95,7 +99,6 @@ outRasterStack <- stack()
 ### CRAFTY set-up --------------------------------------------------------------
 
 # points for each cell to extract from OPM population results
-hexPoints <- st_read(paste0(dirWorking,"/data-processed/hexgrids/hexPoints40m.shp"))
 hexPointsSP <- as_Spatial(hexPoints)
 
 # agent names
@@ -267,7 +270,7 @@ for (CRAFTY_tick in timesteps) {
   capitals$OPMinverted <- dfOPMinv$OPMinv[match(capitals$joinID, dfOPM$joinID)]
   # check
   #ggplot(capitals)+
-    #geom_tile(mapping = aes(x,y,fill=knowledge))
+    #geom_tile(mapping = aes(x,y,fill=OPMinverted))
   # update knowledge to be dependent on OPM presence
   if (CRAFTY_tick==1){
     capitals$knowledge<-NA # clear previous test capital
@@ -276,9 +279,18 @@ for (CRAFTY_tick in timesteps) {
   }
   capitals$knowledge[which(capitals$OPMinverted==0)]<-1
   capitals$knowledge[which(capitals$OPMinverted==1)]<-0
+  #ggplot(capitals)+
+  #geom_tile(mapping = aes(x,y,fill=knowledge))
   capitals$joinID <- NULL
   # write to file
-  write.csv(capitals, paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep_",CRAFTY_tick,".csv"))
+  if (CRAFTY_tick==1){
+    # if first timestep, write to initial capital file
+    capitals <- write.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY.csv"))
+  }else{
+    # if any further timestep, write to correct updater file
+    capitals <- write.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep_",CRAFTY_tick,".csv"))
+  }
+  
   
   #####
   #####
@@ -325,7 +337,6 @@ for (CRAFTY_tick in timesteps) {
   print(paste0("============CRAFTY JAVA-R API: Edit RangeshiftR individuals tick = ", CRAFTY_tick))
 
   # find where OPM individuals intersect
-  shpIndividuals <- shpIndividuals %>% st_transform(st_crs(hexGrid))
   lowInt <- sfResult %>% filter(Agent == "mgmt_lowInt")
   #lowInt <- sfResult %>% filter(borough == "hammersmith") # use to test as no mgmt agents atm
   highInt <- sfResult %>% filter(Agent == "mgmt_highInt")
@@ -362,7 +373,7 @@ for (CRAFTY_tick in timesteps) {
 
   # write new individuals file to be used by RangeShiftR on the next loop
   # need to edit this (extracted from Nick's code)
-  shpIndividuals <- shpIndividuals %>% st_transform(., crs(rstHabitat)) %>% as_Spatial()
+  shpIndividuals <- shpIndividuals %>% as_Spatial()
   dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
   dfNewIndsTable$Year <- 0
   dfNewIndsTable$Species <- 0
