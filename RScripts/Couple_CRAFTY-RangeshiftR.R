@@ -111,7 +111,7 @@ lookUp <- read.csv(paste0(dirWorking,"/data-processed/joinID_lookup.csv"))
 hexGrid <- st_read(paste0(dirWorking,"/data-processed/hexgrids/hexGrid40m.shp"))
 london_xy_df <- read.csv(paste0(dirWorking,"/data-processed/Cell_ID_XY_Borough.csv"))
 
-proj4.BNG <- "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs"
+#proj4.BNG <- "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs"
 
 # location of the CRAFTY Jar file
 path_crafty_jar <- path.expand(paste0(dirWorking, "/lib/CRAFTY_KIT_engineOct2020.jar"))
@@ -170,8 +170,8 @@ stopifnot(dirCRAFTYOutput == .jcall( 'java/lang/System', 'S', 'getProperty', 'us
 ### Set up CRAFTY job ----------------------------------------------------------
 
 # clear objects when testing
-rm(CRAFTY_tick)
-rm(CRAFTY_jobj)
+#rm(CRAFTY_tick)
+#rm(CRAFTY_jobj)
 
 # Create a new instance (to call non-static methods)
 CRAFTY_jobj <- new(J(CRAFTY_main_name)) 
@@ -183,7 +183,7 @@ CRAFTY_RunInfo_jobj <- CRAFTY_jobj$EXTprepareRrun(CRAFTY_sargs)
 CRAFTY_loader_jobj <- CRAFTY_jobj$EXTsetSchedule(as.integer(start_year_idx), as.integer(end_year_idx))
 
 # option to visualise as model runs
-doProcessFR = FALSE
+#doProcessFR = FALSE
 
 nticks <- length(start_year_idx:end_year_idx)
 plot_return_list <- vector("list", nticks)
@@ -196,7 +196,7 @@ region = CRAFTY_loader_jobj$getRegions()$getAllRegions()$iterator()$'next'()
 
 ### Run the models -------------------------------------------------------------
 
-CRAFTY_tick <- 1
+#CRAFTY_tick <- 2
 #RR_iteration <- 1
 
 for (CRAFTY_tick in timesteps) {
@@ -257,13 +257,13 @@ for (CRAFTY_tick in timesteps) {
   #check
   #dfOPM %>% dplyr::filter(population>0)
   # update OPM inverted capital
-  if (CRAFTY_tick==1){
+  #if (CRAFTY_tick==1){
     # if first timestep, read in initial capital file
-    capitals <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY.csv"))
-  }else{
+    #capitals <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY.csv"))
+  #}else{
     # if any further timestep, read in correct updater file
-    capitals <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep_",CRAFTY_tick-1,".csv"))
-  }
+    capitals <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep_",CRAFTY_tick,".csv"))
+  #}
   # update OPM capital using lookUp
   lookUp$OPMinverted <- dfOPMinv$OPMinv[match(lookUp$joinID, dfOPMinv$joinID)]
   capitals$joinID <- lookUp$joinID
@@ -272,24 +272,37 @@ for (CRAFTY_tick in timesteps) {
   #ggplot(capitals)+
     #geom_tile(mapping = aes(x,y,fill=OPMinverted))
   # update knowledge to be dependent on OPM presence
+  
   if (CRAFTY_tick==1){
     capitals$knowledge<-NA # clear previous test capital
-  }else{
-    capitals$knowledge <- capitals$knowledge
-  }
-  capitals$knowledge[which(capitals$OPMinverted==0)]<-1
-  capitals$knowledge[which(capitals$OPMinverted==1)]<-0
+    # and add any new knowledge based on contact with OPM
+    capitals$knowledge[which(capitals$OPMinverted==0)]<-1
+    capitals$knowledge[which(capitals$OPMinverted==1)]<-0
+    }else{
+      prevKnowledge <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep_",CRAFTY_tick-1,".csv"))
+      capitals$knowledge <- prevKnowledge$knowledge
+      capitals$knowledge[which(capitals$OPMinverted==0)]<-1
+    }
+  #if (CRAFTY_tick==2){
+    # keep previous year's knowledge
+    #prevKnowledge <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY.csv"))
+    #capitals$knowledge <- prevKnowledge$knowledge
+    #capitals$knowledge[which(capitals$OPMinverted==0)]<-1
+    
+  #}
+  
   #ggplot(capitals)+
-  #geom_tile(mapping = aes(x,y,fill=knowledge))
+    #geom_tile(mapping = aes(x,y,fill=knowledge))
   capitals$joinID <- NULL
+  
   # write to file
-  if (CRAFTY_tick==1){
+  #if (CRAFTY_tick==1){
     # if first timestep, write to initial capital file
-    capitals <- write.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY.csv"))
-  }else{
+    #capitals <- write.csv(capitals, paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY.csv"), row.names = F)
+  #}else{
     # if any further timestep, write to correct updater file
-    capitals <- write.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep_",CRAFTY_tick,".csv"))
-  }
+    capitals <- write.csv(capitals, paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep_",CRAFTY_tick,".csv"),row.names = F)
+ # }
   
   
   #####
@@ -308,7 +321,6 @@ for (CRAFTY_tick in timesteps) {
   print(paste0("============CRAFTY JAVA-R API: Extract agent locations tick = ", CRAFTY_tick))
   
   # extract agent locations, match to hexagonal grid
-  val_df <- read.csv(paste0(dirCRAFTYOutput,"/output/Baseline-0-99-LondonBoroughs-Cell-",CRAFTY_tick,".csv"))
   val_df <- read.csv(paste0(dirCRAFTYOutput,"/output/Baseline-0-100-LondonBoroughs-Cell-",CRAFTY_tick,".csv"))
   val_fr <- val_df[,"Agent"]
   val_fr_fac <- factor(val_fr,  labels = aft_names_fromzero, levels = aft_names_fromzero)
@@ -325,6 +337,7 @@ for (CRAFTY_tick in timesteps) {
   
   val_df$joinID <- cellid
   sfResult <- left_join(hexGrid, val_df, by="joinID")
+  sfResult$Agent <- factor(sfResult$Agent, levels=aft_names_fromzero)
   
   print(paste0("============CRAFTY JAVA-R API: Show agents & OPM individuals = ", CRAFTY_tick)) 
   p1 <- ggplot() +
@@ -363,7 +376,7 @@ for (CRAFTY_tick in timesteps) {
       lowPops[pop] <- 0}
     }
   }
-    shpIndividuals$rep0_year1[low] <- lowPops
+  shpIndividuals$rep0_year1[low] <- lowPops
   
   # remove if high intensity
   shpIndividuals <- shpIndividuals[!high,] 
