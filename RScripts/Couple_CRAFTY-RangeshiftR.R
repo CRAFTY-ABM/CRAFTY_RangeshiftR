@@ -196,7 +196,7 @@ region = CRAFTY_loader_jobj$getRegions()$getAllRegions()$iterator()$'next'()
 
 ### Run the models -------------------------------------------------------------
 
-CRAFTY_tick <- 5
+#CRAFTY_tick <- 5
 #RR_iteration <- 1
 
 for (CRAFTY_tick in timesteps) {
@@ -404,3 +404,41 @@ for (CRAFTY_tick in timesteps) {
   
   #RR_iteration = RR_iteration + 1 
 }
+
+warnings()
+spplot(outRasterStack)
+
+dirResults <- paste0(dirCRAFTYOutput,"/output/")
+
+# read in all results
+dfResults <-
+  list.files(path = dirResults,
+             pattern = "*.csv", 
+             full.names = T) %>% 
+  grep("-Cell-", value=TRUE, .) %>% 
+  #map_df(~read_csv(., col_types = cols(.default = "c")))
+  map_df(~read.csv(.))
+
+head(dfResults)
+summary(dfResults)
+dfResults$Tick <- factor(dfResults$Tick)
+dfResults$Agent <- factor(dfResults$Agent)
+
+# match back to hex grid 
+tick <- filter(dfResults, Tick==10)
+val_xy <- data.frame(tick$X,tick$Y)
+colnames(val_xy) <- c("X", "Y")
+x_coord <- london_xy_df[match(val_xy$X, london_xy_df$X), "x_coord"]
+y_coord <- london_xy_df[match(val_xy$Y, london_xy_df$Y), "y_coord"]
+
+cellid <- foreach(rowid = 1:nrow(val_xy), .combine = "c") %do% { 
+  which((as.numeric(val_xy[rowid, 1]) == london_xy_df$X) & (as.numeric(val_xy[rowid, 2]) == london_xy_df$Y))
+}
+
+tick$joinID <- cellid
+sfResult <- left_join(hexGrid, tick, by="joinID")
+
+# plot 
+ggplot() +
+  geom_sf(sfResult, mapping = aes(fill = Agent), col = NA)+
+  scale_fill_brewer(palette="Dark2")
