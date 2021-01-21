@@ -196,7 +196,7 @@ region = CRAFTY_loader_jobj$getRegions()$getAllRegions()$iterator()$'next'()
 
 ### Run the models -------------------------------------------------------------
 
-#CRAFTY_tick <- 2
+CRAFTY_tick <- 5
 #RR_iteration <- 1
 
 for (CRAFTY_tick in timesteps) {
@@ -219,19 +219,20 @@ for (CRAFTY_tick in timesteps) {
                     OutIntInd = 1,
                     ReturnPopRaster=TRUE)
   s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init)
-  validateRSparams(s)
+  stopifnot(validateRSparams(s)==TRUE) 
   
   print(paste0("============CRAFTY JAVA-R API: Running RangeShiftR tick = ", CRAFTY_tick))
   # run RangeShiftR - use result to store output population raster.
   result <- RunRS(s, sprintf('%s', dirRsftr))
   crs(result) <- crs(rstHabitat)
   extent(result) <- extent(rstHabitat)
-  #plot(result[[rangeshiftrYears]])
+  print(paste0("============CRAFTY JAVA-R API: Show RangeShiftR result tick = ", CRAFTY_tick))
+  print(plot(result[[rangeshiftrYears]]))
   # store population raster in output stack.
   outRasterStack <- addLayer(outRasterStack, result[[rangeshiftrYears]])
   # store population data in output data frame.
   dfRange <- readRange(s, sprintf('%s/',dirRsftr))
-  dfRange$iteration <- CRAFTY_tick
+  dfRange$timestep <- CRAFTY_tick
   dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[1,])
   
   print(paste0("============CRAFTY JAVA-R API: Extract RangeShiftR population results = ", CRAFTY_tick))
@@ -254,25 +255,19 @@ for (CRAFTY_tick in timesteps) {
   OPMinv <- abs(invert)
   dfOPMinv <- tibble(dfOPM$joinID,OPMinv)
   colnames(dfOPMinv)[1] <- "joinID"
-  #check
-  #dfOPM %>% dplyr::filter(population>0)
-  # update OPM inverted capital
-  #if (CRAFTY_tick==1){
-    # if first timestep, read in initial capital file
-    #capitals <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY.csv"))
-  #}else{
-    # if any further timestep, read in correct updater file
-    capitals <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep_",CRAFTY_tick,".csv"))
-  #}
+  
+  # update OPM inverted capital in updater files
+  capitals <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep_",CRAFTY_tick,".csv"))
   # update OPM capital using lookUp
   lookUp$OPMinverted <- dfOPMinv$OPMinv[match(lookUp$joinID, dfOPMinv$joinID)]
   capitals$joinID <- lookUp$joinID
   capitals$OPMinverted <- dfOPMinv$OPMinv[match(capitals$joinID, dfOPM$joinID)]
   # check
-  #ggplot(capitals)+
-    #geom_tile(mapping = aes(x,y,fill=OPMinverted))
-  # update knowledge to be dependent on OPM presence
+  p2 <- ggplot(capitals)+
+    geom_tile(mapping = aes(x,y,fill=OPMinverted))
+  print(p2)
   
+  # update knowledge to be dependent on OPM presence
   if (CRAFTY_tick==1){
     capitals$knowledge<-NA # clear previous test capital
     # and add any new knowledge based on contact with OPM
@@ -283,27 +278,13 @@ for (CRAFTY_tick in timesteps) {
       capitals$knowledge <- prevKnowledge$knowledge
       capitals$knowledge[which(capitals$OPMinverted==0)]<-1
     }
-  #if (CRAFTY_tick==2){
-    # keep previous year's knowledge
-    #prevKnowledge <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY.csv"))
-    #capitals$knowledge <- prevKnowledge$knowledge
-    #capitals$knowledge[which(capitals$OPMinverted==0)]<-1
-    
-  #}
   
-  #ggplot(capitals)+
-    #geom_tile(mapping = aes(x,y,fill=knowledge))
+  p3 <- ggplot(capitals)+
+    geom_tile(mapping = aes(x,y,fill=knowledge))
+  print(p3)
   capitals$joinID <- NULL
   
-  # write to file
-  #if (CRAFTY_tick==1){
-    # if first timestep, write to initial capital file
-    #capitals <- write.csv(capitals, paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY.csv"), row.names = F)
-  #}else{
-    # if any further timestep, write to correct updater file
-    capitals <- write.csv(capitals, paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep_",CRAFTY_tick,".csv"),row.names = F)
- # }
-  
+  capitals <- write.csv(capitals, paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep_",CRAFTY_tick,".csv"),row.names = F)
   
   #####
   #####
@@ -342,7 +323,7 @@ for (CRAFTY_tick in timesteps) {
   print(paste0("============CRAFTY JAVA-R API: Show agents & OPM individuals = ", CRAFTY_tick)) 
   p1 <- ggplot() +
     geom_sf(sfResult, mapping = aes(fill = Agent), col = NA)+
-    geom_sf(data=shpIndividuals, color="yellow", pch=4)+
+    geom_sf(data=shpIndividuals, color="black", pch=4)+
     scale_fill_brewer(palette="Dark2")
   print(p1)
   
@@ -388,13 +369,26 @@ for (CRAFTY_tick in timesteps) {
   # need to edit this (extracted from Nick's code)
   shpIndividuals <- shpIndividuals %>% as_Spatial()
   dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
-  dfNewIndsTable$Year <- 0
+  dfNewIndsTable$Year <- 0 # CRAFTY_tick - 1
   dfNewIndsTable$Species <- 0
   dfNewIndsTable$X <- dfNewIndsTable$cells %% ncol(rstHabitat)
   dfNewIndsTable$Y <- nrow(rstHabitat) - (floor(dfNewIndsTable$cells / ncol(rstHabitat)))
   dfNewIndsTable$Ninds <- dfNewIndsTable$layer
   dfNewIndsTable <- dfNewIndsTable[ , !(names(dfNewIndsTable) %in% c('ID', 'cells', 'layer'))]
   dfNewIndsTable <- dfNewIndsTable[!is.na(dfNewIndsTable$Ninds),]
+  # join to previous individuals file?
+  # trying this to stop populations dying out... but not sure it's correct as it will undo any management changes made based on CRAFTY...
+  if (CRAFTY_tick==1){
+    initIndsTable <- read.table(file.path(dirRsftrInput, "initial_inds_2014_n10.txt"), header = T)
+  }else{
+    initIndsTable <- read.table(file.path(dirRsftrInput, sprintf('inds_tick_%s.txt', CRAFTY_tick-1)), header = T)
+  }
+  dfNewIndsTable <- rbind(initIndsTable,dfNewIndsTable)
+  # make sure individuals aren't being counted more than once in the same location
+  dfNewIndsTable <- unique(dfNewIndsTable)
+  # where Ninds = 1, set to 10. Otherwise populations die out
+  # they don't die out in RangeshiftR standalone run (which uses the same init file with Ninds set to 10 for entire simulation)
+  dfNewIndsTable$Ninds[which(dfNewIndsTable$Ninds==1)] <- 10
   
   write.table(dfNewIndsTable, file.path(dirRsftrInput, sprintf('inds_tick_%s.txt', CRAFTY_tick)),row.names = F, quote = F, sep = '\t')
   

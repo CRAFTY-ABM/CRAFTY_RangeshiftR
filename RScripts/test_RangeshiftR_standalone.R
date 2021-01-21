@@ -26,7 +26,7 @@ setwd(dirWorking)
 
 ### parameter set-up -----------------------------------------------------------
 
-rangeshiftrYears <- 10
+rangeshiftrYears2 <- 10
 rstHabitat <- raster(file.path(dirRsftrInput, 'Habitat-100m.tif'))
 # make sure BNG
 hexPoints <- st_read(paste0(dirWorking,"/data-processed/hexgrids/hexPoints40m.shp"))
@@ -49,7 +49,7 @@ disp <-  Dispersal(Emigration = Emigration(EmigProb = 0.2),
                    Settlement = Settlement() )
 
 sim <- Simulation(Simulation = 999, # 999 to make sure test simulation is obvious in results folder
-                  Years = rangeshiftrYears,
+                  Years = rangeshiftrYears2,
                   Replicates = 1,
                   OutIntPop = 1,
                   OutIntInd = 1,
