@@ -16,9 +16,9 @@ library(raster)
 library(tidyverse)
 
 #if (!require(RangeShiftR)) { 
-  # Install RangeShiftR from GitHub:
-  #devtools::install_github("RangeShifter/RangeShiftR-package", ref="main")
-  #library(RangeShiftR)
+# Install RangeShiftR from GitHub:
+#devtools::install_github("RangeShifter/RangeShiftR-package", ref="main")
+#library(RangeShiftR)
 #} else {}
 
 library(RangeShiftR)
@@ -36,7 +36,7 @@ library(foreach)
 ### directories/ file paths ----------------------------------------------------
 
 if (Sys.info()["user"] %in% c("alan", "seo-b")) { 
-  dirWorking<- "~/git/CRAFTY_RangeshiftR"
+  dirWorking<- "~/git/CRAFTY_RangeshiftR2"
   
 } else { 
   dirWorking<- "~/eclipse-workspace/CRAFTY_RangeshiftR"
@@ -138,7 +138,7 @@ CRAFTY_sargs <- c("-d", dirCRAFTYInput, "-f", scenario.filename, "-o", random_se
 
 # CRAFTY timesteps
 start_year_idx <- 1 # first year of the input data
-end_year_idx <- 10 # 10th year of the input data 
+end_year_idx <- 20 # 10th year of the input data 
 
 parallelize <- FALSE # not loads of data so don't need to run in parallel
 
@@ -228,6 +228,10 @@ for (CRAFTY_tick in timesteps) {
   print(paste0("============CRAFTY JAVA-R API: Running RangeShiftR tick = ", CRAFTY_tick))
   # run RangeShiftR - use result to store output population raster.
   result <- RunRS(s, sprintf('%s', dirRsftr))
+  
+  # wait few seconds before reading the output
+  Sys.sleep(1)
+  
   crs(result) <- crs(rstHabitat)
   extent(result) <- extent(rstHabitat)
   print(paste0("============CRAFTY JAVA-R API: Show RangeShiftR result tick = ", CRAFTY_tick))
@@ -307,7 +311,7 @@ for (CRAFTY_tick in timesteps) {
   print(paste0("============CRAFTY JAVA-R API: Extract agent locations tick = ", CRAFTY_tick))
   
   # extract agent locations, match to hexagonal grid
-  val_df <- read.csv(paste0(dirCRAFTYOutput,"/output/Baseline-0-", random_seed_crafty+1,"-LondonBoroughs-Cell-",CRAFTY_tick,".csv"))
+  val_df <- read.csv(paste0(dirCRAFTYOutput,"/output/Baseline-0-", random_seed_crafty,"-LondonBoroughs-Cell-",CRAFTY_tick,".csv"))
   val_fr <- val_df[,"Agent"]
   val_fr_fac <- factor(val_fr,  labels = aft_names_fromzero, levels = aft_names_fromzero)
   
@@ -334,42 +338,47 @@ for (CRAFTY_tick in timesteps) {
   
   # now use to edit RangeshiftR individuals
   print(paste0("============CRAFTY JAVA-R API: Edit RangeshiftR individuals tick = ", CRAFTY_tick))
-
+  
   # find where OPM individuals intersect
   lowInt <- sfResult %>% filter(Agent == "mgmt_lowInt")
   #lowInt <- sfResult %>% filter(borough == "hammersmith") # use to test as no mgmt agents atm
   highInt <- sfResult %>% filter(Agent == "mgmt_highInt")
-
+  
   # find OPM individuals within each agent type
   # https://gis.stackexchange.com/questions/245136/how-to-subset-point-data-by-outside-of-polygon-data-in-r
-  low <- sapply(st_intersects(shpIndividuals, lowInt),function(x){length(x)>0})
-  high <- sapply(st_intersects(shpIndividuals, highInt),function(x){length(x)>0})
-  
-  # check
-  #ggplot() +
+  if (nrow(lowInt)>0) { 
+    
+    low <- sapply(st_intersects(shpIndividuals, lowInt),function(x){length(x)>0})
+    
+    # check
+    #ggplot() +
     #geom_sf(sfResult, mapping = aes(fill = Agent), col = NA)+
     #geom_sf(data=shpIndividuals[!low,])+
     #scale_fill_brewer(palette="Dark2")
-
-  # edit OPM populations based on management type
-  
-  # reduce population by half if low intensity
-  lowPops <- shpIndividuals$rep0_year1[low]
-  if (length(lowPops)>1){
-    for (pop in c(1:length(lowPops))){
-    lowPops[pop]<-lowPops[pop]/2
-    if (lowPops[pop]<1){
-      lowPops[pop] <- 0}
+    
+    # edit OPM populations based on management type
+    
+    # reduce population by half if low intensity
+    lowPops <- shpIndividuals$rep0_year1[low]
+    if (length(lowPops)>1){
+      for (pop in c(1:length(lowPops))){
+        lowPops[pop]<-lowPops[pop]/2
+        if (lowPops[pop]<1){
+          lowPops[pop] <- 0}
+      }
     }
+    shpIndividuals$rep0_year1[low] <- lowPops
   }
-  shpIndividuals$rep0_year1[low] <- lowPops
   
-  # remove if high intensity
-  shpIndividuals <- shpIndividuals[!high,] 
-  
+  if (nrow(highInt)>0) { 
+    high <- sapply(st_intersects(shpIndividuals, highInt),function(x){length(x)>0})
+    
+    # remove if high intensity
+    shpIndividuals <- shpIndividuals[!high,] 
+  }
   
   print(paste0("============CRAFTY JAVA-R API: Write new individuals file for RangeShiftR = ", CRAFTY_tick))
-
+  
   # write new individuals file to be used by RangeShiftR on the next loop
   shpIndividuals <- shpIndividuals %>% as_Spatial()
   dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
