@@ -129,8 +129,12 @@ scenario.filename <- "Scenario_Baseline_noGUI.xml" # no display
 # java configuration
 crafty_jclasspath <- c(path_crafty_jar, paste0(path_crafty_libs, crafty_libs))
 
+
+# Random seed used in the crafty 
+random_seed_crafty = 99 
+
 # scenario file
-CRAFTY_sargs <- c("-d", dirCRAFTYInput, "-f", scenario.filename, "-o", "99", "-r", "1",  "-n", "1", "-sr", "0") 
+CRAFTY_sargs <- c("-d", dirCRAFTYInput, "-f", scenario.filename, "-o", random_seed_crafty, "-r", "1",  "-n", "1", "-sr", "0") 
 
 # CRAFTY timesteps
 start_year_idx <- 1 # first year of the input data
@@ -209,7 +213,7 @@ for (CRAFTY_tick in timesteps) {
   # init file updates based on CRAFTY if after tick 1
   if (CRAFTY_tick==1){
     init <- Initialise(InitType=2, InitIndsFile='initial_inds_2014_n10.txt')
-    }else{
+  }else{
     init <- Initialise(InitType=2, InitIndsFile=sprintf('inds_tick_%s.txt', CRAFTY_tick-1))
   }
   sim <- Simulation(Simulation = CRAFTY_tick,
@@ -297,14 +301,13 @@ for (CRAFTY_tick in timesteps) {
   
   stopifnot(CRAFTY_nextTick == (CRAFTY_tick + 1 )) # assertion
   print(paste0("============CRAFTY JAVA-R API: CRAFTY run complete = ", CRAFTY_tick))
-  #stopifnot(CRAFTY_nextTick ==  RR_iteration) # assertion
-
+  
   # after EXTtick()
   # extract agent locations and use them to edit RangeshiftR individuals
   print(paste0("============CRAFTY JAVA-R API: Extract agent locations tick = ", CRAFTY_tick))
   
   # extract agent locations, match to hexagonal grid
-  val_df <- read.csv(paste0(dirCRAFTYOutput,"/output/Baseline-0-100-LondonBoroughs-Cell-",CRAFTY_tick,".csv"))
+  val_df <- read.csv(paste0(dirCRAFTYOutput,"/output/Baseline-0-", random_seed_crafty+1,"-LondonBoroughs-Cell-",CRAFTY_tick,".csv"))
   val_fr <- val_df[,"Agent"]
   val_fr_fac <- factor(val_fr,  labels = aft_names_fromzero, levels = aft_names_fromzero)
   
@@ -396,6 +399,7 @@ for (CRAFTY_tick in timesteps) {
   # set init file for next tick
   #init <- Initialise(InitType=2, InitIndsFile=sprintf('inds_tick_%s.txt', CRAFTY_tick))
   
+  
   if (CRAFTY_nextTick <= end_year_idx) {
     print(paste0("============CRAFTY JAVA-R API: NextTick=", CRAFTY_nextTick))
   } else {
@@ -403,7 +407,6 @@ for (CRAFTY_tick in timesteps) {
     
   }
   
-  #RR_iteration = RR_iteration + 1 
 }
 
 warnings()
