@@ -196,7 +196,7 @@ region = CRAFTY_loader_jobj$getRegions()$getAllRegions()$iterator()$'next'()
 
 ### Run the models -------------------------------------------------------------
 
-#CRAFTY_tick <- 5
+CRAFTY_tick <- 1
 #RR_iteration <- 1
 
 for (CRAFTY_tick in timesteps) {
@@ -274,8 +274,10 @@ for (CRAFTY_tick in timesteps) {
     capitals$knowledge[which(capitals$OPMinverted==0)]<-1
     capitals$knowledge[which(capitals$OPMinverted==1)]<-0
     }else{
+      # keep previous knowledge
       prevKnowledge <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY_tstep_",CRAFTY_tick-1,".csv"))
       capitals$knowledge <- prevKnowledge$knowledge
+      # add new
       capitals$knowledge[which(capitals$OPMinverted==0)]<-1
     }
   
@@ -366,7 +368,6 @@ for (CRAFTY_tick in timesteps) {
   print(paste0("============CRAFTY JAVA-R API: Write new individuals file for RangeShiftR = ", CRAFTY_tick))
 
   # write new individuals file to be used by RangeShiftR on the next loop
-  # need to edit this (extracted from Nick's code)
   shpIndividuals <- shpIndividuals %>% as_Spatial()
   dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
   dfNewIndsTable$Year <- 0 # CRAFTY_tick - 1
@@ -377,7 +378,7 @@ for (CRAFTY_tick in timesteps) {
   dfNewIndsTable <- dfNewIndsTable[ , !(names(dfNewIndsTable) %in% c('ID', 'cells', 'layer'))]
   dfNewIndsTable <- dfNewIndsTable[!is.na(dfNewIndsTable$Ninds),]
   # join to previous individuals file?
-  # trying this to stop populations dying out... but not sure it's correct as it will undo any management changes made based on CRAFTY...
+  # trying this to stop populations dying out... but don't think this is correct as it will undo any management changes made based on CRAFTY...
   if (CRAFTY_tick==1){
     initIndsTable <- read.table(file.path(dirRsftrInput, "initial_inds_2014_n10.txt"), header = T)
   }else{
