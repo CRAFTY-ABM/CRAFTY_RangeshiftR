@@ -3,6 +3,10 @@
 # having issues with RangeShiftR results a few ticks into coupled models
 # so test separately here with same parameters
 
+library(RangeShiftR)
+library(raster)
+library(sf)
+
 ### directories ----------------------------------------------------------------
 
 if (Sys.info()["user"] %in% c("alan", "seo-b")) { 
@@ -12,6 +16,8 @@ if (Sys.info()["user"] %in% c("alan", "seo-b")) {
   dirWorking<- "~/eclipse-workspace/CRAFTY_RangeshiftR"
 }
 
+dirCRAFTYInput <- path.expand(paste0(dirWorking, "/data_LondonOPM/"))
+dirCRAFTYOutput <- path.expand(paste0(dirWorking, "/output"))
 # store RangeshiftR files within CRAFTY output folder as it is the directory CRAFTY will need to run in
 dirRsftr <- file.path(dirCRAFTYOutput, 'RangeshiftR')
 # specific file structure needed for RangeshiftR to run
@@ -26,6 +32,7 @@ setwd(dirWorking)
 
 ### parameter set-up -----------------------------------------------------------
 
+rangeshiftrYears <- 2
 rangeshiftrYears2 <- 10
 rstHabitat <- raster(file.path(dirRsftrInput, 'Habitat-100m.tif'))
 # make sure BNG
@@ -78,3 +85,79 @@ dev.off()
 # completely fine running on it's own, so it must be a mistake in the coupling...
 # maybe due to how new individual files are being edited/written?
 
+
+### test in loop with new init files each time ---------------------------------
+
+timesteps <- 991:1000
+dfRangeShiftrData <- data.frame()
+outRasterStack <- stack()
+
+#tick <- 991
+
+for (tick in timesteps) {
+  
+  if (tick==991){
+    init <- Initialise(InitType=2, InitIndsFile='initial_inds_2014_n10.txt')
+  }else{
+    init <- Initialise(InitType=2, InitIndsFile=sprintf('inds_tick_%s.txt', tick-1))
+  }
+  sim <- Simulation(Simulation = tick,
+                    Years = rangeshiftrYears,
+                    Replicates = 1,
+                    OutIntPop = 1,
+                    OutIntInd = 1,
+                    ReturnPopRaster=TRUE)
+  s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init)
+  stopifnot(validateRSparams(s)==TRUE) 
+  
+  # run RangeShiftR - use result to store output population raster.
+  result <- RunRS(s, sprintf('%s', dirRsftr))
+  crs(result) <- crs(rstHabitat)
+  extent(result) <- extent(rstHabitat)
+  
+  # store population raster in output stack.
+  outRasterStack <- addLayer(outRasterStack, result[[rangeshiftrYears]])
+  # store population data in output data frame.
+  dfRange <- readRange(s, sprintf('%s/',dirRsftr))
+  dfRange$timestep <- tick
+  dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[1,])
+  
+  # extract the population raster to a shapefile of the individuals
+  shpIndividuals <- rasterToPoints(result[[rangeshiftrYears]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
+  shpIndividuals <- shpIndividuals %>% st_set_crs(st_crs(rstHabitat))
+  shpIndividuals$id <- 1:nrow(shpIndividuals)
+  
+  # write new individuals file to be used by RangeShiftR on the next loop
+  shpIndividuals <- shpIndividuals %>% as_Spatial()
+  dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
+  dfNewIndsTable$Year <- 0
+  dfNewIndsTable$Species <- 0
+  dfNewIndsTable$X <- dfNewIndsTable$cells %% ncol(rstHabitat)
+  dfNewIndsTable$Y <- nrow(rstHabitat) - (floor(dfNewIndsTable$cells / ncol(rstHabitat)))
+  dfNewIndsTable$Ninds <- dfNewIndsTable$layer
+  dfNewIndsTable <- dfNewIndsTable[ , !(names(dfNewIndsTable) %in% c('ID', 'cells', 'layer'))]
+  dfNewIndsTable <- dfNewIndsTable[!is.na(dfNewIndsTable$Ninds),]
+  # join to previous individuals file?
+  # trying this to stop populations dying out... but not sure it's correct as it will undo any management changes made based on CRAFTY/
+  # and will undo population change
+  #if (tick==991){
+    #initIndsTable <- read.table(file.path(dirRsftrInput, "initial_inds_2014_n10.txt"), header = T)
+  #}else{
+    #initIndsTable <- read.table(file.path(dirRsftrInput, sprintf('inds_tick_%s.txt', tick-1)), header = T)
+  #}
+  #dfNewIndsTable <- rbind(initIndsTable,dfNewIndsTable)
+  # make sure individuals aren't being counted more than once in the same location
+  dfNewIndsTable <- unique(dfNewIndsTable)
+  # where Ninds = 1, set to 10. Otherwise populations die out
+  # they don't die out in RangeshiftR standalone run (which uses the same init file with Ninds set to 10 for entire simulation)
+  dfNewIndsTable$Ninds[which(dfNewIndsTable$Ninds==1)] <- 10
+  
+  write.table(dfNewIndsTable, file.path(dirRsftrInput, sprintf('inds_tick_%s.txt', tick)),row.names = F, quote = F, sep = '\t')
+  
+}
+
+plot(result)
+plot(outRasterStack)
+
+# populations are dying off by tick 4 if run this way.
+# why is it different extracting the result at every timestep compared to running for 10 years from the same init file??
