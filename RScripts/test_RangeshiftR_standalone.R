@@ -41,8 +41,6 @@ rstHabitat <- projectRaster(rstHabitat, crs = crs(hexPoints))
 st_crs(rstHabitat)
 habitatRes <- 100
 
-init <- Initialise(InitType=2, InitIndsFile='initial_inds_2014_n10.txt')
-
 land <- ImportedLandscape(LandscapeFile=sprintf('Habitat-%sm.asc', habitatRes),
                           Resolution=habitatRes,
                           HabPercent=TRUE,
@@ -55,16 +53,17 @@ disp <-  Dispersal(Emigration = Emigration(EmigProb = 0.2),
                    Transfer   = DispersalKernel(Distances = 1500), # test getting to top of landscape while keeping other params low
                    Settlement = Settlement() )
 
+
+
+
+### run RangeShiftR ------------------------------------------------------------
+init <- Initialise(InitType=2, InitIndsFile='initial_inds_2014_n10.txt')
 sim <- Simulation(Simulation = 999, # 999 to make sure test simulation is obvious in results folder
                   Years = rangeshiftrYears2,
                   Replicates = 1,
                   OutIntPop = 1,
                   OutIntInd = 1,
                   ReturnPopRaster=TRUE)
-
-
-### run RangeShiftR ------------------------------------------------------------
-
 s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init)
 validateRSparams(s)
 result <- RunRS(s, sprintf('%s/', dirpath = dirRsftr))
@@ -139,7 +138,7 @@ for (tick in timesteps) {
   dfNewIndsTable <- dfNewIndsTable[!is.na(dfNewIndsTable$Ninds),]
   # join to previous individuals file?
   # trying this to stop populations dying out... but not sure it's correct as it will undo any management changes made based on CRAFTY/
-  # and will undo population change
+  # and will undo previous population change
   #if (tick==991){
     #initIndsTable <- read.table(file.path(dirRsftrInput, "initial_inds_2014_n10.txt"), header = T)
   #}else{
@@ -157,7 +156,7 @@ for (tick in timesteps) {
 }
 
 plot(result)
-plot(outRasterStack)
+spplot(outRasterStack)
 
-# populations are dying off by tick 4 if run this way.
+# populations are dying off by tick 3/4 if run this way.
 # why is it different extracting the result at every timestep compared to running for 10 years from the same init file??
