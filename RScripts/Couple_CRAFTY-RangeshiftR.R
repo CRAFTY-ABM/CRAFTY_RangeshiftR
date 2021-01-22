@@ -138,7 +138,7 @@ CRAFTY_sargs <- c("-d", dirCRAFTYInput, "-f", scenario.filename, "-o", random_se
 
 # CRAFTY timesteps
 start_year_idx <- 1 # first year of the input data
-end_year_idx <- 20 # 10th year of the input data 
+end_year_idx <- 10 # 10th year of the input data 
 
 parallelize <- FALSE # not loads of data so don't need to run in parallel
 
@@ -201,8 +201,7 @@ region = CRAFTY_loader_jobj$getRegions()$getAllRegions()$iterator()$'next'()
 ### Run the models -------------------------------------------------------------
 
 CRAFTY_tick <- 1
-#RR_iteration <- 1
-
+ 
 for (CRAFTY_tick in timesteps) {
   
   # before EXTtick()
@@ -347,6 +346,7 @@ for (CRAFTY_tick in timesteps) {
   # find OPM individuals within each agent type
   # https://gis.stackexchange.com/questions/245136/how-to-subset-point-data-by-outside-of-polygon-data-in-r
   if (nrow(lowInt)>0) { 
+    lowInt = st_transform(lowInt, crs = st_crs(shpIndividuals))
     
     low <- sapply(st_intersects(shpIndividuals, lowInt),function(x){length(x)>0})
     
@@ -371,6 +371,8 @@ for (CRAFTY_tick in timesteps) {
   }
   
   if (nrow(highInt)>0) { 
+    highInt = st_transform(highInt, crs = st_crs(shpIndividuals))
+    
     high <- sapply(st_intersects(shpIndividuals, highInt),function(x){length(x)>0})
     
     # remove if high intensity
