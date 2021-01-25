@@ -66,7 +66,7 @@ sim <- Simulation(Simulation = 999, # 999 to make sure test simulation is obviou
                   ReturnPopRaster=TRUE)
 s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init)
 validateRSparams(s)
-result <- RunRS(s, sprintf('%s/', dirpath = dirRsftr))
+result <- RunRS(s, sprintf('%s', dirpath = dirRsftr))
 crs(result) <- crs(rstHabitat)
 extent(result) <- extent(rstHabitat)
 #result[[1]]
@@ -91,7 +91,7 @@ timesteps <- 991:1000
 dfRangeShiftrData <- data.frame()
 outRasterStack <- stack()
 
-tick <- 991
+tick <- 992
 
 for (tick in timesteps) {
   
@@ -102,7 +102,7 @@ for (tick in timesteps) {
   }
   sim <- Simulation(Simulation = tick,
                     Years = rangeshiftrYears,
-                    Replicates = 100,
+                    Replicates = 1,
                     OutIntPop = 1,
                     OutIntInd = 1,
                     ReturnPopRaster=TRUE)
@@ -113,25 +113,26 @@ for (tick in timesteps) {
   result <- RunRS(s, sprintf('%s', dirRsftr))
   crs(result) <- crs(rstHabitat)
   extent(result) <- extent(rstHabitat)
+  plot(result)
   
   # store population raster in output stack.
-  #outRasterStack <- addLayer(outRasterStack, result[[rangeshiftrYears]])
-  outRasterStack <- addLayer(outRasterStack, modal(result))
+  outRasterStack <- addLayer(outRasterStack, result[[2]])
+  #outRasterStack <- addLayer(outRasterStack, modal(result))
   # store population data in output data frame.
-  dfRange <- readRange(s, sprintf('%s/',dirRsftr))
+  dfRange <- readRange(s, sprintf('%s',dirRsftr))
   dfRange$timestep <- tick
   dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[1,])
   
   # extract the population raster to a shapefile of the individuals
   #shpIndividuals <- rasterToPoints(result[[rangeshiftrYears]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
-  shpIndividuals <- rasterToPoints(modal(result), fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
+  shpIndividuals <- rasterToPoints(result[[2]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
   shpIndividuals <- shpIndividuals %>% st_set_crs(st_crs(rstHabitat))
   shpIndividuals$id <- 1:nrow(shpIndividuals)
   
   # write new individuals file to be used by RangeShiftR on the next loop
   shpIndividuals <- shpIndividuals %>% as_Spatial()
   #dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
-  dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field='layer'), shpIndividuals, cellnumbers=T, df=TRUE)
+  dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field='rep0_year1'), shpIndividuals, cellnumbers=T, df=TRUE)
   dfNewIndsTable$Year <- 0
   dfNewIndsTable$Species <- 0
   dfNewIndsTable$X <- dfNewIndsTable$cells %% ncol(rstHabitat)
@@ -163,7 +164,7 @@ for (tick in timesteps) {
   
 }
 
-plot(result)
+plot(modal(result))
 spplot(outRasterStack)
 
 # populations are dying off by tick 3/4 if run this way.
