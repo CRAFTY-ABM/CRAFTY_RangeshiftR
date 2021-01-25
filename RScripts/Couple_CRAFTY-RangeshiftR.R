@@ -200,7 +200,7 @@ region = CRAFTY_loader_jobj$getRegions()$getAllRegions()$iterator()$'next'()
 
 ### Run the models -------------------------------------------------------------
 
-CRAFTY_tick <- 1
+#CRAFTY_tick <- 2
  
 for (CRAFTY_tick in timesteps) {
   
@@ -362,9 +362,9 @@ for (CRAFTY_tick in timesteps) {
     lowPops <- shpIndividuals$rep0_year1[low]
     if (length(lowPops)>1){
       for (pop in c(1:length(lowPops))){
-        lowPops[pop]<-lowPops[pop]/2
+        lowPops[pop]<-round(lowPops[pop]/2)
         if (lowPops[pop]<1){
-          lowPops[pop] <- 0}
+          lowPops[-pop]}
       }
     }
     shpIndividuals$rep0_year1[low] <- lowPops
@@ -384,7 +384,7 @@ for (CRAFTY_tick in timesteps) {
   # write new individuals file to be used by RangeShiftR on the next loop
   shpIndividuals <- shpIndividuals %>% as_Spatial()
   dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
-  dfNewIndsTable$Year <- 0 # CRAFTY_tick - 1
+  dfNewIndsTable$Year <- 0
   dfNewIndsTable$Species <- 0
   dfNewIndsTable$X <- dfNewIndsTable$cells %% ncol(rstHabitat)
   dfNewIndsTable$Y <- nrow(rstHabitat) - (floor(dfNewIndsTable$cells / ncol(rstHabitat)))
@@ -393,17 +393,22 @@ for (CRAFTY_tick in timesteps) {
   dfNewIndsTable <- dfNewIndsTable[!is.na(dfNewIndsTable$Ninds),]
   # join to previous individuals file?
   # trying this to stop populations dying out... but don't think this is correct as it will undo any management changes made based on CRAFTY...
-  if (CRAFTY_tick==1){
-    initIndsTable <- read.table(file.path(dirRsftrInput, "initial_inds_2014_n10.txt"), header = T)
-  }else{
-    initIndsTable <- read.table(file.path(dirRsftrInput, sprintf('inds_tick_%s.txt', CRAFTY_tick-1)), header = T)
-  }
-  dfNewIndsTable <- rbind(initIndsTable,dfNewIndsTable)
+  #if (CRAFTY_tick==1){
+    #initIndsTable <- read.table(file.path(dirRsftrInput, "initial_inds_2014_n10.txt"), header = T)
+  #}else{
+    #initIndsTable <- read.table(file.path(dirRsftrInput, sprintf('inds_tick_%s.txt', CRAFTY_tick-1)), header = T)
+  #}
+  #dfNewIndsTable <- rbind(initIndsTable,dfNewIndsTable)
   # make sure individuals aren't being counted more than once in the same location
   dfNewIndsTable <- unique(dfNewIndsTable)
   # where Ninds = 1, set to 10. Otherwise populations die out
   # they don't die out in RangeshiftR standalone run (which uses the same init file with Ninds set to 10 for entire simulation)
   dfNewIndsTable$Ninds[which(dfNewIndsTable$Ninds==1)] <- 10
+  # add another catch for Ninds == 0
+  if (nrow(dfNewIndsTable[which(dfNewIndsTable$Ninds==0),])>0){
+    dfNewIndsTable <- dfNewIndsTable[-which(dfNewIndsTable$Ninds==0),]
+  }
+  
   
   write.table(dfNewIndsTable, file.path(dirRsftrInput, sprintf('inds_tick_%s.txt', CRAFTY_tick)),row.names = F, quote = F, sep = '\t')
   

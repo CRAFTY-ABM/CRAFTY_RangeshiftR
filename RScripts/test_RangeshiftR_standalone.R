@@ -91,7 +91,7 @@ timesteps <- 991:1000
 dfRangeShiftrData <- data.frame()
 outRasterStack <- stack()
 
-#tick <- 991
+tick <- 991
 
 for (tick in timesteps) {
   
@@ -102,7 +102,7 @@ for (tick in timesteps) {
   }
   sim <- Simulation(Simulation = tick,
                     Years = rangeshiftrYears,
-                    Replicates = 1,
+                    Replicates = 100,
                     OutIntPop = 1,
                     OutIntInd = 1,
                     ReturnPopRaster=TRUE)
@@ -115,20 +115,23 @@ for (tick in timesteps) {
   extent(result) <- extent(rstHabitat)
   
   # store population raster in output stack.
-  outRasterStack <- addLayer(outRasterStack, result[[rangeshiftrYears]])
+  #outRasterStack <- addLayer(outRasterStack, result[[rangeshiftrYears]])
+  outRasterStack <- addLayer(outRasterStack, modal(result))
   # store population data in output data frame.
   dfRange <- readRange(s, sprintf('%s/',dirRsftr))
   dfRange$timestep <- tick
   dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[1,])
   
   # extract the population raster to a shapefile of the individuals
-  shpIndividuals <- rasterToPoints(result[[rangeshiftrYears]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
+  #shpIndividuals <- rasterToPoints(result[[rangeshiftrYears]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
+  shpIndividuals <- rasterToPoints(modal(result), fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
   shpIndividuals <- shpIndividuals %>% st_set_crs(st_crs(rstHabitat))
   shpIndividuals$id <- 1:nrow(shpIndividuals)
   
   # write new individuals file to be used by RangeShiftR on the next loop
   shpIndividuals <- shpIndividuals %>% as_Spatial()
-  dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
+  #dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
+  dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field='layer'), shpIndividuals, cellnumbers=T, df=TRUE)
   dfNewIndsTable$Year <- 0
   dfNewIndsTable$Species <- 0
   dfNewIndsTable$X <- dfNewIndsTable$cells %% ncol(rstHabitat)
@@ -150,6 +153,11 @@ for (tick in timesteps) {
   # where Ninds = 1, set to 10. Otherwise populations die out
   # they don't die out in RangeshiftR standalone run (which uses the same init file with Ninds set to 10 for entire simulation)
   dfNewIndsTable$Ninds[which(dfNewIndsTable$Ninds==1)] <- 10
+  # add another catch for Ninds == 0
+  if (nrow(dfNewIndsTable[which(dfNewIndsTable$Ninds==0),])>0){
+    dfNewIndsTable <- dfNewIndsTable[-which(dfNewIndsTable$Ninds==0),]
+  }
+  
   
   write.table(dfNewIndsTable, file.path(dirRsftrInput, sprintf('inds_tick_%s.txt', tick)),row.names = F, quote = F, sep = '\t')
   
