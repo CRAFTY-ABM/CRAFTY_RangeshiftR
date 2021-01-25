@@ -87,22 +87,25 @@ dev.off()
 
 ### test in loop with new init files each time ---------------------------------
 
-timesteps <- 991:1000
+timesteps <- 1:10
 dfRangeShiftrData <- data.frame()
 outRasterStack <- stack()
 
-tick <- 992
+#tick <- 1
 
 for (tick in timesteps) {
   
-  if (tick==991){
+  if (tick==1){
     init <- Initialise(InitType=2, InitIndsFile='initial_inds_2014_n10.txt')
   }else{
     init <- Initialise(InitType=2, InitIndsFile=sprintf('inds_tick_%s.txt', tick-1))
   }
+  
+  RsftR_tick <- tick+1
+  
   sim <- Simulation(Simulation = tick,
-                    Years = rangeshiftrYears,
-                    Replicates = 1,
+                    Years = RsftR_tick,
+                    Replicates = 100,
                     OutIntPop = 1,
                     OutIntInd = 1,
                     ReturnPopRaster=TRUE)
@@ -113,10 +116,14 @@ for (tick in timesteps) {
   result <- RunRS(s, sprintf('%s', dirRsftr))
   crs(result) <- crs(rstHabitat)
   extent(result) <- extent(rstHabitat)
-  plot(result)
+  names(result)
+  # calculate average of 100 reps for current timestep
+  idx <- grep(paste0("year",tick), names(result))
+  resultMean <- mean(result[[idx]])
+  plot(resultMean)
   
   # store population raster in output stack.
-  outRasterStack <- addLayer(outRasterStack, result[[2]])
+  outRasterStack <- addLayer(outRasterStack, resultMean)
   #outRasterStack <- addLayer(outRasterStack, modal(result))
   # store population data in output data frame.
   dfRange <- readRange(s, sprintf('%s',dirRsftr))
@@ -125,14 +132,15 @@ for (tick in timesteps) {
   
   # extract the population raster to a shapefile of the individuals
   #shpIndividuals <- rasterToPoints(result[[rangeshiftrYears]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
-  shpIndividuals <- rasterToPoints(result[[2]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
+  shpIndividuals <- rasterToPoints(resultMean, fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
   shpIndividuals <- shpIndividuals %>% st_set_crs(st_crs(rstHabitat))
   shpIndividuals$id <- 1:nrow(shpIndividuals)
+  shpIndividuals$layer <- ceiling(shpIndividuals$layer)
   
   # write new individuals file to be used by RangeShiftR on the next loop
   shpIndividuals <- shpIndividuals %>% as_Spatial()
-  #dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
-  dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field='rep0_year1'), shpIndividuals, cellnumbers=T, df=TRUE)
+  #dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', RsftR_tick-1)), shpIndividuals, cellnumbers=T, df=TRUE)
+  dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field='layer'), shpIndividuals, cellnumbers=T, df=TRUE)
   dfNewIndsTable$Year <- 0
   dfNewIndsTable$Species <- 0
   dfNewIndsTable$X <- dfNewIndsTable$cells %% ncol(rstHabitat)
@@ -140,20 +148,11 @@ for (tick in timesteps) {
   dfNewIndsTable$Ninds <- dfNewIndsTable$layer
   dfNewIndsTable <- dfNewIndsTable[ , !(names(dfNewIndsTable) %in% c('ID', 'cells', 'layer'))]
   dfNewIndsTable <- dfNewIndsTable[!is.na(dfNewIndsTable$Ninds),]
-  # join to previous individuals file?
-  # trying this to stop populations dying out... but not sure it's correct as it will undo any management changes made based on CRAFTY/
-  # and will undo previous population change
-  #if (tick==991){
-    #initIndsTable <- read.table(file.path(dirRsftrInput, "initial_inds_2014_n10.txt"), header = T)
-  #}else{
-    #initIndsTable <- read.table(file.path(dirRsftrInput, sprintf('inds_tick_%s.txt', tick-1)), header = T)
-  #}
-  #dfNewIndsTable <- rbind(initIndsTable,dfNewIndsTable)
   # make sure individuals aren't being counted more than once in the same location
   dfNewIndsTable <- unique(dfNewIndsTable)
   # where Ninds = 1, set to 10. Otherwise populations die out
   # they don't die out in RangeshiftR standalone run (which uses the same init file with Ninds set to 10 for entire simulation)
-  dfNewIndsTable$Ninds[which(dfNewIndsTable$Ninds==1)] <- 10
+  #dfNewIndsTable$Ninds[which(dfNewIndsTable$Ninds==1)] <- 10
   # add another catch for Ninds == 0
   if (nrow(dfNewIndsTable[which(dfNewIndsTable$Ninds==0),])>0){
     dfNewIndsTable <- dfNewIndsTable[-which(dfNewIndsTable$Ninds==0),]
@@ -164,8 +163,12 @@ for (tick in timesteps) {
   
 }
 
-plot(modal(result))
+#plot(modal(result))
 spplot(outRasterStack)
 
-# populations are dying off by tick 3/4 if run this way.
+# populations are dying off by tick 3/4 if run in 2-year steps per tick.
 # why is it different extracting the result at every timestep compared to running for 10 years from the same init file??
+# 25/01/21
+# try using new Rsftr_tick - run RangeshiftR from start year to timestep year each timestep
+
+# next thing to try - more reps each year and take mean/modal of all reps?

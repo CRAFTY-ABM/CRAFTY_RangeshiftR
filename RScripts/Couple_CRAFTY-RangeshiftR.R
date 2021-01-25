@@ -200,11 +200,11 @@ region = CRAFTY_loader_jobj$getRegions()$getAllRegions()$iterator()$'next'()
 
 ### Run the models -------------------------------------------------------------
 
-#CRAFTY_tick <- 2
+#CRAFTY_tick <- 1
  
 for (CRAFTY_tick in timesteps) {
   
-  # before EXTtick()
+  # before EXTtick() (line 306)
   # run RangeshiftR to get OPM capital
   
   print(paste0("============CRAFTY JAVA-R API: Setting up RangeShiftR tick = ", CRAFTY_tick))
@@ -215,8 +215,12 @@ for (CRAFTY_tick in timesteps) {
   }else{
     init <- Initialise(InitType=2, InitIndsFile=sprintf('inds_tick_%s.txt', CRAFTY_tick-1))
   }
+  
+  # RangeShiftR years - run from start yr to timestep yr
+  RsftR_tick <- CRAFTY_tick+1
+  
   sim <- Simulation(Simulation = CRAFTY_tick,
-                    Years = rangeshiftrYears,
+                    Years = RsftR_tick,
                     Replicates = 1,
                     OutIntPop = 1,
                     OutIntInd = 1,
@@ -234,21 +238,22 @@ for (CRAFTY_tick in timesteps) {
   crs(result) <- crs(rstHabitat)
   extent(result) <- extent(rstHabitat)
   print(paste0("============CRAFTY JAVA-R API: Show RangeShiftR result tick = ", CRAFTY_tick))
-  print(plot(result[[rangeshiftrYears]]))
+  r1 <- plot(result[[RsftR_tick]])
+  print(r1)
   # store population raster in output stack.
-  outRasterStack <- addLayer(outRasterStack, result[[rangeshiftrYears]])
+  outRasterStack <- addLayer(outRasterStack, result[[RsftR_tick]])
   # store population data in output data frame.
-  dfRange <- readRange(s, sprintf('%s/',dirRsftr))
+  dfRange <- readRange(s, sprintf('%s',dirRsftr))
   dfRange$timestep <- CRAFTY_tick
   dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[1,])
   
   print(paste0("============CRAFTY JAVA-R API: Extract RangeShiftR population results = ", CRAFTY_tick))
   # extract the population raster to a shapefile of the individuals
-  shpIndividuals <- rasterToPoints(result[[rangeshiftrYears]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
+  shpIndividuals <- rasterToPoints(result[[RsftR_tick]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
   shpIndividuals <- shpIndividuals %>% st_set_crs(st_crs(rstHabitat))
   shpIndividuals$id <- 1:nrow(shpIndividuals)
   # extract OPM population raster and use as OPM capital
-  result2 <- result[[rangeshiftrYears]]
+  result2 <- result[[RsftR_tick]]
   hexPointsOPM <- raster::extract(result2, hexPointsSP)
   dfOPM <- cbind(hexPointsSP,hexPointsOPM) %>% as.data.frame()
   colnames(dfOPM)[2] <- "population"
@@ -383,7 +388,7 @@ for (CRAFTY_tick in timesteps) {
   
   # write new individuals file to be used by RangeShiftR on the next loop
   shpIndividuals <- shpIndividuals %>% as_Spatial()
-  dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
+  dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', RsftR_tick-1)), shpIndividuals, cellnumbers=T, df=TRUE)
   dfNewIndsTable$Year <- 0
   dfNewIndsTable$Species <- 0
   dfNewIndsTable$X <- dfNewIndsTable$cells %% ncol(rstHabitat)
@@ -391,14 +396,6 @@ for (CRAFTY_tick in timesteps) {
   dfNewIndsTable$Ninds <- dfNewIndsTable$layer
   dfNewIndsTable <- dfNewIndsTable[ , !(names(dfNewIndsTable) %in% c('ID', 'cells', 'layer'))]
   dfNewIndsTable <- dfNewIndsTable[!is.na(dfNewIndsTable$Ninds),]
-  # join to previous individuals file?
-  # trying this to stop populations dying out... but don't think this is correct as it will undo any management changes made based on CRAFTY...
-  #if (CRAFTY_tick==1){
-    #initIndsTable <- read.table(file.path(dirRsftrInput, "initial_inds_2014_n10.txt"), header = T)
-  #}else{
-    #initIndsTable <- read.table(file.path(dirRsftrInput, sprintf('inds_tick_%s.txt', CRAFTY_tick-1)), header = T)
-  #}
-  #dfNewIndsTable <- rbind(initIndsTable,dfNewIndsTable)
   # make sure individuals aren't being counted more than once in the same location
   dfNewIndsTable <- unique(dfNewIndsTable)
   # where Ninds = 1, set to 10. Otherwise populations die out
