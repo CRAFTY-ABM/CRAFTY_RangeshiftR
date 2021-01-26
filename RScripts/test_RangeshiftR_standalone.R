@@ -105,7 +105,7 @@ for (tick in timesteps) {
   
   sim <- Simulation(Simulation = tick,
                     Years = RsftR_tick,
-                    Replicates = 100,
+                    Replicates = 10,
                     OutIntPop = 1,
                     OutIntInd = 1,
                     ReturnPopRaster=TRUE)
@@ -170,5 +170,5 @@ spplot(outRasterStack)
 # why is it different extracting the result at every timestep compared to running for 10 years from the same init file??
 # 25/01/21
 # try using new Rsftr_tick - run RangeshiftR from start year to timestep year each timestep
-
+# because stochastic, will mean individuals take different path each time...
 # next thing to try - more reps each year and take mean/modal of all reps?

@@ -1,5 +1,5 @@
 
-# date: 20/01/21
+# date: 26/01/21
 # authors: VB/BS
 # description: script to loosely couple RangeShiftR and CRAFTY. RangeShiftR will 
 # feed in two capitals (OPM inverted & knowledge). CRAFTY will take these and
@@ -130,8 +130,8 @@ scenario.filename <- "Scenario_Baseline_noGUI.xml" # no display
 crafty_jclasspath <- c(path_crafty_jar, paste0(path_crafty_libs, crafty_libs))
 
 
-# Random seed used in the crafty 
-random_seed_crafty = 99 
+# Random seed used in CRAFTY
+random_seed_crafty <- 99 
 
 # scenario file
 CRAFTY_sargs <- c("-d", dirCRAFTYInput, "-f", scenario.filename, "-o", random_seed_crafty, "-r", "1",  "-n", "1", "-sr", "0") 
@@ -200,14 +200,15 @@ region = CRAFTY_loader_jobj$getRegions()$getAllRegions()$iterator()$'next'()
 
 ### Run the models -------------------------------------------------------------
 
-#CRAFTY_tick <- 1
+#CRAFTY_tick <- 2
  
 for (CRAFTY_tick in timesteps) {
   
-  # before EXTtick() (line 306)
+  # before EXTtick() (line 331)
   # run RangeshiftR to get OPM capital
   
   print(paste0("============CRAFTY JAVA-R API: Setting up RangeShiftR tick = ", CRAFTY_tick))
+  
   # set up RangeShiftR for current iteration
   # init file updates based on CRAFTY if after tick 1
   if (CRAFTY_tick==1){
@@ -216,12 +217,21 @@ for (CRAFTY_tick in timesteps) {
     init <- Initialise(InitType=2, InitIndsFile=sprintf('inds_tick_%s.txt', CRAFTY_tick-1))
   }
   
-  # RangeShiftR years - run from start yr to timestep yr
+  # option 1 run RangeShiftR for 2-years per CRAFTY_tick and extract 2nd yr as result
+  #sim <- Simulation(Simulation = CRAFTY_tick,
+  #                  Years = rangeshiftrYears,
+  #                  Replicates = 1,
+  #                  OutIntPop = 1,
+  #                  OutIntInd = 1,
+  #                  ReturnPopRaster=TRUE)
+  
+  # RangeShiftR years - run from start yr to timestep yr each CRAFTY_tick
   RsftR_tick <- CRAFTY_tick+1
   
+  # option 2 run RangeshiftR for CRAFTY_tick + 1 years and multiple reps, extract mean of tick year
   sim <- Simulation(Simulation = CRAFTY_tick,
                     Years = RsftR_tick,
-                    Replicates = 1,
+                    Replicates = 10,
                     OutIntPop = 1,
                     OutIntInd = 1,
                     ReturnPopRaster=TRUE)
@@ -229,6 +239,7 @@ for (CRAFTY_tick in timesteps) {
   stopifnot(validateRSparams(s)==TRUE) 
   
   print(paste0("============CRAFTY JAVA-R API: Running RangeShiftR tick = ", CRAFTY_tick))
+  
   # run RangeShiftR - use result to store output population raster.
   result <- RunRS(s, sprintf('%s', dirRsftr))
   
@@ -237,30 +248,46 @@ for (CRAFTY_tick in timesteps) {
   
   crs(result) <- crs(rstHabitat)
   extent(result) <- extent(rstHabitat)
-  print(paste0("============CRAFTY JAVA-R API: Show RangeShiftR result tick = ", CRAFTY_tick))
-  r1 <- plot(result[[RsftR_tick]])
-  print(r1)
+  
+  #r1 <- plot(result[[rangeshiftrYears]])
+  #print(r1)
+  
+  # calculate average of 10 reps for current timestep
+  names(result)
+  idx <- grep(paste0("year",CRAFTY_tick), names(result))
+  resultMean <- mean(result[[idx]])
+  r2 <- plot(resultMean)
+  print(r2)
+  
   # store population raster in output stack.
-  outRasterStack <- addLayer(outRasterStack, result[[RsftR_tick]])
+  #outRasterStack <- addLayer(outRasterStack, result[[rangeshiftrYears]])
+  outRasterStack <- addLayer(outRasterStack, resultMean)
+  
   # store population data in output data frame.
   dfRange <- readRange(s, sprintf('%s',dirRsftr))
   dfRange$timestep <- CRAFTY_tick
   dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[1,])
   
   print(paste0("============CRAFTY JAVA-R API: Extract RangeShiftR population results = ", CRAFTY_tick))
+  
   # extract the population raster to a shapefile of the individuals
-  shpIndividuals <- rasterToPoints(result[[RsftR_tick]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
+  #shpIndividuals <- rasterToPoints(result[[rangeshiftrYears]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
+  shpIndividuals <- rasterToPoints(resultMean, fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
   shpIndividuals <- shpIndividuals %>% st_set_crs(st_crs(rstHabitat))
   shpIndividuals$id <- 1:nrow(shpIndividuals)
+  shpIndividuals$layer <- ceiling(shpIndividuals$layer)
+  
   # extract OPM population raster and use as OPM capital
-  result2 <- result[[RsftR_tick]]
-  hexPointsOPM <- raster::extract(result2, hexPointsSP)
+  #result2 <- result[[rangeshiftrYears]]
+  #hexPointsOPM <- raster::extract(result2, hexPointsSP)
+  hexPointsOPM <- raster::extract(resultMean, hexPointsSP)
   dfOPM <- cbind(hexPointsSP,hexPointsOPM) %>% as.data.frame()
   colnames(dfOPM)[2] <- "population"
   dfOPM$population[which(is.na(dfOPM$population))] <- 0
   
   print(paste0("============CRAFTY JAVA-R API: Convert RangeShiftR population results to binary capital = ", CRAFTY_tick))
-  # make binary version and invert 
+  
+  # make binary version and invert for CRAFTY
   OPMbinary <- dfOPM$population
   OPMbinary[which(OPMbinary>0)] <- 1
   invert <- OPMbinary - 1
@@ -388,8 +415,9 @@ for (CRAFTY_tick in timesteps) {
   
   # write new individuals file to be used by RangeShiftR on the next loop
   shpIndividuals <- shpIndividuals %>% as_Spatial()
-  dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', RsftR_tick-1)), shpIndividuals, cellnumbers=T, df=TRUE)
-  dfNewIndsTable$Year <- 0
+  #dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
+  dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field='layer'), shpIndividuals, cellnumbers=T, df=TRUE)
+  dfNewIndsTable$Year <- 0 # would changing year to CRAFTY_tick help when running RS in 2-yr steps?
   dfNewIndsTable$Species <- 0
   dfNewIndsTable$X <- dfNewIndsTable$cells %% ncol(rstHabitat)
   dfNewIndsTable$Y <- nrow(rstHabitat) - (floor(dfNewIndsTable$cells / ncol(rstHabitat)))
@@ -400,7 +428,7 @@ for (CRAFTY_tick in timesteps) {
   dfNewIndsTable <- unique(dfNewIndsTable)
   # where Ninds = 1, set to 10. Otherwise populations die out
   # they don't die out in RangeshiftR standalone run (which uses the same init file with Ninds set to 10 for entire simulation)
-  dfNewIndsTable$Ninds[which(dfNewIndsTable$Ninds==1)] <- 10
+  #dfNewIndsTable$Ninds[which(dfNewIndsTable$Ninds==1)] <- 10
   # add another catch for Ninds == 0
   if (nrow(dfNewIndsTable[which(dfNewIndsTable$Ninds==0),])>0){
     dfNewIndsTable <- dfNewIndsTable[-which(dfNewIndsTable$Ninds==0),]
@@ -408,10 +436,6 @@ for (CRAFTY_tick in timesteps) {
   
   
   write.table(dfNewIndsTable, file.path(dirRsftrInput, sprintf('inds_tick_%s.txt', CRAFTY_tick)),row.names = F, quote = F, sep = '\t')
-  
-  # set init file for next tick
-  #init <- Initialise(InitType=2, InitIndsFile=sprintf('inds_tick_%s.txt', CRAFTY_tick))
-  
   
   if (CRAFTY_nextTick <= end_year_idx) {
     print(paste0("============CRAFTY JAVA-R API: NextTick=", CRAFTY_nextTick))
@@ -422,7 +446,7 @@ for (CRAFTY_tick in timesteps) {
   
 }
 
-warnings()
+warnings() # crs warnings can ignore
 spplot(outRasterStack)
 
 dirResults <- paste0(dirCRAFTYOutput,"/output/")
