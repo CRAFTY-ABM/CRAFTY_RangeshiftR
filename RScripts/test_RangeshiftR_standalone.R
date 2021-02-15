@@ -9,12 +9,7 @@ library(sf)
 
 ### directories ----------------------------------------------------------------
 
-if (Sys.info()["user"] %in% c("alan", "seo-b")) { 
-  dirWorking<- "~/git/CRAFTY_RangeshiftR"
-  
-} else { 
-  dirWorking<- "~/eclipse-workspace/CRAFTY_RangeshiftR"
-}
+dirWorking<- "~/eclipse-workspace/CRAFTY_RangeshiftR"
 
 dirCRAFTYInput <- path.expand(paste0(dirWorking, "/data_LondonOPM/"))
 dirCRAFTYOutput <- path.expand(paste0(dirWorking, "/output"))
@@ -32,8 +27,8 @@ setwd(dirWorking)
 
 ### parameter set-up -----------------------------------------------------------
 
-rangeshiftrYears <- 2
-rangeshiftrYears2 <- 10
+rangeshiftrYears2 <- 2
+rangeshiftrYears10 <- 10
 rstHabitat <- raster(file.path(dirRsftrInput, 'Habitat-100m.tif'))
 # make sure BNG
 hexPoints <- st_read(paste0(dirWorking,"/data-processed/hexgrids/hexPoints40m.shp"))
@@ -56,10 +51,10 @@ disp <-  Dispersal(Emigration = Emigration(EmigProb = 0.2),
 
 
 
-### run RangeShiftR ------------------------------------------------------------
+### run RangeShiftR 10 yrs------------------------------------------------------
 init <- Initialise(InitType=2, InitIndsFile='initial_inds_2014_n10.txt')
 sim <- Simulation(Simulation = 999, # 999 to make sure test simulation is obvious in results folder
-                  Years = rangeshiftrYears2,
+                  Years = rangeshiftrYears10,
                   Replicates = 1,
                   OutIntPop = 1,
                   OutIntInd = 1,
@@ -81,17 +76,17 @@ plotAbundance(range_df)
 plotOccupancy(range_df)
 dev.off()
 
-# completely fine running on it's own, so it must be a mistake in the coupling...
-# maybe due to how new individual files are being edited/written?
+# completely fine running on it's own, so it may be a mistake in the coupling?
+# or maybe due to how new individual files are being edited/written?
 
 
-### test in loop with new init files each time ---------------------------------
+### test in loop, 2 yr chunks with new init files each time --------------------
 
 timesteps <- 1:10
 dfRangeShiftrData <- data.frame()
 outRasterStack <- stack()
 
-#tick <- 1
+#tick <- 1 # for testing
 
 for (tick in timesteps) {
   
@@ -104,7 +99,7 @@ for (tick in timesteps) {
   #RsftR_tick <- tick+1
   
   sim <- Simulation(Simulation = tick,
-                    Years = rangeshiftrYears,
+                    Years = rangeshiftrYears2,
                     Replicates = 10,
                     OutIntPop = 1,
                     OutIntInd = 1,
@@ -151,9 +146,6 @@ for (tick in timesteps) {
   dfNewIndsTable <- dfNewIndsTable[!is.na(dfNewIndsTable$Ninds),]
   # make sure individuals aren't being counted more than once in the same location
   dfNewIndsTable <- unique(dfNewIndsTable)
-  # where Ninds = 1, set to 10. Otherwise populations die out
-  # they don't die out in RangeshiftR standalone run (which uses the same init file with Ninds set to 10 for entire simulation)
-  #dfNewIndsTable$Ninds[which(dfNewIndsTable$Ninds==1)] <- 10
   # add another catch for Ninds == 0
   if (nrow(dfNewIndsTable[which(dfNewIndsTable$Ninds==0),])>0){
     dfNewIndsTable <- dfNewIndsTable[-which(dfNewIndsTable$Ninds==0),]
@@ -166,16 +158,23 @@ for (tick in timesteps) {
 
 #plot(modal(result))
 spplot(outRasterStack)
+# 15/02/21 this now seems to be working fine
 
+
+### notes ----------------------------------------------------------------------
 # populations are dying off by tick 3/4 if run in 2-year steps per tick.
 # why is it different extracting the result at every timestep compared to running for 10 years from the same init file??
 # 25/01/21
-# try using new Rsftr_tick - run RangeshiftR from start year to timestep year each timestep
+# tried using new Rsftr_tick - run RangeshiftR from start year to timestep year each timestep
 # because stochastic, will mean individuals take different path each time...
 # instead...
 # next thing to try - more reps each year and take mean/modal of all reps?
 # 01/02/21
 # tried mean of 10 reps, running in 2 yr chunks. still dying off by around tick 5
+
+
+### vary params ----------------------------------------------------------------
+
 # set up tests varying parameters. added catch to jump to next test if populations have died off...
 
 # current params
@@ -207,7 +206,7 @@ for (i in c(1:nrow(dfSensitivity))) {
   ID <- params[[1]]
   
   sim <- Simulation(Simulation = ID,
-                    Years = rangeshiftrYears,
+                    Years = rangeshiftrYears2,
                     Replicates = 10,
                     OutIntPop = 1, 
                     OutIntInd = 1, 
@@ -297,13 +296,15 @@ for (i in c(1:nrow(dfSensitivity))) {
     }
       
     write.table(dfNewIndsTable, file.path(dirRsftrInput, sprintf('inds_tick_%s.txt', tick)),row.names = F, quote = F, sep = '\t')
-     
+    
+    if(tick==10){
+      print(paste0("Timesteps completed for parameter test ", i))
+      statusList <- append(statusList,paste0("Timesteps completed for parameter test ", i))
+    }
+    
   }
   
-  print(paste0("Timesteps completed for parameter test ", i))
-  statusList <- append(statusList,paste0("Timesteps completed for parameter test ", i))
-  
-}
+  }
 
 statusList
 dfSensitivity
