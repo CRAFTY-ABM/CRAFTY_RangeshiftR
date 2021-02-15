@@ -176,7 +176,7 @@ spplot(outRasterStack)
 # next thing to try - more reps each year and take mean/modal of all reps?
 # 01/02/21
 # tried mean of 10 reps, running in 2 yr chunks. still dying off by around tick 5
-# set up tests varying parameters. need to add catch to jump to next test if populations have died off...
+# set up tests varying parameters. added catch to jump to next test if populations have died off...
 
 # current params
 # K 50, Rmax 25, Dispersal 1500
@@ -226,7 +226,7 @@ for (i in c(1:nrow(dfSensitivity))) {
                      Transfer   = DispersalKernel(Distances = params[[4]]),
                      Settlement = Settlement())
   
-  #tick <- 1
+  #tick <- 1 # test
   
   for (tick in timesteps) {
     
@@ -306,4 +306,8 @@ for (i in c(1:nrow(dfSensitivity))) {
 }
 
 statusList
-  
+dfSensitivity
+# tests 4, 6 and 8 doing best
+# higher K carrying capacity the main factor?
+# and either increased Rmax or dispersal
+
