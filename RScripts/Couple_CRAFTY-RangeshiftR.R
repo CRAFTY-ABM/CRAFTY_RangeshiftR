@@ -200,7 +200,7 @@ region = CRAFTY_loader_jobj$getRegions()$getAllRegions()$iterator()$'next'()
 
 ### Run the models -------------------------------------------------------------
 
-#CRAFTY_tick <- 2
+#CRAFTY_tick <- 1
  
 for (CRAFTY_tick in timesteps) {
   
@@ -218,24 +218,25 @@ for (CRAFTY_tick in timesteps) {
   }
   
   # option 1 run RangeShiftR for 2-years per CRAFTY_tick and extract 2nd yr as result
-  #sim <- Simulation(Simulation = CRAFTY_tick,
-  #                  Years = rangeshiftrYears,
-  #                  Replicates = 1,
-  #                  OutIntPop = 1,
-  #                  OutIntInd = 1,
-  #                  ReturnPopRaster=TRUE)
-  
-  # RangeShiftR years - run from start yr to timestep yr each CRAFTY_tick
-  RsftR_tick <- CRAFTY_tick+1
-  
-  # option 2 run RangeshiftR for CRAFTY_tick + 1 years and multiple reps, extract mean of tick year
   sim <- Simulation(Simulation = CRAFTY_tick,
-                    Years = RsftR_tick,
+                    Years = rangeshiftrYears,
                     Replicates = 10,
                     OutIntPop = 1,
                     OutIntInd = 1,
                     ReturnPopRaster=TRUE)
+  
+  # RangeShiftR years - run from start yr to timestep yr each CRAFTY_tick
+  #RsftR_tick <- CRAFTY_tick+1
+  
+  # option 2 run RangeshiftR for CRAFTY_tick + 1 years and multiple reps, extract mean of tick year
+  #sim <- Simulation(Simulation = CRAFTY_tick,
+  #                  Years = RsftR_tick,
+  #                  Replicates = 10,
+  #                  OutIntPop = 1,
+  #                  OutIntInd = 1,
+  #                  ReturnPopRaster=TRUE)
   s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init)
+  
   stopifnot(validateRSparams(s)==TRUE) 
   
   print(paste0("============CRAFTY JAVA-R API: Running RangeShiftR tick = ", CRAFTY_tick))
@@ -251,13 +252,13 @@ for (CRAFTY_tick in timesteps) {
   
   #r1 <- plot(result[[rangeshiftrYears]])
   #print(r1)
+  names(result)
   
   # calculate average of 10 reps for current timestep
-  names(result)
-  idx <- grep(paste0("year",CRAFTY_tick), names(result))
+  #idx <- grep(paste0("year",tick), names(result))
+  idx <- grep("year1", names(result))
   resultMean <- mean(result[[idx]])
-  r2 <- plot(resultMean)
-  print(r2)
+  plot(resultMean)
   
   # store population raster in output stack.
   #outRasterStack <- addLayer(outRasterStack, result[[rangeshiftrYears]])
@@ -426,14 +427,10 @@ for (CRAFTY_tick in timesteps) {
   dfNewIndsTable <- dfNewIndsTable[!is.na(dfNewIndsTable$Ninds),]
   # make sure individuals aren't being counted more than once in the same location
   dfNewIndsTable <- unique(dfNewIndsTable)
-  # where Ninds = 1, set to 10. Otherwise populations die out
-  # they don't die out in RangeshiftR standalone run (which uses the same init file with Ninds set to 10 for entire simulation)
-  #dfNewIndsTable$Ninds[which(dfNewIndsTable$Ninds==1)] <- 10
   # add another catch for Ninds == 0
   if (nrow(dfNewIndsTable[which(dfNewIndsTable$Ninds==0),])>0){
     dfNewIndsTable <- dfNewIndsTable[-which(dfNewIndsTable$Ninds==0),]
   }
-  
   
   write.table(dfNewIndsTable, file.path(dirRsftrInput, sprintf('inds_tick_%s.txt', CRAFTY_tick)),row.names = F, quote = F, sep = '\t')
   
