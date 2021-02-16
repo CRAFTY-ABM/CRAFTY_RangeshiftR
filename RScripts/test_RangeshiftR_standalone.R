@@ -160,11 +160,15 @@ for (tick in timesteps) {
   
 }
 
+
 #plot(modal(result))
 spplot(outRasterStack)
 # 15/02/21 this now seems to be working fine
+# 16/02/21 not anymore...
+# compared to 10 yr standalone
+spplot(result10yr)
 
-write.csv(dfRangeShiftrData, "")
+#write.csv(dfRangeShiftrData, "")
 
 
 ### notes ----------------------------------------------------------------------
