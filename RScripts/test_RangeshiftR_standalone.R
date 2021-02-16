@@ -34,18 +34,22 @@ rstHabitat <- raster(file.path(dirRsftrInput, 'Habitat-100m.tif'))
 hexPoints <- st_read(paste0(dirWorking,"/data-processed/hexgrids/hexPoints40m.shp"))
 rstHabitat <- projectRaster(rstHabitat, crs = crs(hexPoints))
 st_crs(rstHabitat)
+spplot(rstHabitat)
 habitatRes <- 100
 
 land <- ImportedLandscape(LandscapeFile=sprintf('Habitat-%sm.asc', habitatRes),
                           Resolution=habitatRes,
                           HabPercent=TRUE,
-                          K_or_DensDep=50) # carrying capacity (individuals per hectare) when habitat at 100% quality
+                          K_or_DensDep=70) 
+                          #K_or_DensDep=50) # carrying capacity (individuals per hectare) when habitat at 100% quality
 
-demo <- Demography(Rmax = 25,
+#demo <- Demography(Rmax = 25,
+demo <- Demography(Rmax = 40,
                    ReproductionType = 0) # 0 = asexual / only female; 1 = simple sexual; 2 = sexual model with explicit mating system
 
 disp <-  Dispersal(Emigration = Emigration(EmigProb = 0.2),
-                   Transfer   = DispersalKernel(Distances = 1500), # test getting to top of landscape while keeping other params low
+                   Transfer   = DispersalKernel(Distances = 800), # test getting to top of landscape while keeping other params low
+                   #Transfer   = DispersalKernel(Distances = 1500), # test getting to top of landscape while keeping other params low
                    Settlement = Settlement() )
 
 
@@ -59,13 +63,13 @@ sim <- Simulation(Simulation = 999, # 999 to make sure test simulation is obviou
                   OutIntPop = 1,
                   OutIntInd = 1,
                   ReturnPopRaster=TRUE)
-s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init)
+s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init, seed = 261090)
 validateRSparams(s)
-result <- RunRS(s, sprintf('%s', dirpath = dirRsftr))
-crs(result) <- crs(rstHabitat)
-extent(result) <- extent(rstHabitat)
+result10yr <- RunRS(s, sprintf('%s', dirpath = dirRsftr))
+crs(result10yr) <- crs(rstHabitat)
+extent(result10yr) <- extent(rstHabitat)
 #result[[1]]
-spplot(result)
+spplot(result10yr)
 #spplot(result[[-1]])
 
 # plot abundance and occupancy
@@ -86,7 +90,7 @@ timesteps <- 1:10
 dfRangeShiftrData <- data.frame()
 outRasterStack <- stack()
 
-#tick <- 1 # for testing
+#tick <- 2 # for testing
 
 for (tick in timesteps) {
   
@@ -100,11 +104,11 @@ for (tick in timesteps) {
   
   sim <- Simulation(Simulation = tick,
                     Years = rangeshiftrYears2,
-                    Replicates = 10,
+                    Replicates = 20,
                     OutIntPop = 1,
                     OutIntInd = 1,
                     ReturnPopRaster=TRUE)
-  s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init, seed = 123456)
+  s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init)#, seed = 261090)
   stopifnot(validateRSparams(s)==TRUE) 
   
   # run RangeShiftR - use result to store output population raster.
@@ -116,7 +120,7 @@ for (tick in timesteps) {
   #idx <- grep(paste0("year",tick), names(result))
   idx <- grep("year1", names(result))
   resultMean <- mean(result[[idx]])
-  plot(resultMean)
+  spplot(resultMean)
   
   # store population raster in output stack.
   outRasterStack <- addLayer(outRasterStack, resultMean)
@@ -159,6 +163,8 @@ for (tick in timesteps) {
 #plot(modal(result))
 spplot(outRasterStack)
 # 15/02/21 this now seems to be working fine
+
+write.csv(dfRangeShiftrData, "")
 
 
 ### notes ----------------------------------------------------------------------
