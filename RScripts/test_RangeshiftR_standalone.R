@@ -104,7 +104,7 @@ for (tick in timesteps) {
                     OutIntPop = 1,
                     OutIntInd = 1,
                     ReturnPopRaster=TRUE)
-  s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init)
+  s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init, seed = 123456)
   stopifnot(validateRSparams(s)==TRUE) 
   
   # run RangeShiftR - use result to store output population raster.
