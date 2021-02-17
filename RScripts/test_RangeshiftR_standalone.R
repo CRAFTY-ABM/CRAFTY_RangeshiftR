@@ -6,22 +6,26 @@
 library(RangeShiftR)
 library(raster)
 library(sf)
+library(viridis)
+library(ggplot2)
 
 ### directories ----------------------------------------------------------------
 
 dirWorking<- "~/eclipse-workspace/CRAFTY_RangeshiftR"
 
+dirFigs <- "~/CRAFTY-opm/figures"
+
 dirCRAFTYInput <- path.expand(paste0(dirWorking, "/data_LondonOPM/"))
 dirCRAFTYOutput <- path.expand(paste0(dirWorking, "/output"))
 # store RangeshiftR files within CRAFTY output folder as it is the directory CRAFTY will need to run in
-dirRsftr <- file.path(dirCRAFTYOutput, 'RangeshiftR')
+dirRsftr2 <- file.path(dirCRAFTYOutput, 'RangeshiftR_standalone')
 # specific file structure needed for RangeshiftR to run
-dirRsftrInput <- file.path(dirRsftr,"Inputs")
-dirRsftrOutput <- file.path(dirRsftr,"Outputs")
-dirRsftrOutputMaps <- file.path(dirRsftr,"Output_Maps")
+dirRsftrInput2 <- file.path(dirRsftr2,"Inputs")
+dirRsftrOutput2 <- file.path(dirRsftr2,"Outputs")
+dirRsftrOutputMaps2 <- file.path(dirRsftr2,"Output_Maps")
 # important
 # need to add the / for this path to work in RunRS()
-dirRsftr <- paste0(dirRsftr,"/") 
+dirRsftr2 <- paste0(dirRsftr2,"/") 
 
 setwd(dirWorking)
 
@@ -29,8 +33,8 @@ setwd(dirWorking)
 
 rangeshiftrYears2 <- 2
 rangeshiftrYears10 <- 10
-#rstHabitat <- raster(file.path(dirRsftrInput, 'Habitat-100m.tif'))
-ascHabitat <- raster(file.path(dirRsftrInput, 'Habitat-100m.asc'))
+#rstHabitat <- raster(file.path(dirRsftrInput2, 'Habitat-100m.tif'))
+ascHabitat <- raster(file.path(dirRsftrInput2, 'Habitat-100m.asc'))
 # make sure BNG
 hexPoints <- st_read(paste0(dirWorking,"/data-processed/hexgrids/hexPoints40m.shp"))
 #rstHabitat <- projectRaster(rstHabitat, crs = crs(hexPoints))
@@ -42,11 +46,11 @@ habitatRes <- 100
 land <- ImportedLandscape(LandscapeFile=sprintf('Habitat-%sm.asc', habitatRes),
                           Resolution=habitatRes,
                           HabPercent=TRUE,
-                          K_or_DensDep=70) 
-                          #K_or_DensDep=50) # carrying capacity (individuals per hectare) when habitat at 100% quality
+                          #K_or_DensDep=70) 
+                          K_or_DensDep=50) # carrying capacity (individuals per hectare) when habitat at 100% quality
 
-#demo <- Demography(Rmax = 25,
-demo <- Demography(Rmax = 40,
+demo <- Demography(Rmax = 25,
+#demo <- Demography(Rmax = 40,
                    ReproductionType = 0) # 0 = asexual / only female; 1 = simple sexual; 2 = sexual model with explicit mating system
 
 disp <-  Dispersal(Emigration = Emigration(EmigProb = 0.2),
@@ -67,15 +71,21 @@ sim <- Simulation(Simulation = 999, # 999 to make sure test simulation is obviou
                   ReturnPopRaster=TRUE)
 s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init, seed = 261090)
 validateRSparams(s)
-result10yr <- RunRS(s, sprintf('%s', dirpath = dirRsftr))
+result10yr <- RunRS(s, sprintf('%s', dirpath = dirRsftr2))
 crs(result10yr) <- crs(ascHabitat)
 extent(result10yr) <- extent(ascHabitat)
-#result[[1]]
-spplot(result10yr)
-#spplot(result[[-1]])
+
+# plot
+#spplot(result10yr)
+names(result10yr) <- c("Yr1","Yr2","Yr3","Yr4","Yr5","Yr6","Yr7","Yr8","Yr9","Yr10")
+clrs.viridis <- colorRampPalette(viridis::viridis(10))
+
+png(paste0(dirFigs,"/rsftr_pops_10yr_standalone.png"), width = 800, height = 600)
+spplot(result10yr, layout = c(5,2), col.regions=clrs.viridis(14), at = seq(0,70,10))
+dev.off()
 
 # plot abundance and occupancy
-dfRange10yr <- readRange(s, dirRsftr)
+dfRange10yr <- readRange(s, dirRsftr2)
 # ...with replicates:
 par(mfrow=c(1,2))
 plotAbundance(dfRange10yr)
@@ -89,8 +99,8 @@ dev.off()
 ### test in loop, 2 yr chunks with new init files each time --------------------
 
 timesteps <- 1:10
-dfRangeShiftrData <- data.frame()
-outRasterStack <- stack()
+dfRangeShiftrData2 <- data.frame()
+outRasterStack2 <- stack()
 
 #tick <- 2 # for testing
 
@@ -106,43 +116,43 @@ for (tick in timesteps) {
   
   sim <- Simulation(Simulation = tick,
                     Years = rangeshiftrYears2,
-                    Replicates = 1,
+                    Replicates = 10,
                     OutIntPop = 1,
                     OutIntInd = 1,
                     ReturnPopRaster=TRUE)
   s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init, seed = 261090)
   stopifnot(validateRSparams(s)==TRUE) 
   
-  # run RangeShiftR - use result to store output population raster.
-  result <- RunRS(s, sprintf('%s', dirRsftr))
-  crs(result) <- crs(ascHabitat)
-  extent(result) <- extent(ascHabitat)
-  names(result)
+  # run RangeShiftR - use result2 to store output population raster.
+  result2 <- RunRS(s, sprintf('%s', dirRsftr2))
+  crs(result2) <- crs(ascHabitat)
+  extent(result2) <- extent(ascHabitat)
+  names(result2)
   # calculate average of 10 reps for current timestep
-  #idx <- grep(paste0("year",tick), names(result))
-  idx <- grep("year1", names(result))
-  resultMean <- mean(result[[idx]])
-  spplot(resultMean)
+  #idx <- grep(paste0("year",tick), names(result2))
+  idx <- grep("year1", names(result2))
+  resultMean2 <- mean(result2[[idx]])
+  spplot(resultMean2)
   
   # store population raster in output stack.
-  outRasterStack <- addLayer(outRasterStack, resultMean)
-  #outRasterStack <- addLayer(outRasterStack, modal(result))
+  outRasterStack2 <- addLayer(outRasterStack2, resultMean2)
+  #outRasterStack2 <- addLayer(outRasterStack2, modal(result2))
   # store population data in output data frame.
-  dfRange <- readRange(s, sprintf('%s',dirRsftr))
-  dfRange$timestep <- tick
-  dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[,])
+  dfRange2 <- readRange(s, sprintf('%s',dirRsftr2))
+  dfRange2$timestep <- tick
+  dfRangeShiftrData2 <- rbind(dfRangeShiftrData2, dfRange2[,])
   
   # extract the population raster to a shapefile of the individuals
-  #shpIndividuals <- rasterToPoints(result[[rangeshiftrYears]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
-  shpIndividuals <- rasterToPoints(resultMean, fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
-  shpIndividuals <- shpIndividuals %>% st_set_crs(st_crs(ascHabitat))
-  shpIndividuals$id <- 1:nrow(shpIndividuals)
-  shpIndividuals$layer <- ceiling(shpIndividuals$layer)
+  #shpIndividuals2 <- rasterToPoints(result2[[rangeshiftrYears]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
+  shpIndividuals2 <- rasterToPoints(resultMean2, fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
+  shpIndividuals2 <- shpIndividuals2 %>% st_set_crs(st_crs(ascHabitat))
+  shpIndividuals2$id <- 1:nrow(shpIndividuals2)
+  shpIndividuals2$layer <- ceiling(shpIndividuals2$layer)
   
   # write new individuals file to be used by RangeShiftR on the next loop
-  shpIndividuals <- shpIndividuals %>% as_Spatial()
-  #dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, ascHabitat, field=sprintf('rep0_year%s', RsftR_tick-1)), shpIndividuals, cellnumbers=T, df=TRUE)
-  dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, ascHabitat, field='layer'), shpIndividuals, cellnumbers=T, df=TRUE)
+  shpIndividuals2 <- shpIndividuals2 %>% as_Spatial()
+  #dfNewIndsTable <- raster::extract(rasterize(shpIndividuals2, ascHabitat, field=sprintf('rep0_year%s', RsftR_tick-1)), shpIndividuals2, cellnumbers=T, df=TRUE)
+  dfNewIndsTable <- raster::extract(rasterize(shpIndividuals2, ascHabitat, field='layer'), shpIndividuals2, cellnumbers=T, df=TRUE)
   dfNewIndsTable$Year <- 0
   dfNewIndsTable$Species <- 0
   dfNewIndsTable$X <- dfNewIndsTable$cells %% ncol(ascHabitat) 
@@ -161,23 +171,28 @@ for (tick in timesteps) {
   }
   
   
-  write.table(dfNewIndsTable, file.path(dirRsftrInput, sprintf('inds_tick_%s.txt', tick)),row.names = F, quote = F, sep = '\t')
+  write.table(dfNewIndsTable, file.path(dirRsftrInput2, sprintf('inds_tick_%s.txt', tick)),row.names = F, quote = F, sep = '\t')
   
 }
 
 
-#plot(modal(result))
-spplot(outRasterStack)
-spplot(result10yr)
+spplot(outRasterStack2)
+names(outRasterStack2) <- c("Yr1","Yr2","Yr3","Yr4","Yr5","Yr6","Yr7","Yr8","Yr9","Yr10")
+clrs.viridis <- colorRampPalette(viridis::viridis(10))
+
+png(paste0(dirFigs,"/rsftr_pops_10yr_2yr-interrupted.png"), width = 800, height = 600)
+spplot(outRasterStack2, layout = c(5,2), col.regions=clrs.viridis(14), at = seq(0,70,10))
+dev.off()
+
 # compare abundance timeseries of 10 yr version with interrupted version with 3 simulated yrs at each tick
 # want to see that the middle point (year==1) matches up with the lower point (year==0) of the following tick
 par(mfrow=c(1,2))
 plotAbundance(dfRange10yr)
-plot(NInds~timestep, data = dfRangeShiftrData)
+plot(NInds~timestep, data = dfRangeShiftrData2)
 dev.off()
 
 
-#write.csv(dfRangeShiftrData, "")
+#write.csv(dfRangeShiftrData2, "")
 
 
 ### notes ----------------------------------------------------------------------
@@ -212,8 +227,8 @@ dfSensitivity$Dispersal[which(dfSensitivity$Dispersal==1)] <- 2000 # higher opti
 dfSensitivity <- tibble::rowid_to_column(dfSensitivity, "ID")
 
 # Create empty data frame and raster stack to store the output data
-dfRangeShiftrData <- data.frame()
-outRasterStack <- stack()
+dfRangeShiftrData2 <- data.frame()
+outRasterStack2 <- stack()
 timesteps <- 1:10
 statusList <- c()
 
@@ -257,15 +272,15 @@ for (i in c(1:nrow(dfSensitivity))) {
     s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init)
     
     # run and store raster result
-    result <- RunRS(s, sprintf('%s/',dirRsftr))
+    result2 <- RunRS(s, sprintf('%s/',dirRsftr2))
   
-    crs(result) <- crs(ascHabitat)
-    extent(result) <- extent(ascHabitat)
-    names(result)
+    crs(result2) <- crs(ascHabitat)
+    extent(result2) <- extent(ascHabitat)
+    names(result2)
     
     # add catch for if pops have died off
     
-    if (length(names(result))<20){
+    if (length(names(result2))<20){
       
       # skip to next i in dfSensitivity
       print(paste0("Pops died for parameter test ", i, " @ tick", tick))
@@ -275,31 +290,31 @@ for (i in c(1:nrow(dfSensitivity))) {
     }
     
     # calculate average of 10 reps for current timestep
-    #idx <- grep(paste0("year",tick), names(result))
-    idx <- grep("year1", names(result))
-    resultMean <- mean(result[[idx]])
-    plot(resultMean)
+    #idx <- grep(paste0("year",tick), names(result2))
+    idx <- grep("year1", names(result2))
+    resultMean2 <- mean(result2[[idx]])
+    plot(resultMean2)
       
     # store population raster in output stack.
-    outRasterStack <- addLayer(outRasterStack, resultMean)
-    #outRasterStack <- addLayer(outRasterStack, modal(result))
+    outRasterStack2 <- addLayer(outRasterStack2, resultMean2)
+    #outRasterStack2 <- addLayer(outRasterStack2, modal(result2))
     # store population data in output data frame.
-    dfRange <- readRange(s, sprintf('%s',dirRsftr))
-    dfRange$timestep <- tick
-    dfRange$sensitivityID <- ID
-    dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[1,])
+    dfRange2 <- readRange(s, sprintf('%s',dirRsftr2))
+    dfRange2$timestep <- tick
+    dfRange2$sensitivityID <- ID
+    dfRangeShiftrData2 <- rbind(dfRangeShiftrData2, dfRange2[1,])
       
     # extract the population raster to a shapefile of the individuals
-    #shpIndividuals <- rasterToPoints(result[[rangeshiftrYears]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
-    shpIndividuals <- rasterToPoints(resultMean, fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
-    shpIndividuals <- shpIndividuals %>% st_set_crs(st_crs(ascHabitat))
-    shpIndividuals$id <- 1:nrow(shpIndividuals)
-    shpIndividuals$layer <- ceiling(shpIndividuals$layer)
+    #shpIndividuals2 <- rasterToPoints(result2[[rangeshiftrYears]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
+    shpIndividuals2 <- rasterToPoints(resultMean2, fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
+    shpIndividuals2 <- shpIndividuals2 %>% st_set_crs(st_crs(ascHabitat))
+    shpIndividuals2$id <- 1:nrow(shpIndividuals2)
+    shpIndividuals2$layer <- ceiling(shpIndividuals2$layer)
       
     # write new individuals file to be used by RangeShiftR on the next loop
-    shpIndividuals <- shpIndividuals %>% as_Spatial()
-    #dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, ascHabitat, field=sprintf('rep0_year%s', RsftR_tick-1)), shpIndividuals, cellnumbers=T, df=TRUE)
-    dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, ascHabitat, field='layer'), shpIndividuals, cellnumbers=T, df=TRUE)
+    shpIndividuals2 <- shpIndividuals2 %>% as_Spatial()
+    #dfNewIndsTable <- raster::extract(rasterize(shpIndividuals2, ascHabitat, field=sprintf('rep0_year%s', RsftR_tick-1)), shpIndividuals2, cellnumbers=T, df=TRUE)
+    dfNewIndsTable <- raster::extract(rasterize(shpIndividuals2, ascHabitat, field='layer'), shpIndividuals2, cellnumbers=T, df=TRUE)
     dfNewIndsTable$Year <- 0
     dfNewIndsTable$Species <- 0
     dfNewIndsTable$X <- dfNewIndsTable$cells %% ncol(ascHabitat)
@@ -314,7 +329,7 @@ for (i in c(1:nrow(dfSensitivity))) {
       dfNewIndsTable <- dfNewIndsTable[-which(dfNewIndsTable$Ninds==0),]
     }
       
-    write.table(dfNewIndsTable, file.path(dirRsftrInput, sprintf('inds_tick_%s.txt', tick)),row.names = F, quote = F, sep = '\t')
+    write.table(dfNewIndsTable, file.path(dirRsftrInput2, sprintf('inds_tick_%s.txt', tick)),row.names = F, quote = F, sep = '\t')
     
     if(tick==10){
       print(paste0("Timesteps completed for parameter test ", i))
