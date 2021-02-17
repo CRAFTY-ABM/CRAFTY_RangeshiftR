@@ -69,11 +69,15 @@ source("RScripts/Functions_CRAFTY_rJava.R")
 ### RangeshiftR set-up ---------------------------------------------------------
 
 rangeshiftrYears <- 2
-rstHabitat <- raster(file.path(dirRsftrInput, 'Habitat-100m.tif'))
+#rstHabitat <- raster(file.path(dirRsftrInput, 'Habitat-100m.tif'))
+ascHabitat <- raster(file.path(dirRsftrInput, 'Habitat-100m.asc'))
 # make sure BNG
 hexPoints <- st_read(paste0(dirWorking,"/data-processed/hexgrids/hexPoints40m.shp"))
-rstHabitat <- projectRaster(rstHabitat, crs = crs(hexPoints))
-st_crs(rstHabitat)
+#rstHabitat <- projectRaster(rstHabitat, crs = crs(hexPoints))
+#st_crs(rstHabitat)
+crs(ascHabitat) <- crs(hexPoints)
+st_crs(ascHabitat)
+spplot(ascHabitat)
 habitatRes <- 100
 
 init <- Initialise(InitType=2, InitIndsFile='initial_inds_2014_n10.txt')
@@ -87,7 +91,7 @@ demo <- Demography(Rmax = 25,
                    ReproductionType = 0) # 0 = asexual / only female; 1 = simple sexual; 2 = sexual model with explicit mating system
 
 disp <-  Dispersal(Emigration = Emigration(EmigProb = 0.2),
-                   Transfer   = DispersalKernel(Distances = 1500), # test getting to top of landscape while keeping other params low
+                   Transfer   = DispersalKernel(Distances = 800), # test getting to top of landscape while keeping other params low
                    Settlement = Settlement() )
 
 # for storing rangeshiftR output data
@@ -200,7 +204,7 @@ region = CRAFTY_loader_jobj$getRegions()$getAllRegions()$iterator()$'next'()
 
 ### Run the models -------------------------------------------------------------
 
-#CRAFTY_tick <- 1
+#CRAFTY_tick <- 2
  
 for (CRAFTY_tick in timesteps) {
   
@@ -217,7 +221,7 @@ for (CRAFTY_tick in timesteps) {
     init <- Initialise(InitType=2, InitIndsFile=sprintf('inds_tick_%s.txt', CRAFTY_tick-1))
   }
   
-  # option 1 run RangeShiftR for 2-years per CRAFTY_tick and extract 2nd yr as result
+  # option 1 run RangeShiftR for 2-years per CRAFTY_tick and extract mean of 10 reps as result
   sim <- Simulation(Simulation = CRAFTY_tick,
                     Years = rangeshiftrYears,
                     Replicates = 10,
@@ -235,7 +239,8 @@ for (CRAFTY_tick in timesteps) {
   #                  OutIntPop = 1,
   #                  OutIntInd = 1,
   #                  ReturnPopRaster=TRUE)
-  s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init, seed = 123456)
+  
+  s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init, seed = 261090) # set seed for replication
   
   stopifnot(validateRSparams(s)==TRUE) 
   
@@ -247,8 +252,8 @@ for (CRAFTY_tick in timesteps) {
   # wait few seconds before reading the output
   Sys.sleep(1)
   
-  crs(result) <- crs(rstHabitat)
-  extent(result) <- extent(rstHabitat)
+  crs(result) <- crs(ascHabitat)
+  extent(result) <- extent(ascHabitat)
   
   #r1 <- plot(result[[rangeshiftrYears]])
   #print(r1)
@@ -258,7 +263,7 @@ for (CRAFTY_tick in timesteps) {
   #idx <- grep(paste0("year",tick), names(result))
   idx <- grep("year1", names(result))
   resultMean <- mean(result[[idx]])
-  plot(resultMean)
+  spplot(resultMean)
   
   # store population raster in output stack.
   #outRasterStack <- addLayer(outRasterStack, result[[rangeshiftrYears]])
@@ -267,14 +272,14 @@ for (CRAFTY_tick in timesteps) {
   # store population data in output data frame.
   dfRange <- readRange(s, sprintf('%s',dirRsftr))
   dfRange$timestep <- CRAFTY_tick
-  dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[1,])
+  dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[,])
   
   print(paste0("============CRAFTY JAVA-R API: Extract RangeShiftR population results = ", CRAFTY_tick))
   
   # extract the population raster to a shapefile of the individuals
   #shpIndividuals <- rasterToPoints(result[[rangeshiftrYears]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
   shpIndividuals <- rasterToPoints(resultMean, fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
-  shpIndividuals <- shpIndividuals %>% st_set_crs(st_crs(rstHabitat))
+  shpIndividuals <- shpIndividuals %>% st_set_crs(st_crs(ascHabitat))
   shpIndividuals$id <- 1:nrow(shpIndividuals)
   shpIndividuals$layer <- ceiling(shpIndividuals$layer)
   
@@ -416,15 +421,18 @@ for (CRAFTY_tick in timesteps) {
   
   # write new individuals file to be used by RangeShiftR on the next loop
   shpIndividuals <- shpIndividuals %>% as_Spatial()
-  #dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
-  dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field='layer'), shpIndividuals, cellnumbers=T, df=TRUE)
+  #dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, ascHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
+  dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, ascHabitat, field='layer'), shpIndividuals, cellnumbers=T, df=TRUE)
   dfNewIndsTable$Year <- 0 # would changing year to CRAFTY_tick help when running RS in 2-yr steps?
   dfNewIndsTable$Species <- 0
-  dfNewIndsTable$X <- dfNewIndsTable$cells %% ncol(rstHabitat)
-  dfNewIndsTable$Y <- nrow(rstHabitat) - (floor(dfNewIndsTable$cells / ncol(rstHabitat)))
+  dfNewIndsTable$X <- dfNewIndsTable$cells %% ncol(ascHabitat)
+  dfNewIndsTable$Y <- nrow(ascHabitat) - (floor(dfNewIndsTable$cells / ncol(ascHabitat)))
   dfNewIndsTable$Ninds <- dfNewIndsTable$layer
   dfNewIndsTable <- dfNewIndsTable[ , !(names(dfNewIndsTable) %in% c('ID', 'cells', 'layer'))]
   dfNewIndsTable <- dfNewIndsTable[!is.na(dfNewIndsTable$Ninds),]
+  # quick fix coords (for some reason when extracting from result raster they get offset by 1 compared to output txt pop file)
+  dfNewIndsTable$X <- dfNewIndsTable$X -1
+  dfNewIndsTable$Y<- dfNewIndsTable$Y -1
   # make sure individuals aren't being counted more than once in the same location
   dfNewIndsTable <- unique(dfNewIndsTable)
   # add another catch for Ninds == 0
