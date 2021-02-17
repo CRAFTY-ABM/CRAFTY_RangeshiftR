@@ -42,6 +42,7 @@ if (Sys.info()["user"] %in% c("alan", "seo-b")) {
   dirWorking<- "~/eclipse-workspace/CRAFTY_RangeshiftR"
 }
 
+dirFigs <- "~/CRAFTY-opm/figures"
 
 dirCRAFTYInput <- path.expand(paste0(dirWorking, "/data_LondonOPM/"))
 dirCRAFTYOutput <- path.expand(paste0(dirWorking, "/output"))
@@ -451,8 +452,13 @@ for (CRAFTY_tick in timesteps) {
   
 }
 
-warnings() # crs warnings can ignore
-spplot(outRasterStack)
+#warnings() # crs warnings can ignore
+names(outRasterStack) <- c("Yr1","Yr2","Yr3","Yr4","Yr5","Yr6","Yr7","Yr8","Yr9","Yr10")
+clrs.viridis <- colorRampPalette(viridis::viridis(10))
+
+png(paste0(dirFigs,"/rsftr_pops_CRAFTY-coupled.png"), width = 800, height = 600)
+spplot(outRasterStack, layout = c(5,2), col.regions=clrs.viridis(14), at = seq(0,70,10))
+dev.off()
 
 dirResults <- paste0(dirCRAFTYOutput,"/output/")
 
