@@ -191,9 +191,23 @@ plotAbundance(dfRange10yr)
 plot(NInds~timestep, data = dfRangeShiftrData2)
 dev.off()
 
+# compare all three (10 yr standalone, 2yr chunks standalone, 2 yr chunks coupled)
+par(mfrow=c(1,3))
+plotAbundance(dfRange10yr)
+plot(NInds~timestep, data=dfRangeShiftrData2)
+plot(NInds~timestep, data=dfRangeShiftrData)
+dev.off()
 
-#write.csv(dfRangeShiftrData2, "")
-
+par(mfrow=c(1,2))
+dfRangeShiftrData2 %>% filter(Year==2) %>% 
+  group_by(timestep) %>% summarise(avgNinds=mean(NInds)) %>% 
+  plot(avgNinds~timestep, ., main = "Uncoupled", type="l")
+  #ggplot(aes(timestep,NInds))+geom_point()+theme_bw()
+dfRangeShiftrData %>% filter(Year==2) %>%
+  group_by(timestep) %>% summarise(avgNinds=mean(NInds)) %>% 
+  plot(avgNinds~timestep, ., main = "Coupled", type="l")
+  #ggplot(aes(timestep,NInds))+geom_point()+theme_bw()
+dev.off()
 
 ### notes ----------------------------------------------------------------------
 # populations are dying off by tick 3/4 if run in 2-year steps per tick.
