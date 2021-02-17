@@ -29,12 +29,14 @@ setwd(dirWorking)
 
 rangeshiftrYears2 <- 2
 rangeshiftrYears10 <- 10
-rstHabitat <- raster(file.path(dirRsftrInput, 'Habitat-100m.tif'))
+#rstHabitat <- raster(file.path(dirRsftrInput, 'Habitat-100m.tif'))
+ascHabitat <- raster(file.path(dirRsftrInput, 'Habitat-100m.asc'))
 # make sure BNG
 hexPoints <- st_read(paste0(dirWorking,"/data-processed/hexgrids/hexPoints40m.shp"))
-rstHabitat <- projectRaster(rstHabitat, crs = crs(hexPoints))
-st_crs(rstHabitat)
-spplot(rstHabitat)
+#rstHabitat <- projectRaster(rstHabitat, crs = crs(hexPoints))
+crs(ascHabitat) <- crs(hexPoints)
+st_crs(ascHabitat)
+spplot(ascHabitat)
 habitatRes <- 100
 
 land <- ImportedLandscape(LandscapeFile=sprintf('Habitat-%sm.asc', habitatRes),
@@ -66,18 +68,18 @@ sim <- Simulation(Simulation = 999, # 999 to make sure test simulation is obviou
 s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init, seed = 261090)
 validateRSparams(s)
 result10yr <- RunRS(s, sprintf('%s', dirpath = dirRsftr))
-crs(result10yr) <- crs(rstHabitat)
-extent(result10yr) <- extent(rstHabitat)
+crs(result10yr) <- crs(ascHabitat)
+extent(result10yr) <- extent(ascHabitat)
 #result[[1]]
 spplot(result10yr)
 #spplot(result[[-1]])
 
 # plot abundance and occupancy
-range_df <- readRange(s, dirRsftr)
+dfRange10yr <- readRange(s, dirRsftr)
 # ...with replicates:
 par(mfrow=c(1,2))
-plotAbundance(range_df)
-plotOccupancy(range_df)
+plotAbundance(dfRange10yr)
+plotOccupancy(dfRange10yr)
 dev.off()
 
 # completely fine running on it's own, so it may be a mistake in the coupling?
@@ -104,17 +106,17 @@ for (tick in timesteps) {
   
   sim <- Simulation(Simulation = tick,
                     Years = rangeshiftrYears2,
-                    Replicates = 20,
+                    Replicates = 1,
                     OutIntPop = 1,
                     OutIntInd = 1,
                     ReturnPopRaster=TRUE)
-  s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init)#, seed = 261090)
+  s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init, seed = 261090)
   stopifnot(validateRSparams(s)==TRUE) 
   
   # run RangeShiftR - use result to store output population raster.
   result <- RunRS(s, sprintf('%s', dirRsftr))
-  crs(result) <- crs(rstHabitat)
-  extent(result) <- extent(rstHabitat)
+  crs(result) <- crs(ascHabitat)
+  extent(result) <- extent(ascHabitat)
   names(result)
   # calculate average of 10 reps for current timestep
   #idx <- grep(paste0("year",tick), names(result))
@@ -128,26 +130,29 @@ for (tick in timesteps) {
   # store population data in output data frame.
   dfRange <- readRange(s, sprintf('%s',dirRsftr))
   dfRange$timestep <- tick
-  dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[1,])
+  dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[,])
   
   # extract the population raster to a shapefile of the individuals
   #shpIndividuals <- rasterToPoints(result[[rangeshiftrYears]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
   shpIndividuals <- rasterToPoints(resultMean, fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
-  shpIndividuals <- shpIndividuals %>% st_set_crs(st_crs(rstHabitat))
+  shpIndividuals <- shpIndividuals %>% st_set_crs(st_crs(ascHabitat))
   shpIndividuals$id <- 1:nrow(shpIndividuals)
   shpIndividuals$layer <- ceiling(shpIndividuals$layer)
   
   # write new individuals file to be used by RangeShiftR on the next loop
   shpIndividuals <- shpIndividuals %>% as_Spatial()
-  #dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', RsftR_tick-1)), shpIndividuals, cellnumbers=T, df=TRUE)
-  dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field='layer'), shpIndividuals, cellnumbers=T, df=TRUE)
+  #dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, ascHabitat, field=sprintf('rep0_year%s', RsftR_tick-1)), shpIndividuals, cellnumbers=T, df=TRUE)
+  dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, ascHabitat, field='layer'), shpIndividuals, cellnumbers=T, df=TRUE)
   dfNewIndsTable$Year <- 0
   dfNewIndsTable$Species <- 0
-  dfNewIndsTable$X <- dfNewIndsTable$cells %% ncol(rstHabitat)
-  dfNewIndsTable$Y <- nrow(rstHabitat) - (floor(dfNewIndsTable$cells / ncol(rstHabitat)))
+  dfNewIndsTable$X <- dfNewIndsTable$cells %% ncol(ascHabitat) 
+  dfNewIndsTable$Y <- nrow(ascHabitat) - (floor(dfNewIndsTable$cells / ncol(ascHabitat))) 
   dfNewIndsTable$Ninds <- dfNewIndsTable$layer
-  dfNewIndsTable <- dfNewIndsTable[ , !(names(dfNewIndsTable) %in% c('ID', 'cells', 'layer'))]
+  dfNewIndsTable <- dfNewIndsTable[ , !(names(dfNewIndsTable) %in% c('ID', 'cells', 'layer'))] 
   dfNewIndsTable <- dfNewIndsTable[!is.na(dfNewIndsTable$Ninds),]
+  # quick fix coords
+  dfNewIndsTable$X <- dfNewIndsTable$X -1
+  dfNewIndsTable$Y<- dfNewIndsTable$Y -1
   # make sure individuals aren't being counted more than once in the same location
   dfNewIndsTable <- unique(dfNewIndsTable)
   # add another catch for Ninds == 0
@@ -163,10 +168,14 @@ for (tick in timesteps) {
 
 #plot(modal(result))
 spplot(outRasterStack)
-# 15/02/21 this now seems to be working fine
-# 16/02/21 not anymore...
-# compared to 10 yr standalone
 spplot(result10yr)
+# compare abundance timeseries of 10 yr version with interrupted version with 3 simulated yrs at each tick
+# want to see that the middle point (year==1) matches up with the lower point (year==0) of the following tick
+par(mfrow=c(1,2))
+plotAbundance(dfRange10yr)
+plot(NInds~timestep, data = dfRangeShiftrData)
+dev.off()
+
 
 #write.csv(dfRangeShiftrData, "")
 
@@ -250,8 +259,8 @@ for (i in c(1:nrow(dfSensitivity))) {
     # run and store raster result
     result <- RunRS(s, sprintf('%s/',dirRsftr))
   
-    crs(result) <- crs(rstHabitat)
-    extent(result) <- extent(rstHabitat)
+    crs(result) <- crs(ascHabitat)
+    extent(result) <- extent(ascHabitat)
     names(result)
     
     # add catch for if pops have died off
@@ -283,18 +292,18 @@ for (i in c(1:nrow(dfSensitivity))) {
     # extract the population raster to a shapefile of the individuals
     #shpIndividuals <- rasterToPoints(result[[rangeshiftrYears]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
     shpIndividuals <- rasterToPoints(resultMean, fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
-    shpIndividuals <- shpIndividuals %>% st_set_crs(st_crs(rstHabitat))
+    shpIndividuals <- shpIndividuals %>% st_set_crs(st_crs(ascHabitat))
     shpIndividuals$id <- 1:nrow(shpIndividuals)
     shpIndividuals$layer <- ceiling(shpIndividuals$layer)
       
     # write new individuals file to be used by RangeShiftR on the next loop
     shpIndividuals <- shpIndividuals %>% as_Spatial()
-    #dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field=sprintf('rep0_year%s', RsftR_tick-1)), shpIndividuals, cellnumbers=T, df=TRUE)
-    dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, rstHabitat, field='layer'), shpIndividuals, cellnumbers=T, df=TRUE)
+    #dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, ascHabitat, field=sprintf('rep0_year%s', RsftR_tick-1)), shpIndividuals, cellnumbers=T, df=TRUE)
+    dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, ascHabitat, field='layer'), shpIndividuals, cellnumbers=T, df=TRUE)
     dfNewIndsTable$Year <- 0
     dfNewIndsTable$Species <- 0
-    dfNewIndsTable$X <- dfNewIndsTable$cells %% ncol(rstHabitat)
-    dfNewIndsTable$Y <- nrow(rstHabitat) - (floor(dfNewIndsTable$cells / ncol(rstHabitat)))
+    dfNewIndsTable$X <- dfNewIndsTable$cells %% ncol(ascHabitat)
+    dfNewIndsTable$Y <- nrow(ascHabitat) - (floor(dfNewIndsTable$cells / ncol(ascHabitat)))
     dfNewIndsTable$Ninds <- dfNewIndsTable$layer
     dfNewIndsTable <- dfNewIndsTable[ , !(names(dfNewIndsTable) %in% c('ID', 'cells', 'layer'))]
     dfNewIndsTable <- dfNewIndsTable[!is.na(dfNewIndsTable$Ninds),]
