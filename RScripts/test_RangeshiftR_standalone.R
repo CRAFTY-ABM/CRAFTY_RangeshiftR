@@ -184,6 +184,8 @@ png(paste0(dirFigs,"/rsftr_pops_10yr_2yr-interrupted.png"), width = 800, height 
 spplot(outRasterStack2, layout = c(5,2), col.regions=clrs.viridis(14), at = seq(0,70,10))
 dev.off()
 
+write.csv(dfRangeShiftrData2, paste0(dirCRAFTYOutput,"/dfRangeshiftR_output_RsftR_standalone.csv"), row.names = F)
+
 # compare abundance timeseries of 10 yr version with interrupted version with 3 simulated yrs at each tick
 # want to see that the middle point (year==1) matches up with the lower point (year==0) of the following tick
 par(mfrow=c(1,2))
@@ -192,11 +194,11 @@ plot(NInds~timestep, data = dfRangeShiftrData2)
 dev.off()
 
 # compare all three (10 yr standalone, 2yr chunks standalone, 2 yr chunks coupled)
-par(mfrow=c(1,3))
-plotAbundance(dfRange10yr)
-plot(NInds~timestep, data=dfRangeShiftrData2)
-plot(NInds~timestep, data=dfRangeShiftrData)
-dev.off()
+#par(mfrow=c(1,3))
+#plotAbundance(dfRange10yr)
+#plot(NInds~timestep, data=dfRangeShiftrData2)
+#plot(NInds~timestep, data=dfRangeShiftrData)
+#dev.off()
 
 png(paste0(dirFigs,"/rsftr_comparePops_uncoupled_vs_coupled.png"), width = 800, height = 600)
 par(mfrow=c(1,2))

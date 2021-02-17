@@ -452,6 +452,8 @@ for (CRAFTY_tick in timesteps) {
   
 }
 
+write.csv(dfRangeShiftrData, paste0(dirCRAFTYOutput,"/dfRangeshiftR_output_coupled.csv"), row.names = F)
+
 #warnings() # crs warnings can ignore
 names(outRasterStack) <- c("Yr1","Yr2","Yr3","Yr4","Yr5","Yr6","Yr7","Yr8","Yr9","Yr10")
 clrs.viridis <- colorRampPalette(viridis::viridis(10))
