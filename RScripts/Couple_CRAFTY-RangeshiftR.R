@@ -385,7 +385,7 @@ for (CRAFTY_tick in timesteps) {
   # find OPM individuals within each agent type
   # https://gis.stackexchange.com/questions/245136/how-to-subset-point-data-by-outside-of-polygon-data-in-r
   if (nrow(lowInt)>0) { 
-    lowInt = st_transform(lowInt, crs = st_crs(shpIndividuals))
+    lowInt <- st_transform(lowInt, crs = st_crs(shpIndividuals))
     
     low <- sapply(st_intersects(shpIndividuals, lowInt),function(x){length(x)>0})
     
@@ -398,7 +398,7 @@ for (CRAFTY_tick in timesteps) {
     # edit OPM populations based on management type
     
     # reduce population by half if low intensity
-    lowPops <- shpIndividuals$rep0_year1[low]
+    lowPops <- shpIndividuals$layer[low]
     if (length(lowPops)>1){
       for (pop in c(1:length(lowPops))){
         lowPops[pop]<-round(lowPops[pop]/2)
@@ -406,11 +406,11 @@ for (CRAFTY_tick in timesteps) {
           lowPops[-pop]}
       }
     }
-    shpIndividuals$rep0_year1[low] <- lowPops
+    shpIndividuals$layer[low] <- lowPops
   }
   
   if (nrow(highInt)>0) { 
-    highInt = st_transform(highInt, crs = st_crs(shpIndividuals))
+    highInt <- st_transform(highInt, crs = st_crs(shpIndividuals))
     
     high <- sapply(st_intersects(shpIndividuals, highInt),function(x){length(x)>0})
     
