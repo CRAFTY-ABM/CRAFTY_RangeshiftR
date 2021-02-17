@@ -198,6 +198,7 @@ plot(NInds~timestep, data=dfRangeShiftrData2)
 plot(NInds~timestep, data=dfRangeShiftrData)
 dev.off()
 
+png(paste0(dirFigs,"/rsftr_comparePops_uncoupled_vs_coupled.png"), width = 800, height = 600)
 par(mfrow=c(1,2))
 dfRangeShiftrData2 %>% filter(Year==2) %>% 
   group_by(timestep) %>% summarise(avgNinds=mean(NInds)) %>% 
