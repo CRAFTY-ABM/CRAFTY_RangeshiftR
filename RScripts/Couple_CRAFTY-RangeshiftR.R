@@ -48,7 +48,7 @@ dirCRAFTYInput <- path.expand(paste0(dirWorking, "/data_LondonOPM/"))
 dirCRAFTYOutput <- path.expand(paste0(dirWorking, "/output"))
 
 # store RangeshiftR files within CRAFTY output folder as it is the directory CRAFTY will need to run in
-dirRsftr <- file.path(dirCRAFTYOutput, 'RangeshiftR')
+dirRsftr <- file.path(dirCRAFTYOutput, 'RangeshiftR_coupled')
 # specific file structure needed for RangeshiftR to run
 dirRsftrInput <- file.path(dirRsftr,"Inputs")
 dirRsftrOutput <- file.path(dirRsftr,"Outputs")
@@ -148,7 +148,7 @@ end_year_idx <- 10 # 10th year of the input data
 parallelize <- FALSE # not loads of data so don't need to run in parallel
 
 # change wd to the output folder to store output files
-setwd(dirCRAFTYOutput) 
+#setwd(dirCRAFTYOutput) 
 
 # if getting random Java errors, restart Rstudio
 # initialise Java
@@ -206,6 +206,8 @@ region = CRAFTY_loader_jobj$getRegions()$getAllRegions()$iterator()$'next'()
 ### Run the models -------------------------------------------------------------
 
 #CRAFTY_tick <- 2
+
+test <- "test1" # both management agents remove individuals
  
 for (CRAFTY_tick in timesteps) {
   
@@ -222,7 +224,7 @@ for (CRAFTY_tick in timesteps) {
     init <- Initialise(InitType=2, InitIndsFile=sprintf('inds_tick_%s.txt', CRAFTY_tick-1))
   }
   
-  # option 1 run RangeShiftR for 2-years per CRAFTY_tick and extract mean of 10 reps as result
+  # run RangeShiftR for 2-years per CRAFTY_tick and extract mean of 10 reps as result
   sim <- Simulation(Simulation = CRAFTY_tick,
                     Years = rangeshiftrYears,
                     Replicates = 10,
@@ -230,19 +232,10 @@ for (CRAFTY_tick in timesteps) {
                     OutIntInd = 1,
                     ReturnPopRaster=TRUE)
   
-  # RangeShiftR years - run from start yr to timestep yr each CRAFTY_tick
-  #RsftR_tick <- CRAFTY_tick+1
+  # set up simulation
+  s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init, seed = 261090) # set seed to enable replication
   
-  # option 2 run RangeshiftR for CRAFTY_tick + 1 years and multiple reps, extract mean of tick year
-  #sim <- Simulation(Simulation = CRAFTY_tick,
-  #                  Years = RsftR_tick,
-  #                  Replicates = 10,
-  #                  OutIntPop = 1,
-  #                  OutIntInd = 1,
-  #                  ReturnPopRaster=TRUE)
-  
-  s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init, seed = 261090) # set seed for replication
-  
+  # stop if set up incorrectly
   stopifnot(validateRSparams(s)==TRUE) 
   
   print(paste0("============CRAFTY JAVA-R API: Running RangeShiftR tick = ", CRAFTY_tick))
@@ -253,18 +246,16 @@ for (CRAFTY_tick in timesteps) {
   # wait few seconds before reading the output
   Sys.sleep(1)
   
+  # set crs and extent
   crs(result) <- crs(ascHabitat)
   extent(result) <- extent(ascHabitat)
   
-  #r1 <- plot(result[[rangeshiftrYears]])
-  #print(r1)
-  names(result)
+  #names(result)
   
   # calculate average of 10 reps for current timestep
-  #idx <- grep(paste0("year",tick), names(result))
-  idx <- grep("year1", names(result))
+  idx <- grep("year1", names(result)) # this selects the second years data
   resultMean <- mean(result[[idx]])
-  spplot(resultMean)
+  print(spplot(resultMean))
   
   # store population raster in output stack.
   #outRasterStack <- addLayer(outRasterStack, result[[rangeshiftrYears]])
@@ -379,7 +370,6 @@ for (CRAFTY_tick in timesteps) {
   
   # find where OPM individuals intersect
   lowInt <- sfResult %>% filter(Agent == "mgmt_lowInt")
-  #lowInt <- sfResult %>% filter(borough == "hammersmith") # use to test as no mgmt agents atm
   highInt <- sfResult %>% filter(Agent == "mgmt_highInt")
   
   # find OPM individuals within each agent type
@@ -388,14 +378,6 @@ for (CRAFTY_tick in timesteps) {
     lowInt <- st_transform(lowInt, crs = st_crs(shpIndividuals))
     
     low <- sapply(st_intersects(shpIndividuals, lowInt),function(x){length(x)>0})
-    
-    # check
-    #ggplot() +
-    #geom_sf(sfResult, mapping = aes(fill = Agent), col = NA)+
-    #geom_sf(data=shpIndividuals[!low,])+
-    #scale_fill_brewer(palette="Dark2")
-    
-    # edit OPM populations based on management type
     
     # reduce population by half if low intensity
     lowPops <- shpIndividuals$layer[low]
@@ -414,7 +396,7 @@ for (CRAFTY_tick in timesteps) {
     
     high <- sapply(st_intersects(shpIndividuals, highInt),function(x){length(x)>0})
     
-    # remove if high intensity
+    # remove inidividuals if high intensity
     shpIndividuals <- shpIndividuals[!high,] 
   }
   
@@ -424,7 +406,7 @@ for (CRAFTY_tick in timesteps) {
   shpIndividuals <- shpIndividuals %>% as_Spatial()
   #dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, ascHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
   dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, ascHabitat, field='layer'), shpIndividuals, cellnumbers=T, df=TRUE)
-  dfNewIndsTable$Year <- 0 # would changing year to CRAFTY_tick help when running RS in 2-yr steps?
+  dfNewIndsTable$Year <- 0 
   dfNewIndsTable$Species <- 0
   dfNewIndsTable$X <- dfNewIndsTable$cells %% ncol(ascHabitat)
   dfNewIndsTable$Y <- nrow(ascHabitat) - (floor(dfNewIndsTable$cells / ncol(ascHabitat)))
@@ -436,7 +418,7 @@ for (CRAFTY_tick in timesteps) {
   dfNewIndsTable$Y<- dfNewIndsTable$Y -1
   # make sure individuals aren't being counted more than once in the same location
   dfNewIndsTable <- unique(dfNewIndsTable)
-  # add another catch for Ninds == 0
+  # add another catch where Ninds == 0 (remove)
   if (nrow(dfNewIndsTable[which(dfNewIndsTable$Ninds==0),])>0){
     dfNewIndsTable <- dfNewIndsTable[-which(dfNewIndsTable$Ninds==0),]
   }
@@ -444,9 +426,14 @@ for (CRAFTY_tick in timesteps) {
   write.table(dfNewIndsTable, file.path(dirRsftrInput, sprintf('inds_tick_%s.txt', CRAFTY_tick)),row.names = F, quote = F, sep = '\t')
   
   if (CRAFTY_nextTick <= end_year_idx) {
-    print(paste0("============CRAFTY JAVA-R API: NextTick=", CRAFTY_nextTick))
+    
+    (paste0("============CRAFTY JAVA-R API: NextTick=", CRAFTY_nextTick))
+    
   } else {
+    
     print(paste0("============CRAFTY JAVA-R API: Simulation done (tick=", CRAFTY_tick, ")"))
+    write.csv(dfRangeShiftrData, paste0(dirCRAFTYOutput,"/dfRangeshiftR_output_coupled_",test,".csv"), row.names = F)
+    writeRaster(outRasterStack, paste0(dirCRAFTYOutput,"/rstRangeshiftR_output_coupled_",test,".tif"))
     
   }
   
