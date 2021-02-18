@@ -225,7 +225,7 @@ for (CRAFTY_tick in timesteps) {
   }
   
   # run RangeShiftR for 2-years per CRAFTY_tick and extract mean of 10 reps as result
-  sim <- Simulation(Simulation = CRAFTY_tick,
+  sim <- Simulation(Simulation = 20+CRAFTY_tick,
                     Years = rangeshiftrYears,
                     Replicates = 10,
                     OutIntPop = 1,
@@ -340,7 +340,7 @@ for (CRAFTY_tick in timesteps) {
   print(paste0("============CRAFTY JAVA-R API: Extract agent locations tick = ", CRAFTY_tick))
   
   # extract agent locations, match to hexagonal grid
-  val_df <- read.csv(paste0(dirCRAFTYOutput,"/output/Baseline-0-", random_seed_crafty,"-LondonBoroughs-Cell-",CRAFTY_tick,".csv"))
+  val_df <- read.csv(paste0(dirCRAFTYOutput,"/Baseline-0-", random_seed_crafty,"-LondonBoroughs-Cell-",CRAFTY_tick,".csv"))
   val_fr <- val_df[,"Agent"]
   val_fr_fac <- factor(val_fr,  labels = aft_names_fromzero, levels = aft_names_fromzero)
   
@@ -380,16 +380,20 @@ for (CRAFTY_tick in timesteps) {
     low <- sapply(st_intersects(shpIndividuals, lowInt),function(x){length(x)>0})
     
     # reduce population by half if low intensity
-    lowPops <- shpIndividuals$layer[low]
-    if (length(lowPops)>1){
-      for (pop in c(1:length(lowPops))){
-        lowPops[pop]<-round(lowPops[pop]/2)
-        if (lowPops[pop]<1){
-          lowPops[-pop]}
-      }
+    #lowPops <- shpIndividuals$layer[low]
+    #if (length(lowPops)>1){
+      #for (pop in c(1:length(lowPops))){
+        #lowPops[pop]<-round(lowPops[pop]/2)
+        #if (lowPops[pop]<1){
+          #lowPops[-pop]}
+      #}
+    
+    # remove as test1
+    shpIndividuals <- shpIndividuals[!low,] 
+    
     }
-    shpIndividuals$layer[low] <- lowPops
-  }
+    #shpIndividuals$layer[low] <- lowPops
+  #}
   
   if (nrow(highInt)>0) { 
     highInt <- st_transform(highInt, crs = st_crs(shpIndividuals))
@@ -439,19 +443,21 @@ for (CRAFTY_tick in timesteps) {
   
 }
 
-write.csv(dfRangeShiftrData, paste0(dirCRAFTYOutput,"/dfRangeshiftR_output_coupled.csv"), row.names = F)
+
+### look at outputs ------------------------------------------------------------
 
 #warnings() # crs warnings can ignore
+
 names(outRasterStack) <- c("Yr1","Yr2","Yr3","Yr4","Yr5","Yr6","Yr7","Yr8","Yr9","Yr10")
 clrs.viridis <- colorRampPalette(viridis::viridis(10))
 
-png(paste0(dirFigs,"/rsftr_pops_CRAFTY-coupled.png"), width = 800, height = 600)
+png(paste0(dirFigs,"/rsftr_pops_CRAFTY-coupled_test1.png"), width = 800, height = 600)
 spplot(outRasterStack, layout = c(5,2), col.regions=clrs.viridis(14), at = seq(0,70,10))
 dev.off()
 
-dirResults <- paste0(dirCRAFTYOutput,"/output/")
+dirResults <- paste0(dirCRAFTYOutput)#,"/output/")
 
-# read in all results
+# read in all CRAFTY results
 dfResults <-
   list.files(path = dirResults,
              pattern = "*.csv", 
