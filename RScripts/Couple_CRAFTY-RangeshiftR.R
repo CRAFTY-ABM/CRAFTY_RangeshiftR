@@ -30,7 +30,7 @@ library(rJava)
 library(jdx)
 library(xml2)
 library(foreach)
-
+library(tictoc)
 
 
 ### directories/ file paths ----------------------------------------------------
@@ -207,12 +207,15 @@ region = CRAFTY_loader_jobj$getRegions()$getAllRegions()$iterator()$'next'()
 
 #CRAFTY_tick <- 2
 
-test <- "test1" # both management agents remove individuals
- 
+#test <- "test1" # both management agents remove individuals
+test <- "test2" # low_int halve individuals, high_int remove
+
 for (CRAFTY_tick in timesteps) {
   
-  # before EXTtick() (line 331)
+  # before EXTtick() (line 335)
   # run RangeshiftR to get OPM capital
+  
+  tic(CRAFTY_tick)
   
   print(paste0("============CRAFTY JAVA-R API: Setting up RangeShiftR tick = ", CRAFTY_tick))
   
@@ -225,7 +228,7 @@ for (CRAFTY_tick in timesteps) {
   }
   
   # run RangeShiftR for 2-years per CRAFTY_tick and extract mean of 10 reps as result
-  sim <- Simulation(Simulation = 20+CRAFTY_tick,
+  sim <- Simulation(Simulation = 30+CRAFTY_tick,
                     Years = rangeshiftrYears,
                     Replicates = 10,
                     OutIntPop = 1,
@@ -380,20 +383,20 @@ for (CRAFTY_tick in timesteps) {
     low <- sapply(st_intersects(shpIndividuals, lowInt),function(x){length(x)>0})
     
     # reduce population by half if low intensity
-    #lowPops <- shpIndividuals$layer[low]
-    #if (length(lowPops)>1){
-      #for (pop in c(1:length(lowPops))){
-        #lowPops[pop]<-round(lowPops[pop]/2)
-        #if (lowPops[pop]<1){
-          #lowPops[-pop]}
-      #}
+    lowPops <- shpIndividuals$layer[low]
+    if (length(lowPops)>1){
+      for (pop in c(1:length(lowPops))){
+        lowPops[pop]<-round(lowPops[pop]/2)
+        if (lowPops[pop]<1){
+          lowPops[-pop]}
+      }
     
     # remove as test1
-    shpIndividuals <- shpIndividuals[!low,] 
+    #shpIndividuals <- shpIndividuals[!low,] 
     
     }
-    #shpIndividuals$layer[low] <- lowPops
-  #}
+    shpIndividuals$layer[low] <- lowPops
+  }
   
   if (nrow(highInt)>0) { 
     highInt <- st_transform(highInt, crs = st_crs(shpIndividuals))
@@ -432,17 +435,22 @@ for (CRAFTY_tick in timesteps) {
   if (CRAFTY_nextTick <= end_year_idx) {
     
     (paste0("============CRAFTY JAVA-R API: NextTick=", CRAFTY_nextTick))
-    
+
   } else {
     
     print(paste0("============CRAFTY JAVA-R API: Simulation done (tick=", CRAFTY_tick, ")"))
     write.csv(dfRangeShiftrData, paste0(dirCRAFTYOutput,"/dfRangeshiftR_output_coupled_",test,".csv"), row.names = F)
-    writeRaster(outRasterStack, paste0(dirCRAFTYOutput,"/rstRangeshiftR_output_coupled_",test,".tif"))
+    writeRaster(outRasterStack, paste0(dirCRAFTYOutput,"/rstRangeshiftR_output_coupled_",test,".tif"), overwrite = T)
     
   }
   
+  toc(log = TRUE, quiet = TRUE)
+  
 }
 
+log.txt <- tic.log(format = TRUE)
+log.lst <- tic.log(format = FALSE)
+tic.clearlog()
 
 ### look at outputs ------------------------------------------------------------
 
@@ -451,22 +459,20 @@ for (CRAFTY_tick in timesteps) {
 names(outRasterStack) <- c("Yr1","Yr2","Yr3","Yr4","Yr5","Yr6","Yr7","Yr8","Yr9","Yr10")
 clrs.viridis <- colorRampPalette(viridis::viridis(10))
 
-png(paste0(dirFigs,"/rsftr_pops_CRAFTY-coupled_test1.png"), width = 800, height = 600)
+png(paste0(dirFigs,"/rsftr_pops_CRAFTY-coupled_",test,".png"), width = 800, height = 600)
 spplot(outRasterStack, layout = c(5,2), col.regions=clrs.viridis(14), at = seq(0,70,10))
 dev.off()
 
 dfRangeShiftrData_standalone <- read.csv(paste0(dirCRAFTYOutput,"/dfRangeshiftR_output_RsftR_standalone.csv"))
 dfRangeShiftrData_standalone$models <- "Uncoupled"
 dfRangeShiftrData$models <- "Coupled"
-dfRsftR_all$models <- factor(dfRsftR_all$models, ordered = T, levels = c("Uncoupled","Coupled"))
 
 dfRsftR_all <- rbind(dfRangeShiftrData_standalone,dfRangeShiftrData)
 head(dfRsftR_all)
+dfRsftR_all$models <- factor(dfRsftR_all$models, ordered = T, levels = c("Uncoupled","Coupled"))
 
-png(paste0(dirFigs,"/rsftr_comparePops_uncoupled_vs_coupled_test1.png"), width = 800, height = 550)
-#par(mfrow=c(1,2))
+png(paste0(dirFigs,"/rsftr_comparePops_uncoupled_vs_coupled_",test,".png"), width = 800, height = 550)
 dfRsftR_all %>% filter(Year==2) %>% 
-  #group_by(models, timestep) %>% summarise(avgNinds=mean(NInds)) %>% 
   ggplot(aes(timestep,NInds))+
   geom_smooth(color="purple3")+
   facet_wrap(~models)+
@@ -477,7 +483,7 @@ dev.off()
 
 
 # read in all CRAFTY results
-dirResults <- paste0(dirCRAFTYOutput,"/CRAFTY_coupled_test1/")
+dirResults <- paste0(dirCRAFTYOutput,"/CRAFTY_coupled_",test,"/")
 dfResults <-
   list.files(path = dirResults,
              pattern = "*.csv", 
@@ -509,4 +515,5 @@ head(sfResult)
 # plot 
 ggplot() +
   geom_sf(sfResult, mapping = aes(fill = Agent), col = NA)+
-  scale_fill_brewer(palette="Dark2")
+  scale_fill_brewer(palette="Dark2")+
+  theme_bw()
