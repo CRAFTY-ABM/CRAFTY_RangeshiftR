@@ -455,9 +455,29 @@ png(paste0(dirFigs,"/rsftr_pops_CRAFTY-coupled_test1.png"), width = 800, height 
 spplot(outRasterStack, layout = c(5,2), col.regions=clrs.viridis(14), at = seq(0,70,10))
 dev.off()
 
-dirResults <- paste0(dirCRAFTYOutput)#,"/output/")
+dfRangeShiftrData_standalone <- read.csv(paste0(dirCRAFTYOutput,"/dfRangeshiftR_output_RsftR_standalone.csv"))
+dfRangeShiftrData_standalone$models <- "Uncoupled"
+dfRangeShiftrData$models <- "Coupled"
+dfRsftR_all$models <- factor(dfRsftR_all$models, ordered = T, levels = c("Uncoupled","Coupled"))
+
+dfRsftR_all <- rbind(dfRangeShiftrData_standalone,dfRangeShiftrData)
+head(dfRsftR_all)
+
+png(paste0(dirFigs,"/rsftr_comparePops_uncoupled_vs_coupled_test1.png"), width = 800, height = 550)
+#par(mfrow=c(1,2))
+dfRsftR_all %>% filter(Year==2) %>% 
+  #group_by(models, timestep) %>% summarise(avgNinds=mean(NInds)) %>% 
+  ggplot(aes(timestep,NInds))+
+  geom_smooth(color="purple3")+
+  facet_wrap(~models)+
+  scale_x_continuous(breaks=seq(1,10,1))+
+  xlab("Year")+ylab("Total number of individuals in landscape")+
+  theme_bw()
+dev.off()
+
 
 # read in all CRAFTY results
+dirResults <- paste0(dirCRAFTYOutput,"/CRAFTY_coupled_test1/")
 dfResults <-
   list.files(path = dirResults,
              pattern = "*.csv", 
@@ -484,6 +504,7 @@ cellid <- foreach(rowid = 1:nrow(val_xy), .combine = "c") %do% {
 
 tick$joinID <- cellid
 sfResult <- left_join(hexGrid, tick, by="joinID")
+head(sfResult)
 
 # plot 
 ggplot() +
