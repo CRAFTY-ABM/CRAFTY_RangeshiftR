@@ -134,7 +134,6 @@ scenario.filename <- "Scenario_Baseline_noGUI.xml" # no display
 # java configuration
 crafty_jclasspath <- c(path_crafty_jar, paste0(path_crafty_libs, crafty_libs))
 
-
 # Random seed used in CRAFTY
 random_seed_crafty <- 99 
 
@@ -147,9 +146,6 @@ end_year_idx <- 10 # 10th year of the input data
 
 parallelize <- FALSE # not loads of data so don't need to run in parallel
 
-# change wd to the output folder to store output files
-#setwd(dirCRAFTYOutput) 
-
 # if getting random Java errors, restart Rstudio
 # initialise Java
 if (!rJava::.jniInitialized) { # initialize only once 
@@ -160,7 +156,6 @@ if (!rJava::.jniInitialized) { # initialize only once
   
   # .jinit(parameters = paste0("user.dir=", path_crafty_batch_run )) # does not work.. 
 }
-
 
 # add java classpath
 .jclassPath() # print out the current class path settings.
@@ -208,7 +203,33 @@ region = CRAFTY_loader_jobj$getRegions()$getAllRegions()$iterator()$'next'()
 #CRAFTY_tick <- 2
 
 #test <- "test1" # both management agents remove individuals
-test <- "test2" # low_int halve individuals, high_int remove
+#test <- "test2" # low_int halve individuals, high_int remove
+
+# start setting up structure for scenarios
+
+scenario.filenames <- c("Scenario_Baseline_noGUI.xml", "Scenario_De-regulation_noGUI.xml","Scenario_Govt-Intervention_noGUI.xml") 
+
+for (scenario in scenario.filenames){
+  
+  #scenario <- scenario.filenames[2]
+  scenario.filename <- scenario
+  scenario.split <- strsplit(scenario, "[_]")[[1]][2]
+ 
+  # scenario file
+  CRAFTY_sargs <- c("-d", dirCRAFTYInput, "-f", scenario.filename, "-o", random_seed_crafty, "-r", "1",  "-n", "1", "-sr", "0") 
+  
+  # change wd to a scenario folder to store output files
+  dirCRAFTYscenario <- (paste0(dirCRAFTYOutput,"/",scenario.split))
+  dir.create(dirCRAFTYscenario)
+  setwd(dirCRAFTYscenario) 
+  
+  # set the batch run folder (dirCRAFTYOutput)
+  .jcall( 'java/lang/System', 'S', 'setProperty', 'user.dir',  dirCRAFTYscenario )
+  
+  # assertion
+  stopifnot(dirCRAFTYscenario == .jcall( 'java/lang/System', 'S', 'getProperty', 'user.dir' ))
+  
+}
 
 for (CRAFTY_tick in timesteps) {
   
