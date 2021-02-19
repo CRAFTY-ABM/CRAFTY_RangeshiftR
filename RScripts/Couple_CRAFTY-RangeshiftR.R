@@ -484,6 +484,7 @@ png(paste0(dirFigs,"/rsftr_pops_CRAFTY-coupled_",test,".png"), width = 800, heig
 spplot(outRasterStack, layout = c(5,2), col.regions=clrs.viridis(14), at = seq(0,70,10))
 dev.off()
 
+dfRangeShiftrData <- read.csv(paste0(dirCRAFTYOutput,"/dfRangeshiftR_output_coupled_test1.csv"))
 dfRangeShiftrData_standalone <- read.csv(paste0(dirCRAFTYOutput,"/dfRangeshiftR_output_RsftR_standalone.csv"))
 dfRangeShiftrData_standalone$models <- "Uncoupled"
 dfRangeShiftrData$models <- "Coupled"
@@ -492,14 +493,18 @@ dfRsftR_all <- rbind(dfRangeShiftrData_standalone,dfRangeShiftrData)
 head(dfRsftR_all)
 dfRsftR_all$models <- factor(dfRsftR_all$models, ordered = T, levels = c("Uncoupled","Coupled"))
 
-png(paste0(dirFigs,"/rsftr_comparePops_uncoupled_vs_coupled_",test,".png"), width = 800, height = 550)
+png(paste0(dirFigs,"/rsftr_comparePops_uncoupled_vs_coupled_test1.png"), width = 700, height = 450)
 dfRsftR_all %>% filter(Year==2) %>% 
   ggplot(aes(timestep,NInds))+
   geom_smooth(color="purple3")+
   facet_wrap(~models)+
   scale_x_continuous(breaks=seq(1,10,1))+
   xlab("Year")+ylab("Total number of individuals in landscape")+
-  theme_bw()
+  theme_bw()+theme(text = element_text(size=20, family = "Roboto"),
+                   axis.text=element_text(size=10, family = "Roboto"),
+                   axis.title=element_text(size=14,face="bold", family = "Roboto"),
+                   axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+                   axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)))
 dev.off()
 
 
