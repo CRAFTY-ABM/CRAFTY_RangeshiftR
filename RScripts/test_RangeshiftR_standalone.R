@@ -178,6 +178,8 @@ for (tick in timesteps) {
 
 spplot(outRasterStack2)
 names(outRasterStack2) <- c("Yr1","Yr2","Yr3","Yr4","Yr5","Yr6","Yr7","Yr8","Yr9","Yr10")
+writeRaster(outRasterStack2, paste0(dirCRAFTYOutput,"/rstRangeshiftR_output_standalone.tif"), overwrite = T)
+
 clrs.viridis <- colorRampPalette(viridis::viridis(10))
 
 png(paste0(dirFigs,"/rsftr_pops_10yr_2yr-interrupted.png"), width = 800, height = 600)
