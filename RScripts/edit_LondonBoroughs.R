@@ -7,9 +7,12 @@ library(ggplot2)
 #wd <- "~/CRAFTY-opm"# sandbox VM
 wd <- "~/eclipse-workspace/CRAFTY_RangeshiftR"# sandbox VM
 dirOut <- file.path(wd, 'data-processed')
+baseline <- "baseline"
+scenario <- "de-regulation"
 
+# note. can skip to l.121 to read in baseline capitals and change from there.
 
-# read in 'raw' data -----------------------------------------------------------
+### read in 'raw' data -----------------------------------------------------------
 
 # data produced in scripts:
 # OPM_nature_access.R
@@ -40,12 +43,11 @@ head(capitals)
 
 # normalise --------------------------------------------------------------------
 summary(capitals)
-# only need to normalise nature and OPM presence, rest are already 0-1
+# only need to normalise nature, rest are already 0-1
 
-# need to add step here to normalised/standardise using max carrying capacity
+# commented out old code from when using OPM population values directly - don't need to do this now testing binary 0/1 OPM
+# add step here to normalised/standardise using max carrying capacity
 # otherwise normalising rangeshiftR populations in every run of CRAFTY_RangeshiftR will mess things up
-
-# don't need to do this now testing binary 0/1 OPM
 # OPM presence
 #data <- capitals$OPMpresence
 #data[which(data==0)]<-NA
@@ -77,13 +79,13 @@ hx <- read.csv("~/eclipse-workspace/CRAFTY_RangeshiftR/data-processed/Cell_ID_XY
 
 head(london)
 colnames(london)[3:4] = c("Lon", "Lat")
-london$x  = hx$X[match(london$joinID, hx$Cell_ID)]
-london$y  = hx$Y[match(london$joinID, hx$Cell_ID)]
+london$x <- hx$X[match(london$joinID, hx$Cell_ID)]
+london$y <- hx$Y[match(london$joinID, hx$Cell_ID)]
 
 # create look-up file
 head(london)
 lookUp <- london[,c(2,12,13)]
-write.csv(lookUp,"~/eclipse-workspace/CRAFTY_RangeshiftR/data-processed/joinID_lookup.csv", row.names = F)
+#write.csv(lookUp,"~/eclipse-workspace/CRAFTY_RangeshiftR/data-processed/joinID_lookup.csv", row.names = F)
 
 head(london)
 london$OPMpresence <- capitals$OPMpresence[match(london$joinID, capitals$joinID)]
@@ -99,14 +101,16 @@ london$access <- capitals$access[match(london$joinID, capitals$joinID)]
 ggplot(london)+
   geom_tile(mapping = aes(x,y,fill=OPMinverted))
 
+### baseline -------------------------------------------------------------------
+
 # tidy up
-london$id = NULL
-london$joinID = NULL
-london$Lon = NULL
-london$Lat = NULL
-london$FR = "no_mgmt"
-london$Agent = NULL
-london$BT = 0
+london$id <- NULL
+london$joinID <- NULL
+london$Lon <- NULL
+london$Lat <- NULL
+london$FR <- "no_mgmt"
+london$Agent <- NULL
+london$BT <- 0
 
 head(london)
 london <- london[,c(7,8,1,9,2,3,4,5,6,10,11)]
@@ -116,5 +120,52 @@ head(london)
 # remove OPMpresence
 london$OPMpresence <- NULL
 
-write.csv(london, "~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/LondonBoroughs_XY.csv", row.names = F)
+write.csv(london, sprintf("~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/%s/LondonBoroughs_XY.csv", baseline), row.names = F)
+
+### de-regulation changes ------------------------------------------------------
+
+london <- read.csv("~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/LondonBoroughs_original.csv")
+hx <- read.csv("~/eclipse-workspace/CRAFTY_RangeshiftR/data-processed/Cell_ID_XY_Borough.csv")
+colnames(london)[3:4] = c("Lon", "Lat")
+london$x <- hx$X[match(london$joinID, hx$Cell_ID)]
+london$y <- hx$Y[match(london$joinID, hx$Cell_ID)]
+london$OPMpresence <- capitals$OPMpresence[match(london$joinID, capitals$joinID)]
+london$OPMinverted <- capitals$OPMinv[match(london$joinID, capitals$joinID)]
+london$riskPerc <- capitals$riskPrc[match(london$joinID, capitals$joinID)]
+london$budget <- capitals$budget[match(london$joinID, capitals$joinID)]
+london$OPMpresence <- capitals$OPMpresence[match(london$joinID, capitals$joinID)]
+london$knowledge <- capitals$knowledge[match(london$joinID, capitals$joinID)]
+london$nature <- capitals$nature[match(london$joinID, capitals$joinID)]
+london$access <- capitals$access[match(london$joinID, capitals$joinID)]
+
+# 1. define budget by each land owner type (replace simple borough levels atm)
+# need to come up with simple rules
+# e.g. private residents lowest budgets 0.2
+# random scale for parks, 0.2, 0.6, 0.9
+# all other types medium 0.5?
+
+ggplot(london)+
+  geom_tile(mapping = aes(x,y,fill=budget))
+
+head(social)
+london$type <- social$type[match(london$joinID, social$joinID)]
+london$ownerID <- social$ownerID[match(london$joinID, social$joinID)]
+
+ggplot(london)+
+  geom_tile(mapping = aes(x,y,fill=type))
+
+head(london)
+unique(london$type)
+unique(london$ownerID[which(london$type=="Public.park")])
+
+# 2. increase risk perception through time (if it's low)
+# 3. stop updating knowledge based on OPM presence
+
+### govt-intervention changes --------------------------------------------------
+
+# 1. create an artificial frontier zone (e.g. a single borough) and substantially increase budget in this area
+# 2. keep risk perception at baseline
+# 3. knowledge updates and spreads based on OPM presence
+
+
 
