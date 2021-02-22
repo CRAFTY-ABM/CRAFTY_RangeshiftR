@@ -11,7 +11,7 @@
    
    <cellInitialiserFile>xml/CSVCells.xml</cellInitialiserFile>		
 
-	<!-- not implemnted <agentInitiliserFile>	Agents not implemented -->
+	<!-- not implemented <agentInitiliserFile>	Agents not implemented -->
 	
 	<regionalLaraModelFile>lara/RegionalLaraModel.xml</regionalLaraModelFile>
 
@@ -33,7 +33,7 @@
 		<maskChar>1</maskChar> 
 	</institution> -->
 	
-	<!-- FR restricting instititon (FR to FR) -->
+	<!-- FR restricting institution (FR to FR) -->
 <!--	<institution class="org.volante.abm.institutions.FrRestrictingInsitution">
     	<csvFileRestrictedAllocations>csv/AllocationTypeRestrictions.csv</csvFileRestrictedAllocations>
 	</institution>
