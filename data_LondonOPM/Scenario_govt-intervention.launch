@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
+    <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+        <listEntry value="/CRAFTY_RangeshiftR/lib/CRAFTY_KIT_engineOct2020.jar"/>
+    </listAttribute>
+    <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+        <listEntry value="1"/>
+    </listAttribute>
+    <booleanAttribute key="org.eclipse.jdt.debug.ui.CONSIDER_INHERITED_MAIN" value="true"/>
+    <booleanAttribute key="org.eclipse.jdt.launching.ATTR_SHOW_CODEDETAILS_IN_EXCEPTION_MESSAGES" value="true"/>
+    <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_CLASSPATH_ONLY_JAR" value="false"/>
+    <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_START_ON_FIRST_THREAD" value="true"/>
+    <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.volante.abm.serialization.ModelRunner"/>
+    <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="CRAFTY_CoBRA_Impressions"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-d /Users/vanessa.burton.sb/Documents/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/ -f Scenario_govt-intervention_GUI.xml -o 99 -r 1 -n 1 -sr 0 -e 10"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="CRAFTY_RangeshiftR"/>
+    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dlog4j.configuration=log4j/log4j2020_normal.properties"/>
+</launchConfiguration>
