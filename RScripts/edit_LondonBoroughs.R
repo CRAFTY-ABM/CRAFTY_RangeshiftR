@@ -199,6 +199,9 @@ ggplot(londonXY)+
   geom_tile(mapping = aes(x,y,fill=budget))
 
 summary(londonXY)
+
+write.csv(londonXY, paste0(dirOut,"/capitals/de-reg_capitals_raw.csv"),row.names = F)
+
 londonDEREG <- londonXY[,c(11,12,13,6:10)]
 londonDEREG$FR <- "no_mgmt"
 londonDEREG$BT <- 0
@@ -213,7 +216,7 @@ write.csv(londonDEREGnrm, "~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM
 # 2. increase risk perception through time (if it's low) - apply to updater files
 
 # tsteps 1 and 2
-# keep same risk perc
+# keep same risk perc, assumining it will take a bit of time for risk perception to increase as OPM spread gets worse?
 # normalise
 updaterDRGnrm <- londonDEREGnrm[1:8]
 write.csv(updaterDRGnrm,"~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/de-regulation/LondonBoroughs_XY_tstep_1.csv", row.names = F)
@@ -275,11 +278,39 @@ ggplot(updaterDRGnrm)+
 # 3. stop updating knowledge based on OPM presence
 #(will need to implement this in CRAFTY-RangeshiftR loop)
 
+
 ### govt-intervention changes --------------------------------------------------
 
+# same initial landowner dependent budget as de-regulation
+londonGOVINTnrm <- read.csv("~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/de-regulation/LondonBoroughs_XY.csv")
+head(londonGOVINTnrm)
+write.csv(londonGOVINTnrm, "~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/govt-intervention/LondonBoroughs_XY.csv", row.names = F)
+
+# updater format
+londonGOVINTnrm <- londonGOVINTnrm[1:8]
+# then edit raw data and re-normalise for updaters
+londonGOVINT <- read.csv(paste0(dirOut,"/capitals/de-reg_capitals_raw.csv"))
+
 # 1. create an artificial frontier zone (e.g. a single borough) and substantially increase budget in this area
+londonGOVINT$borough <- social$borough[match(londonGOVINT$joinID, social$joinID)]
+ggplot(londonGOVINT)+
+  geom_tile(aes(x,y,fill=borough))
+
+# create artificial frontier zone in camden & westminster
+londonGOVINT$budget[which(londonGOVINT$borough=="camden"|londonGOVINT$borough=="westminster")] <- 1
+londonGOVINTnrm$budget <- normalise(londonGOVINT$budget)
+ggplot(londonGOVINTnrm)+
+  geom_tile(aes(x,y,fill=budget))
+
+tsteps <- seq(1,10,by=1)
+for (i in tsteps){
+  
+  write.csv(londonGOVINTnrm, paste0("~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/govt-intervention/LondonBoroughs_XY_tstep_",i,".csv"), row.names = F)
+  
+}
+
 # 2. keep risk perception at baseline
+# so no changes needed
+
 # 3. knowledge updates and spreads based on OPM presence
-
-
-
+# make sure this happens in CRAFTY-RangeshiftR loop
