@@ -8,9 +8,7 @@ library(ggplot2)
 wd <- "~/eclipse-workspace/CRAFTY_RangeshiftR"# sandbox VM
 dirOut <- file.path(wd, 'data-processed')
 baseline <- "baseline"
-scenario <- "de-regulation"
 
-# note. can skip to l.121 to read in baseline capitals and change from there.
 
 ### read in raw data -----------------------------------------------------------
 
@@ -46,6 +44,8 @@ capitalsRAW$OPMinv <- z
 
 head(capitalsRAW)
 summary(capitalsRAW)
+
+write.csv(capitalsRAW, paste0(dirOut, "/capitals/baseline_capitals_raw.csv"),row.names = F)
 
 # normalise --------------------------------------------------------------------
 
@@ -120,21 +120,30 @@ london$OPMpresence <- NULL
 
 write.csv(london, sprintf("~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/%s/LondonBoroughs_XY.csv", baseline), row.names = F)
 
+# updater files
+updater <- london[1:8]
+tsteps <- seq(1,10,by=1)
+for (i in tsteps){
+  
+  write.csv(updater, paste0("~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/baseline/LondonBoroughs_XY_tstep_",i,".csv"), row.names = F)
+  
+}
+
 ### de-regulation changes ------------------------------------------------------
 
 londonXY <- read.csv("~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/LondonBoroughs_original.csv")
 hx <- read.csv("~/eclipse-workspace/CRAFTY_RangeshiftR/data-processed/Cell_ID_XY_Borough.csv")
-capitalsNORM <- read.csv(paste0(dirOut, "/capitals/baseline_capitals_norm.csv"))
+capitalsRAW <- read.csv(paste0(dirOut, "/capitals/baseline_capitals_raw.csv"))
 colnames(londonXY)[3:4] = c("Lon", "Lat")
 londonXY$x <- hx$X[match(londonXY$joinID, hx$Cell_ID)]
 londonXY$y <- hx$Y[match(londonXY$joinID, hx$Cell_ID)]
-londonXY$OPMinverted <- capitalsNORM$OPMinv[match(londonXY$joinID, capitalsNORM$joinID)]
-londonXY$riskPerc <- capitalsNORM$riskPrc[match(londonXY$joinID, capitalsNORM$joinID)]
-londonXY$budget <- capitalsNORM$budget[match(londonXY$joinID, capitalsNORM$joinID)]
-londonXY$OPMpresence <- capitalsNORM$OPMpresence[match(londonXY$joinID, capitalsNORM$joinID)]
-londonXY$knowledge <- capitalsNORM$knowledge[match(londonXY$joinID, capitalsNORM$joinID)]
-londonXY$nature <- capitalsNORM$nature[match(londonXY$joinID, capitalsNORM$joinID)]
-londonXY$access <- capitalsNORM$access[match(londonXY$joinID, capitalsNORM$joinID)]
+londonXY$OPMinverted <- capitalsRAW$OPMinv[match(londonXY$joinID, capitalsRAW$joinID)]
+londonXY$riskPerc <- capitalsRAW$riskPerc[match(londonXY$joinID, capitalsRAW$joinID)]
+londonXY$budget <- capitalsRAW$budget[match(londonXY$joinID, capitalsRAW$joinID)]
+londonXY$OPMpresence <- capitalsRAW$OPMpresence[match(londonXY$joinID, capitalsRAW$joinID)]
+londonXY$knowledge <- capitalsRAW$knowledge[match(londonXY$joinID, capitalsRAW$joinID)]
+londonXY$nature <- capitalsRAW$nature[match(londonXY$joinID, capitalsRAW$joinID)]
+londonXY$access <- capitalsRAW$access[match(londonXY$joinID, capitalsRAW$joinID)]
 
 head(londonXY)
 londonXY$Agent <- NULL
@@ -148,6 +157,8 @@ londonXY$Agent <- NULL
 ggplot(londonXY)+
   geom_tile(mapping = aes(x,y,fill=budget))
 
+londonXY$budget <- NA
+
 head(social)
 londonXY$type <- social$type[match(londonXY$joinID, social$joinID)]
 londonXY$ownerID <- social$ownerID[match(londonXY$joinID, social$joinID)]
@@ -157,10 +168,112 @@ ggplot(londonXY)+
 
 head(londonXY)
 unique(londonXY$type)
-unique(londonXY$ownerID[which(londonXY$type=="Public.park")])
+#unique(londonXY$ownerID[which(londonXY$type=="Public.park")])
 
-# 2. increase risk perception through time (if it's low)
+# parks 50% low budget = 0.2, 50% high budget = 0.9
+parks <- filter(londonXY, grepl("park", ownerID))
+parkIDs <- unique(parks$ownerID)
+perc50 <- length(sample(parkIDs,(0.5*length(parkIDs)))) # 50% of parkIDs
+parkIDhalf <- sample(parkIDs,perc50,replace=F) # randomly sample
+index <- parkIDs %nin% parkIDhalf
+parkIDhalf2 <- parkIDs[index==T] # extract the other half
+# check
+summary(parkIDhalf %in% parkIDhalf2) # all false so all good
+
+londonXY$budget[which(londonXY$ownerID %in% parkIDhalf == T)] <- 0.2
+londonXY$budget[which(londonXY$ownerID %in% parkIDhalf2 == T)] <- 0.9
+
+# private residents low budget 0.2
+londonXY$budget[which(londonXY$type=="Private.garden")] <- 0.2
+
+# all other types (by cluster ID) medium 0.5
+others <- filter(londonXY, grepl("schl|rlgs|inst|plysp|plyfd|othsp|ten|bwl|cmtry|altmt|amnrb|amnt", ownerID)) 
+otherIDs <- unique(others$ownerID)
+
+londonXY$budget[which(londonXY$ownerID %in% otherIDs == T)] <- 0.5
+
+londonXY$budget[which(is.na(londonXY$budget))] <- 0
+summary(londonXY$budget)
+
+ggplot(londonXY)+
+  geom_tile(mapping = aes(x,y,fill=budget))
+
+summary(londonXY)
+londonDEREG <- londonXY[,c(11,12,13,6:10)]
+londonDEREG$FR <- "no_mgmt"
+londonDEREG$BT <- 0
+summary(londonDEREG)
+
+# normalise
+londonDEREGnrm <- data.frame(londonDEREG[1:2], lapply(londonDEREG[3:8], normalise), londonDEREG[9:10])
+summary(londonDEREGnrm)
+
+write.csv(londonDEREGnrm, "~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/de-regulation/LondonBoroughs_XY.csv", row.names = F)
+
+# 2. increase risk perception through time (if it's low) - apply to updater files
+
+# tsteps 1 and 2
+# keep same risk perc
+# normalise
+updaterDRGnrm <- londonDEREGnrm[1:8]
+write.csv(updaterDRGnrm,"~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/de-regulation/LondonBoroughs_XY_tstep_1.csv", row.names = F)
+write.csv(updaterDRGnrm,"~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/de-regulation/LondonBoroughs_XY_tstep_2.csv", row.names = F)
+
+# increase risk perception gradually at each subsequent timestep
+# make changes to raw data, then re-normalise
+updaterDRG <- londonDEREG[1:8]
+
+ggplot(updaterDRG)+
+  geom_tile(mapping = aes(x,y,fill=riskPerc))
+
+summary(updaterDRG)
+
+updaterDRG$riskPerc[which(updaterDRG$riskPerc>0 & updaterDRG$riskPerc<=0.5)] <- updaterDRG$riskPerc[which(updaterDRG$riskPerc>0 & updaterDRG$riskPerc<=0.5)]+0.05
+updaterDRGnrm$riskPerc <- normalise(updaterDRG$riskPerc)
+summary(updaterDRGnrm$riskPerc)
+write.csv(updaterDRGnrm,"~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/de-regulation/LondonBoroughs_XY_tstep_3.csv", row.names = F)
+
+updaterDRG$riskPerc[which(updaterDRG$riskPerc<=0.5)] <- updaterDRG$riskPerc[which(updaterDRG$riskPerc<=0.5)]+0.05
+updaterDRGnrm$riskPerc <- normalise(updaterDRG$riskPerc)
+summary(updaterDRGnrm$riskPerc)
+write.csv(updaterDRGnrm,"~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/de-regulation/LondonBoroughs_XY_tstep_4.csv", row.names = F)
+
+updaterDRG$riskPerc[which(updaterDRG$riskPerc<=0.5)] <- updaterDRG$riskPerc[which(updaterDRG$riskPerc<=0.5)]+0.05
+updaterDRGnrm$riskPerc <- normalise(updaterDRG$riskPerc)
+summary(updaterDRGnrm$riskPerc)
+write.csv(updaterDRGnrm,"~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/de-regulation/LondonBoroughs_XY_tstep_5.csv", row.names = F)
+
+updaterDRG$riskPerc[which(updaterDRG$riskPerc<=0.5)] <- updaterDRG$riskPerc[which(updaterDRG$riskPerc<=0.5)]+0.05
+updaterDRGnrm$riskPerc <- normalise(updaterDRG$riskPerc)
+summary(updaterDRGnrm$riskPerc)
+write.csv(updaterDRGnrm,"~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/de-regulation/LondonBoroughs_XY_tstep_6.csv", row.names = F)
+
+updaterDRG$riskPerc[which(updaterDRG$riskPerc<=0.7)] <- updaterDRG$riskPerc[which(updaterDRG$riskPerc<=0.7)]+0.05
+updaterDRGnrm$riskPerc <- normalise(updaterDRG$riskPerc)
+summary(updaterDRGnrm$riskPerc)
+write.csv(updaterDRGnrm,"~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/de-regulation/LondonBoroughs_XY_tstep_7.csv", row.names = F)
+
+updaterDRG$riskPerc[which(updaterDRG$riskPerc<=0.7)] <- updaterDRG$riskPerc[which(updaterDRG$riskPerc<=0.7)]+0.05
+updaterDRGnrm$riskPerc <- normalise(updaterDRG$riskPerc)
+summary(updaterDRGnrm$riskPerc)
+write.csv(updaterDRGnrm,"~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/de-regulation/LondonBoroughs_XY_tstep_8.csv", row.names = F)
+
+updaterDRG$riskPerc[which(updaterDRG$riskPerc<=0.7)] <- updaterDRG$riskPerc[which(updaterDRG$riskPerc<=0.7)]+0.1
+updaterDRGnrm$riskPerc <- normalise(updaterDRG$riskPerc)
+summary(updaterDRGnrm$riskPerc)
+write.csv(updaterDRGnrm,"~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/de-regulation/LondonBoroughs_XY_tstep_9.csv", row.names = F)
+
+updaterDRG$riskPerc[which(updaterDRG$riskPerc<=0.7)] <- updaterDRG$riskPerc[which(updaterDRG$riskPerc<=0.7)]+0.2
+updaterDRGnrm$riskPerc <- normalise(updaterDRG$riskPerc)
+summary(updaterDRGnrm$riskPerc)
+write.csv(updaterDRGnrm,"~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/de-regulation/LondonBoroughs_XY_tstep_10.csv", row.names = F)
+
+summary(updaterDRGnrm)
+ggplot(updaterDRGnrm)+
+  geom_tile(mapping = aes(x,y,fill=riskPerc))+theme_bw()
+
 # 3. stop updating knowledge based on OPM presence
+#(will need to implement this in CRAFTY-RangeshiftR loop)
 
 ### govt-intervention changes --------------------------------------------------
 
