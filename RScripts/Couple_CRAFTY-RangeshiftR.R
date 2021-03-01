@@ -185,7 +185,7 @@ scenario.filenames <- c("Scenario_Baseline_noGUI.xml", "Scenario_de-regulation_n
 
 for (scenario in scenario.filenames){
   
-  scenario <- scenario.filenames[1]
+  scenario <- scenario.filenames[2]
   scenario.filename <- scenario
   scenario.split <- strsplit(scenario, "[_]")[[1]][2]
  
@@ -496,7 +496,6 @@ for (scenario in scenario.filenames){
 }
 
 
-
 log.txt <- tic.log(format = TRUE)
 log.lst <- tic.log(format = FALSE)
 tic.clearlog()
@@ -508,9 +507,9 @@ tic.clearlog()
 names(outRasterStack) <- c("Yr1","Yr2","Yr3","Yr4","Yr5","Yr6","Yr7","Yr8","Yr9","Yr10")
 clrs.viridis <- colorRampPalette(viridis::viridis(10))
 
-png(paste0(dirFigs,"/rsftr_pops_CRAFTY-coupled_",test,".png"), width = 800, height = 600)
+#png(paste0(dirFigs,"/rsftr_pops_CRAFTY-coupled_",test,".png"), width = 800, height = 600)
 spplot(outRasterStack, layout = c(5,2), col.regions=clrs.viridis(14), at = seq(0,70,10))
-dev.off()
+#dev.off()
 
 dfRangeShiftrData <- read.csv(paste0(dirCRAFTYOutput,"/dfRangeshiftR_output_coupled_test1.csv"))
 dfRangeShiftrData_standalone <- read.csv(paste0(dirCRAFTYOutput,"/dfRangeshiftR_output_RsftR_standalone.csv"))
@@ -521,7 +520,7 @@ dfRsftR_all <- rbind(dfRangeShiftrData_standalone,dfRangeShiftrData)
 head(dfRsftR_all)
 dfRsftR_all$models <- factor(dfRsftR_all$models, ordered = T, levels = c("Uncoupled","Coupled"))
 
-png(paste0(dirFigs,"/rsftr_comparePops_uncoupled_vs_coupled_test1.png"), width = 700, height = 450)
+#png(paste0(dirFigs,"/rsftr_comparePops_uncoupled_vs_coupled_test1.png"), width = 700, height = 450)
 dfRsftR_all %>% filter(Year==2) %>% 
   ggplot(aes(timestep,NInds))+
   geom_smooth(color="purple3")+
@@ -533,7 +532,7 @@ dfRsftR_all %>% filter(Year==2) %>%
                    axis.title=element_text(size=14,face="bold", family = "Roboto"),
                    axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
                    axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)))
-dev.off()
+#dev.off()
 
 
 # read in all CRAFTY results
