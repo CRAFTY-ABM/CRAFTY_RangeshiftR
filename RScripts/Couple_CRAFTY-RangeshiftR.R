@@ -185,7 +185,7 @@ scenario.filenames <- c("Scenario_Baseline_noGUI.xml", "Scenario_de-regulation_n
 
 for (scenario in scenario.filenames){
   
-  scenario <- scenario.filenames[2]
+  scenario <- scenario.filenames[3]
   scenario.filename <- scenario
   scenario.split <- strsplit(scenario, "[_]")[[1]][2]
  
@@ -510,6 +510,9 @@ clrs.viridis <- colorRampPalette(viridis::viridis(10))
 #png(paste0(dirFigs,"/rsftr_pops_CRAFTY-coupled_",test,".png"), width = 800, height = 600)
 spplot(outRasterStack, layout = c(5,2), col.regions=clrs.viridis(14), at = seq(0,70,10))
 #dev.off()
+
+
+### initial tests --------------------------------------------------------------
 
 dfRangeShiftrData <- read.csv(paste0(dirCRAFTYOutput,"/dfRangeshiftR_output_coupled_test1.csv"))
 dfRangeShiftrData_standalone <- read.csv(paste0(dirCRAFTYOutput,"/dfRangeshiftR_output_RsftR_standalone.csv"))
