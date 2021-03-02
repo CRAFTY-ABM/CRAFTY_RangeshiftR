@@ -185,7 +185,7 @@ scenario.filenames <- c("Scenario_Baseline_noGUI.xml", "Scenario_de-regulation_n
 
 for (scenario in scenario.filenames){
   
-  scenario <- scenario.filenames[3]
+  scenario <- scenario.filenames[2]
   scenario.filename <- scenario
   scenario.split <- strsplit(scenario, "[_]")[[1]][2]
  
@@ -193,7 +193,6 @@ for (scenario in scenario.filenames){
   CRAFTY_sargs <- c("-d", dirCRAFTYInput, "-f", scenario.filename, "-o", random_seed_crafty, "-r", "1",  "-n", "1", "-sr", "0") 
   
   # set up CRAFTY job
-  
   # Create a new instance (to call non-static methods)
   CRAFTY_jobj <- new(J(CRAFTY_main_name)) 
   
@@ -203,11 +202,6 @@ for (scenario in scenario.filenames){
   # set the schedule
   CRAFTY_loader_jobj <- CRAFTY_jobj$EXTsetSchedule(as.integer(start_year_idx), as.integer(end_year_idx))
   
-  # option to visualise as model runs
-  #doProcessFR = FALSE
-  
-  #nticks <- length(start_year_idx:end_year_idx)
-  #plot_return_list <- vector("list", nticks)
   timesteps <- start_year_idx:end_year_idx
   
   ### pre-process CRAFTY Java object
@@ -227,8 +221,6 @@ for (scenario in scenario.filenames){
   dirRsftr <- paste0(dirRsftr,"/") 
   
   # set-up RangeshiftR parameters for this scenario
-  #init <- Initialise(InitType=2, InitIndsFile='initial_inds_2014_n10.txt')
-  
   land <- ImportedLandscape(LandscapeFile=sprintf('Habitat-%sm.asc', habitatRes),
                             Resolution=habitatRes,
                             HabPercent=TRUE,
@@ -257,7 +249,7 @@ for (scenario in scenario.filenames){
     
     #CRAFTY_tick <- 1
     
-    # before EXTtick() (line 361)
+    # before EXTtick() (line 380)
     # run RangeshiftR to get OPM capital
     
     tic(CRAFTY_tick)
@@ -353,17 +345,33 @@ for (scenario in scenario.filenames){
     print(p2)
     
     # update knowledge to be dependent on OPM presence
-    if (CRAFTY_tick==1){
-      capitals$knowledge<-NA # clear previous test capital
-      # and add any new knowledge based on contact with OPM
-      capitals$knowledge[which(capitals$OPMinverted==0)]<-1
-      capitals$knowledge[which(capitals$OPMinverted==1)]<-0
+    # for de-regulation scenario, there is no monitoring, so way minimal knowledge (0.2 instead of 1)
+    if (scenario.split == "de-regulation"){
+      if (CRAFTY_tick==1){
+        capitals$knowledge<-NA # clear previous test capital
+        # and add any new knowledge based on contact with OPM
+        capitals$knowledge[which(capitals$OPMinverted==0)]<-0.2
+        capitals$knowledge[which(capitals$OPMinverted==1)]<-0
+      }else{
+        # keep previous knowledge
+        prevKnowledge <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/",scenario.split,"/LondonBoroughs_XY_tstep_",CRAFTY_tick-1,".csv"))
+        capitals$knowledge <- prevKnowledge$knowledge
+        # add new
+        capitals$knowledge[which(capitals$OPMinverted==0)]<-0.2
+      }
     }else{
-      # keep previous knowledge
-      prevKnowledge <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/",scenario.split,"/LondonBoroughs_XY_tstep_",CRAFTY_tick-1,".csv"))
-      capitals$knowledge <- prevKnowledge$knowledge
-      # add new
-      capitals$knowledge[which(capitals$OPMinverted==0)]<-1
+      if (CRAFTY_tick==1){
+        capitals$knowledge<-NA # clear previous test capital
+        # and add any new knowledge based on contact with OPM
+        capitals$knowledge[which(capitals$OPMinverted==0)]<-1
+        capitals$knowledge[which(capitals$OPMinverted==1)]<-0
+      }else{
+        # keep previous knowledge
+        prevKnowledge <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/",scenario.split,"/LondonBoroughs_XY_tstep_",CRAFTY_tick-1,".csv"))
+        capitals$knowledge <- prevKnowledge$knowledge
+        # add new
+        capitals$knowledge[which(capitals$OPMinverted==0)]<-1
+      }
     }
     
     p3 <- ggplot(capitals)+
