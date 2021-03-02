@@ -308,15 +308,20 @@ londonGOVINTnrm$budget <- normalise(londonGOVINT$budget)
 ggplot(londonGOVINTnrm)+
   geom_tile(aes(x,y,fill=budget))
 
+
+# 2. risk perception not dramatically different to baseline, but site owners might increase due to production of management plans
+unique(londonGOVINT$type)
+londonGOVINT$riskPerc[which(londonGOVINT$type=="Public.park"&londonGOVINT$riskPerc<1)] <- 1 # make max
+londonGOVINTnrm$riskPerc <- normalise(londonGOVINT$riskPerc)
+ggplot(londonGOVINTnrm)+
+  geom_tile(aes(x,y,fill=riskPerc))
+
+# 3. knowledge updates and spreads based on OPM presence
+# make sure this happens in CRAFTY-RangeshiftR loop
+
 tsteps <- seq(1,10,by=1)
 for (i in tsteps){
   
   write.csv(londonGOVINTnrm, paste0("~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/govt-intervention/LondonBoroughs_XY_tstep_",i,".csv"), row.names = F)
   
 }
-
-# 2. keep risk perception at baseline
-# so no changes needed
-
-# 3. knowledge updates and spreads based on OPM presence
-# make sure this happens in CRAFTY-RangeshiftR loop
