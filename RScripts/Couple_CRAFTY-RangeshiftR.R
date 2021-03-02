@@ -185,7 +185,7 @@ scenario.filenames <- c("Scenario_Baseline_noGUI.xml", "Scenario_de-regulation_n
 
 for (scenario in scenario.filenames){
   
-  scenario <- scenario.filenames[2]
+  #scenario <- scenario.filenames[2]
   scenario.filename <- scenario
   scenario.split <- strsplit(scenario, "[_]")[[1]][2]
  
