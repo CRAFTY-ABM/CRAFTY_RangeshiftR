@@ -62,7 +62,7 @@ capitalsNORM %>%
   geom_boxplot(aes(capital,value))
 
 write.csv(capitalsNORM, paste0(dirOut, "/capitals/baseline_capitals_norm.csv"),row.names = F)
-
+capitalsNORM <- read.csv(paste0(dirOut, "/capitals/baseline_capitals_norm.csv"),)
 
 # join to CRAFTY coords ---------------------------------------------------------
 # original LondonBoroughs file and cellIDs for matching to CRAFTY coordinates
@@ -117,6 +117,12 @@ head(london)
 
 # remove OPMpresence
 london$OPMpresence <- NULL
+
+# change budget to be by type same as scenarios
+budgetBySite <- read.csv("~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/de-regulation/LondonBoroughs_XY.csv")
+summary(budgetBySite$budget)
+summary(london$budget)
+london$budget <- budgetBySite$budget
 
 write.csv(london, sprintf("~/eclipse-workspace/CRAFTY_RangeshiftR/data_LondonOPM/worlds/LondonBoroughs/%s/LondonBoroughs_XY.csv", baseline), row.names = F)
 
