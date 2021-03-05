@@ -185,7 +185,7 @@ scenario.filenames <- c("Scenario_Baseline_noGUI.xml", "Scenario_de-regulation_n
 
 for (scenario in scenario.filenames){
   
-  scenario <- scenario.filenames[3]
+  scenario <- scenario.filenames[2]
   scenario.filename <- scenario
   scenario.split <- strsplit(scenario, "[_]")[[1]][2]
  
@@ -347,18 +347,18 @@ for (scenario in scenario.filenames){
     # update knowledge to be dependent on OPM presence
     # for de-regulation scenario, there is no monitoring, so way minimal knowledge (0.2 instead of 1)
     if (scenario.split == "de-regulation"){
-      if (CRAFTY_tick==1){
-        capitals$knowledge<-NA # clear previous test capital
+      #if (CRAFTY_tick==1){
+        capitals$knowledge<-0 # clear previous test capital
         # and add any new knowledge based on contact with OPM
-        capitals$knowledge[which(capitals$OPMinverted==0)]<-0.2
-        capitals$knowledge[which(capitals$OPMinverted==1)]<-0
-      }else{
+        #capitals$knowledge[which(capitals$OPMinverted==0)]<-0.2
+        #capitals$knowledge[which(capitals$OPMinverted==1)]<-0
+      #}else{
         # keep previous knowledge
-        prevKnowledge <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/",scenario.split,"/LondonBoroughs_XY_tstep_",CRAFTY_tick-1,".csv"))
-        capitals$knowledge <- prevKnowledge$knowledge
+        #prevKnowledge <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/",scenario.split,"/LondonBoroughs_XY_tstep_",CRAFTY_tick-1,".csv"))
+        #capitals$knowledge <- prevKnowledge$knowledge
         # add new
-        capitals$knowledge[which(capitals$OPMinverted==0)]<-0.2
-      }
+        #capitals$knowledge[which(capitals$OPMinverted==0)]<-0.2
+      #}
     }else{
       if (CRAFTY_tick==1){
         capitals$knowledge<-NA # clear previous test capital
