@@ -1,12 +1,7 @@
 
 # date: 26/01/21
-# authors: VB/BS
-# description: script to loosely couple RangeShiftR and CRAFTY. RangeShiftR will 
-# feed in two capitals (OPM inverted & knowledge). CRAFTY will take these and
-# run for a single timestep. The agent locations from CRAFTY will be used to alter
-# OPM populations in RangeShiftR. These edited pops will start the next iteration of
-# RangeshiftR, etc...
-
+# authors: VB & BS
+# description: script which runs coupled CRAFTY & RangeShiftR models
 
 
 ### libraries ------------------------------------------------------------------
@@ -42,7 +37,7 @@ if (Sys.info()["user"] %in% c("alan", "seo-b")) {
   dirWorking<- "~/eclipse-workspace/CRAFTY_RangeshiftR"
 }
 
-dirFigs <- "~/CRAFTY-opm/figures"
+dirFigs <- "~/OPM-model-prep-21-22/figs"
 
 dirCRAFTYInput <- path.expand(paste0(dirWorking, "/data_LondonOPM/"))
 dirCRAFTYOutput <- path.expand(paste0(dirWorking, "/output"))
@@ -64,7 +59,7 @@ dirRsftrOutputMaps <- file.path(dirRsftr,"Output_Maps")
 
 setwd(dirWorking)
 
-source("RScripts/Functions_CRAFTY_rJava.R")
+source("RScripts/02_Functions_CRAFTY_rJava.R")
 
 
 ### RangeshiftR set-up ---------------------------------------------------------
