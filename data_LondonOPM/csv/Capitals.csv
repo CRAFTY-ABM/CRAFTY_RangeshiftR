@@ -1,7 +1,8 @@
 "Name","Index"
-"OPMinverted",0
-"riskPerc",1
-"budget",2
-"knowledge",3
-"nature",4
-"access",5
+"OPM_presence",0
+"Risk_perception",1
+"Willingness_to_pay",2
+"Knowledge",3
+"Risk_map",4
+"Nature",5
+"Access",6
