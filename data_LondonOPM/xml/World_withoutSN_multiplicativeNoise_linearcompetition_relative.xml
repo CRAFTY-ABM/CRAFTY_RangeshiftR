@@ -1,5 +1,5 @@
 <world>
-	<region id="LondonBoroughs">
+	<region id="GreaterLondon">
 	
 	
 	<allocation class="org.volante.abm.example.GiveUpGiveInAllocationModel" percentageCells="10" percentageTakeOvers="10" relativeThresholding="true"/> 
@@ -16,7 +16,7 @@
 	<regionalLaraModelFile>lara/RegionalLaraModel.xml</regionalLaraModelFile>
 
 	<initialiserFile>xml/Initialiser.xml</initialiserFile>
-	<updaterFile>xml/CsvCapitalUpdater_%s.xml</updaterFile>    
+	<!-- <updaterFile>xml/CsvCapitalUpdater_%s.xml</updaterFile> -->    
 
 
    <!-- Regional institutions -->
