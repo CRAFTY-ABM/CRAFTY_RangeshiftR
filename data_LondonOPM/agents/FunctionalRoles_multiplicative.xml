@@ -1,96 +1,96 @@
 <functionalRoles>
-	<fRole class="org.volante.abm.comi.fr.ComiVariantProductionFR" label="mgmt_highInt" serialID="0"
-		givingUpMean="${@(agents/%v/AftParams_mgmt_highInt.csv, givingUpDistributionMean)}"
-		givingInMean="${@(agents/%v/AftParams_mgmt_highInt.csv, givingInDistributionMean)}"
-		givingUpProbability = "${@(agents/%v/AftParams_mgmt_highInt.csv, givingUpProb)}">
-		<alternativeFr>mgmt_highInt</alternativeFr>
+	<fRole class="org.volante.abm.comi.fr.ComiVariantProductionFR" label="no_mgmt" serialID="0"
+		givingUpMean="${@(agents/%v/AftParams_no_mgmt.csv, givingUpDistributionMean)}"
+		givingInMean="${@(agents/%v/AftParams_no_mgmt.csv, givingInDistributionMean)}"
+		givingUpProbability = "${@(agents/%v/AftParams_no_mgmt.csv, givingUpProb)}">
+		<alternativeFr>no_mgmt</alternativeFr>
 
  		<givingUpDistribution class="com.moseph.modelutils.distribution.NormalDistribution" 
- 			mean="${@(agents/%v/AftParams_mgmt_highInt.csv, givingUpDistributionMean)}" 
- 			sd="${@(agents/%v/AftParams_mgmt_highInt.csv, givingUpDistributionSD)}"/>
+ 			mean="${@(agents/%v/AftParams_no_mgmt.csv, givingUpDistributionMean)}" 
+ 			sd="${@(agents/%v/AftParams_no_mgmt.csv, givingUpDistributionSD)}"/>
  		
  		<givingInDistribution class="com.moseph.modelutils.distribution.NormalDistribution" 
- 			mean="${@(agents/%v/AftParams_mgmt_highInt.csv, givingInDistributionMean)}" 
- 			sd="${@(agents/%v/AftParams_mgmt_highInt.csv, givingInDistributionSD)}"/>
+ 			mean="${@(agents/%v/AftParams_no_mgmt.csv, givingInDistributionMean)}" 
+ 			sd="${@(agents/%v/AftParams_no_mgmt.csv, givingInDistributionSD)}"/>
  		
  		<serviceLevelNoise class="com.moseph.modelutils.distribution.UniformDistribution" 
- 			min="${@(agents/%v/AftParams_mgmt_highInt.csv, serviceLevelNoiseMin)}" 
- 			max="${@(agents/%v/AftParams_mgmt_highInt.csv, serviceLevelNoiseMax)}"/>
+ 			min="${@(agents/%v/AftParams_no_mgmt.csv, serviceLevelNoiseMin)}" 
+ 			max="${@(agents/%v/AftParams_no_mgmt.csv, serviceLevelNoiseMax)}"/>
  		
 		<production class="org.volante.abm.example.SimpleProductionModel"
-			csvFile="${@(agents/%v/AftParams_mgmt_highInt.csv, productionCsvFile)}" multiplyProductionNoise="true" />
+			csvFile="${@(agents/%v/AftParams_no_mgmt.csv, productionCsvFile)}" multiplyProductionNoise="true" />
 	</fRole>
 	 
 
-	<fRole class="org.volante.abm.comi.fr.ComiVariantProductionFR" label="mgmt_lowInt" serialID="1"
-	givingUpMean="${@(agents/%v/AftParams_mgmt_lowInt.csv, givingUpDistributionMean)}"
-	givingInMean="${@(agents/%v/AftParams_mgmt_lowInt.csv, givingInDistributionMean)}"
-	givingUpProbability = "${@(agents/%v/AftParams_mgmt_lowInt.csv, givingUpProb)}">
-	<alternativeFr>mgmt_lowInt</alternativeFr>
+	<fRole class="org.volante.abm.comi.fr.ComiVariantProductionFR" label="mgmt_remove" serialID="1"
+	givingUpMean="${@(agents/%v/AftParams_mgmt_remove.csv, givingUpDistributionMean)}"
+	givingInMean="${@(agents/%v/AftParams_mgmt_remove.csv, givingInDistributionMean)}"
+	givingUpProbability = "${@(agents/%v/AftParams_mgmt_remove.csv, givingUpProb)}">
+	<alternativeFr>mgmt_remove</alternativeFr>
 
 	 <givingUpDistribution class="com.moseph.modelutils.distribution.NormalDistribution" 
-		 mean="${@(agents/%v/AftParams_mgmt_lowInt.csv, givingUpDistributionMean)}" 
-		 sd="${@(agents/%v/AftParams_mgmt_lowInt.csv, givingUpDistributionSD)}"/>
+		 mean="${@(agents/%v/AftParams_mgmt_remove.csv, givingUpDistributionMean)}" 
+		 sd="${@(agents/%v/AftParams_mgmt_remove.csv, givingUpDistributionSD)}"/>
 	 
 	 <givingInDistribution class="com.moseph.modelutils.distribution.NormalDistribution" 
-		 mean="${@(agents/%v/AftParams_mgmt_lowInt.csv, givingInDistributionMean)}" 
-		 sd="${@(agents/%v/AftParams_mgmt_lowInt.csv, givingInDistributionSD)}"/>
+		 mean="${@(agents/%v/AftParams_mgmt_remove.csv, givingInDistributionMean)}" 
+		 sd="${@(agents/%v/AftParams_mgmt_remove.csv, givingInDistributionSD)}"/>
 	 
 	 <serviceLevelNoise class="com.moseph.modelutils.distribution.UniformDistribution" 
-		 min="${@(agents/%v/AftParams_mgmt_lowInt.csv, serviceLevelNoiseMin)}" 
-		 max="${@(agents/%v/AftParams_mgmt_lowInt.csv, serviceLevelNoiseMax)}"/>
+		 min="${@(agents/%v/AftParams_mgmt_remove.csv, serviceLevelNoiseMin)}" 
+		 max="${@(agents/%v/AftParams_mgmt_remove.csv, serviceLevelNoiseMax)}"/>
 	 
 	<production class="org.volante.abm.example.SimpleProductionModel"
-		csvFile="${@(agents/%v/AftParams_mgmt_lowInt.csv, productionCsvFile)}" multiplyProductionNoise="true" />
+		csvFile="${@(agents/%v/AftParams_mgmt_remove.csv, productionCsvFile)}" multiplyProductionNoise="true" />
 
 	</fRole>
 		
-	<!-- <fRole class="org.volante.abm.comi.fr.ComiVariantProductionFR" label="mgmt_medInt" serialID="2"
-	givingUpMean="${@(agents/%v/AftParams_mgmt_medInt.csv, givingUpDistributionMean)}"
-	givingInMean="${@(agents/%v/AftParams_mgmt_medInt.csv, givingInDistributionMean)}"
-	givingUpProbability = "${@(agents/%v/AftParams_mgmt_medInt.csv, givingUpProb)}">
-	<alternativeFr>mgmt_medInt</alternativeFr>
+	
+	<fRole class="org.volante.abm.comi.fr.ComiVariantProductionFR" label="mgmt_pesticide" serialID="2"
+	givingUpMean="${@(agents/%v/AftParams_mgmt_pesticide.csv, givingUpDistributionMean)}"
+	givingInMean="${@(agents/%v/AftParams_mgmt_pesticide.csv, givingInDistributionMean)}"
+	givingUpProbability = "${@(agents/%v/AftParams_mgmt_pesticide.csv, givingUpProb)}">
+	<alternativeFr>mgmt_pesticide</alternativeFr>
 
 	 <givingUpDistribution class="com.moseph.modelutils.distribution.NormalDistribution" 
-		 mean="${@(agents/%v/AftParams_mgmt_medInt.csv, givingUpDistributionMean)}" 
-		 sd="${@(agents/%v/AftParams_mgmt_medInt.csv, givingUpDistributionSD)}"/>
+		 mean="${@(agents/%v/AftParams_mgmt_pesticide.csv, givingUpDistributionMean)}" 
+		 sd="${@(agents/%v/AftParams_mgmt_pesticide.csv, givingUpDistributionSD)}"/>
 	 
 	 <givingInDistribution class="com.moseph.modelutils.distribution.NormalDistribution" 
-		 mean="${@(agents/%v/AftParams_mgmt_medInt.csv, givingInDistributionMean)}" 
-		 sd="${@(agents/%v/AftParams_mgmt_medInt.csv, givingInDistributionSD)}"/>
+		 mean="${@(agents/%v/AftParams_mgmt_pesticide.csv, givingInDistributionMean)}" 
+		 sd="${@(agents/%v/AftParams_mgmt_pesticide.csv, givingInDistributionSD)}"/>
 	 
 	 <serviceLevelNoise class="com.moseph.modelutils.distribution.UniformDistribution" 
-		 min="${@(agents/%v/AftParams_mgmt_medInt.csv, serviceLevelNoiseMin)}" 
-		 max="${@(agents/%v/AftParams_mgmt_medInt.csv, serviceLevelNoiseMax)}"/>
+		 min="${@(agents/%v/AftParams_mgmt_pesticide.csv, serviceLevelNoiseMin)}" 
+		 max="${@(agents/%v/AftParams_mgmt_pesticide.csv, serviceLevelNoiseMax)}"/>
 	 
 	<production class="org.volante.abm.example.SimpleProductionModel"
-		csvFile="${@(agents/%v/AftParams_mgmt_medInt.csv, productionCsvFile)}" multiplyProductionNoise="true" />
-	</fRole> -->
-
-
-			
-	<fRole class="org.volante.abm.comi.fr.ComiVariantProductionFR" label="no_mgmt" serialID="2"
-	givingUpMean="${@(agents/%v/AftParams_no_mgmt.csv, givingUpDistributionMean)}"
-	givingInMean="${@(agents/%v/AftParams_no_mgmt.csv, givingInDistributionMean)}"
-	givingUpProbability = "${@(agents/%v/AftParams_no_mgmt.csv, givingUpProb)}">
-	<alternativeFr>no_mgmt</alternativeFr>
-
-	 <givingUpDistribution class="com.moseph.modelutils.distribution.NormalDistribution" 
-		 mean="${@(agents/%v/AftParams_no_mgmt.csv, givingUpDistributionMean)}" 
-		 sd="${@(agents/%v/AftParams_no_mgmt.csv, givingUpDistributionSD)}"/>
-	 
-	 <givingInDistribution class="com.moseph.modelutils.distribution.NormalDistribution" 
-		 mean="${@(agents/%v/AftParams_no_mgmt.csv, givingInDistributionMean)}" 
-		 sd="${@(agents/%v/AftParams_no_mgmt.csv, givingInDistributionSD)}"/>
-	 
-	 <serviceLevelNoise class="com.moseph.modelutils.distribution.UniformDistribution" 
-		 min="${@(agents/%v/AftParams_no_mgmt.csv, serviceLevelNoiseMin)}" 
-		 max="${@(agents/%v/AftParams_no_mgmt.csv, serviceLevelNoiseMax)}"/>
-	 
-	<production class="org.volante.abm.example.SimpleProductionModel"
-		csvFile="${@(agents/%v/AftParams_no_mgmt.csv, productionCsvFile)}" multiplyProductionNoise="true" />
+		csvFile="${@(agents/%v/AftParams_mgmt_pesticide.csv, productionCsvFile)}" multiplyProductionNoise="true" />
 	</fRole>
  
+ 
+ 	
+	<fRole class="org.volante.abm.comi.fr.ComiVariantProductionFR" label="mgmt_fell" serialID="3"
+	givingUpMean="${@(agents/%v/AftParams_mgmt_fell.csv, givingUpDistributionMean)}"
+	givingInMean="${@(agents/%v/AftParams_mgmt_fell.csv, givingInDistributionMean)}"
+	givingUpProbability = "${@(agents/%v/AftParams_mgmt_fell.csv, givingUpProb)}">
+	<alternativeFr>mgmt_fell</alternativeFr>
+
+	 <givingUpDistribution class="com.moseph.modelutils.distribution.NormalDistribution" 
+		 mean="${@(agents/%v/AftParams_mgmt_fell.csv, givingUpDistributionMean)}" 
+		 sd="${@(agents/%v/AftParams_mgmt_fell.csv, givingUpDistributionSD)}"/>
+	 
+	 <givingInDistribution class="com.moseph.modelutils.distribution.NormalDistribution" 
+		 mean="${@(agents/%v/AftParams_mgmt_fell.csv, givingInDistributionMean)}" 
+		 sd="${@(agents/%v/AftParams_mgmt_fell.csv, givingInDistributionSD)}"/>
+	 
+	 <serviceLevelNoise class="com.moseph.modelutils.distribution.UniformDistribution" 
+		 min="${@(agents/%v/AftParams_mgmt_fell.csv, serviceLevelNoiseMin)}" 
+		 max="${@(agents/%v/AftParams_mgmt_fell.csv, serviceLevelNoiseMax)}"/>
+	 
+	<production class="org.volante.abm.example.SimpleProductionModel"
+		csvFile="${@(agents/%v/AftParams_mgmt_fell.csv, productionCsvFile)}" multiplyProductionNoise="true" />
+	</fRole>
  
 
 </functionalRoles>
