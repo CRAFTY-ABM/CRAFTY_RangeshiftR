@@ -176,19 +176,19 @@ dfWorld$X <- dfWorld$X / 1000
 dfWorld$Y <- dfWorld$Y / 1000
 
 # unique coordinates 
-# x_unq <- sort(unique(dfWorld$Long), decreasing = F)
-# y_unq <- sort(unique(dfWorld$Lat), decreasing = F)
-# 
-# # ranks (later row/col id in CRAFTY)
-# x_rnk <- 1:length(x_unq)
-# y_rnk <- 1:length(y_unq)
-# 
-# # order of the grid coords
-# x_ord <- match(dfWorld$Long, x_unq)
-# y_ord <- match(dfWorld$Lat, y_unq)
-# 
-# dfWorld$X <- x_ord
-# dfWorld$Y <- y_ord
+x_unq <- sort(unique(dfWorld$X), decreasing = F)
+y_unq <- sort(unique(dfWorld$Y), decreasing = F)
+
+# ranks (later row/col id in CRAFTY)
+x_rnk <- 1:length(x_unq)
+y_rnk <- 1:length(y_unq)
+
+# order of the grid coords
+x_ord <- match(dfWorld$X, x_unq)
+y_ord <- match(dfWorld$Y, y_unq)
+
+dfWorld$X <- x_ord
+dfWorld$Y <- y_ord
 
 # save look-up
 dfCoords <- dfWorld %>% dplyr::select(GridID,Long,Lat,X,Y)
@@ -222,11 +222,11 @@ dfWorld$FR <- "no_mgmt"
 dfWorld$BT <- 0
 
 # round so CRAFTY can deal with numbers
-dfWorld[,1:10] <- round(dfWorld[,1:10], digits = 1)
+#dfWorld[,1:10] <- round(dfWorld[,1:10], digits = 1)
 
 is.integer(dfWorld$x)
-dfWorld$x <- as.integer(dfWorld$x)
-dfWorld$y <- as.integer(dfWorld$y)
+# dfWorld$x <- as.integer(dfWorld$x)
+# dfWorld$y <- as.integer(dfWorld$y)
 
 for (scenario in lstScenarios){
   
