@@ -16,7 +16,7 @@ library(tmap)
 ### paths ----------------------------------------------------------------------
 
 wd <- "~/eclipse-workspace/CRAFTY_RangeshiftR" # sandbox VM
-dirData <- file.path(wd, 'data-processed')
+dirData <- file.path(wd, 'data-store')
 dirOut <- file.path(wd, 'data_LondonOPM')
 
 ### CRAFTY set-up --------------------------------------------------------------
