@@ -148,6 +148,10 @@ dfWorld <- sfCapitals_RAW %>%
                 Nature, Access, Zone) %>%  # select and rename columns
   st_drop_geometry() # drop geometry so no longer sf
 
+# points version for extracting RangeShiftR results in coupled set-up
+sfPoints <- st_as_sf(dfWorld[,1:3], coords = c("Long","Lat"), crs = 27700)
+st_write(sfPoints, dsn = paste0(dirData,"/01_Grid_points.shp"))
+
 # format coords for CRAFTY and save look-up
 # unique coordinates 
 # x_unq <- sort(unique(dfWorld$Long), decreasing = F)
