@@ -30,9 +30,7 @@ java.ms <- "1g -d64"
 
 #aft.names.fromzero <- c( "Ext_AF", "IA", "Int_AF", "Int_Fa", "IP", "MF", "Min_man", "Mix_Fa", "Mix_For", "Mix_P", "Multifun", "P-Ur", "UL", "UMF", "Ur", "VEP", "EP")
 
-
-
-CRAFTY_main_name = "org.volante.abm.serialization.ModelRunner" # Better using the reflection based API in rJava.  
+CRAFTY_main_name <- "org.volante.abm.serialization.ModelRunner" # Better using the reflection based API in rJava.  
 
 #crafty_sp =NA 
 
