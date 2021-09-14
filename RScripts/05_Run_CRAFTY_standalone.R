@@ -70,22 +70,6 @@ source("RScripts/02_Functions_CRAFTY_rJava.R")
 
 ### set up CRAFTY --------------------------------------------------------------
 
-# points file for Greater London 100m grid - to extract from OPM population results
-sfPoints <- st_read(paste0(dirWorking,"/data-store/01_Grid_points.shp"))
-
-# convert to spatial
-spPoints <- as_Spatial(sfPoints)
-
-# agent names
-aft_names_fromzero <- c("no_mgmt", "mgmt_remove", "mgmt_pesticide", "mgmt_fell")
-
-# read in look-up for GridID & coords
-lookUp <- read.csv(paste0(dirWorking,"/data-store/Cell_ID_XY_GreaterLondon.csv"))
-# sf polygon grid for plotting if required
-sfGrid <- st_read(paste0(dirWorking,"/data-store/01_Grid_capitals_raw.shp"))
-sfGrid <- sfGrid %>% dplyr::select(GridID, geometry)
-
-
 # location of the CRAFTY Jar file
 #path_crafty_jar <- path.expand(paste0(dirWorking, "/lib/CRAFTY_KIT_engineOct2020.jar"))
 path_crafty_jar <- path.expand(paste0(dirWorking, "/lib/CRAFTY_KIT_engineAug2021.jar"))
