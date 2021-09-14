@@ -13,6 +13,8 @@ library(sf)
 library(viridis)
 library(ggplot2)
 library(sp)
+# try option to increase java heap space before loading package, from here: https://stackoverflow.com/questions/21937640/handling-java-lang-outofmemoryerror-when-writing-to-excel-from-r
+options(java.parameters = "-Xmx8000m")
 library(rJava)
 library(jdx)
 library(xml2)
