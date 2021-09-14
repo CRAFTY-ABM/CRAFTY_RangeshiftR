@@ -43,30 +43,30 @@ source("RScripts/02_Functions_CRAFTY_rJava.R")
 ### test set of capitals -------------------------------------------------------
 
 # put OPM and knowledge everywhere - test for agent response
-dfCapitals <- read.csv(paste0(dirCRAFTYInput,"worlds/GreaterLondon/with_social/GreaterLondon.csv"), header = T, sep = ",")
-head(dfCapitals)
-#write.csv(capitals, paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY.csv"),row.names = F)
-
-dfCapitals$OPM_presence <- 0 # OPM everywhere
-dfCapitals$Knowledge <- 1 # knowledge everywhere
-write.csv(dfCapitals, paste0(dirCRAFTYInput,"worlds/GreaterLondon/with_social/GreaterLondon.csv"),row.names = F)
-
-updaterFiles <- dfCapitals[1:10]
-head(updaterFiles)
-
-#updaterFiles$OPMinverted <- 1
-#updaterFiles$knowledge <- 0
-head(updaterFiles)
-summary(updaterFiles)
-
-ticks <- c(1,2,3,4,5,6,7,8,9,10)
-
-for (i in ticks){
-  
-  #tick <- ticks[1]
-  write.csv(updaterFiles, paste0(dirCRAFTYInput,"worlds/GreaterLondon/with_social/GreaterLondon_tstep_",i,".csv") ,row.names = FALSE)
-  
-}
+# dfCapitals <- read.csv(paste0(dirCRAFTYInput,"worlds/GreaterLondon/with_social/GreaterLondon.csv"), header = T, sep = ",")
+# head(dfCapitals)
+# #write.csv(capitals, paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY.csv"),row.names = F)
+# 
+# dfCapitals$OPM_presence <- 0 # OPM everywhere
+# dfCapitals$Knowledge <- 1 # knowledge everywhere
+# write.csv(dfCapitals, paste0(dirCRAFTYInput,"worlds/GreaterLondon/with_social/GreaterLondon.csv"),row.names = F)
+# 
+# updaterFiles <- dfCapitals[1:10]
+# head(updaterFiles)
+# 
+# #updaterFiles$OPMinverted <- 1
+# #updaterFiles$knowledge <- 0
+# head(updaterFiles)
+# summary(updaterFiles)
+# 
+# ticks <- c(1,2,3,4,5,6,7,8,9,10)
+# 
+# for (i in ticks){
+#   
+#   #tick <- ticks[1]
+#   write.csv(updaterFiles, paste0(dirCRAFTYInput,"worlds/GreaterLondon/with_social/GreaterLondon_tstep_",i,".csv") ,row.names = FALSE)
+#   
+# }
 
 ### set up CRAFTY --------------------------------------------------------------
 
@@ -87,8 +87,8 @@ sfGrid <- sfGrid %>% dplyr::select(GridID, geometry)
 
 
 # location of the CRAFTY Jar file
-path_crafty_jar <- path.expand(paste0(dirWorking, "/lib/CRAFTY_KIT_engineOct2020.jar"))
-#path_crafty_jar <- path.expand(paste0(dirWorking, "/lib/CRAFTY_KIT_engineAug2021.jar"))
+#path_crafty_jar <- path.expand(paste0(dirWorking, "/lib/CRAFTY_KIT_engineOct2020.jar"))
+path_crafty_jar <- path.expand(paste0(dirWorking, "/lib/CRAFTY_KIT_engineAug2021.jar"))
 
 # location of the CRAFTY lib files
 path_crafty_libs <- path.expand(paste0(dirWorking, "/lib/"))
