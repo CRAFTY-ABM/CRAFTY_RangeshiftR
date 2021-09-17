@@ -1,6 +1,6 @@
 <scenario startTick="1" endTick="10" world="GreaterLondon" 
 version = "behaviour_baseline"
-scenario = "with_social">
+scenario = "no-social">
   <capitals class="org.volante.abm.serialization.CSVCapitalLoader" file="csv/Capitals.csv" indexed="true"/>
   <services class="org.volante.abm.serialization.CSVServiceLoader" file="csv/Services.csv" indexed="true"/>
    <outputs outputDirectory="output/%v/%s" filePattern="%s-%i-%r-%o" tickPattern="%s-%i-%r-%o-%y">
@@ -19,7 +19,8 @@ scenario = "with_social">
    <displays class="org.volante.abm.visualisation.DefaultModelDisplays">
     <display class="org.volante.abm.visualisation.CapitalDisplay" initial="OPM_presence" title="Capitals"/>
     <display class="org.volante.abm.visualisation.ProductionDisplay" initial="biodiversity" title="Production"/>
-    <display class="org.volante.abm.comi.visualisation.OPMAgents" title="AgentTypes"/>
+    <!-- <display class="org.volante.abm.comi.visualisation.OPMAgents" title="AgentTypes"/>-->
+    <display class="org.volante.abm.comi.visualisation.CSVAgentDisplayLoader" file="csv/AgentColors.csv" indexed="true" title="AgentTypes"/>
     <display class="org.volante.abm.visualisation.CompetitivenessDisplay" initial="no_mgmt" title="Competitiveness"/>
     <display class="org.volante.abm.visualisation.SubmodelDisplays" title="Submodels"/>
 </displays>
