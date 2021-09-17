@@ -209,7 +209,7 @@ scenario.filenames <- c("Scenario_with-social_GUI.xml", "Scenario_no-social_GUI.
 
 for (s.idx in 1:length(scenario.filenames)){
   
-  s.idx <- 1 # for testing
+  #s.idx <- 1 # for testing
   scenario <- scenario.filenames[s.idx] 
   scenario.filename <- scenario
   scenario.split <- strsplit(scenario, "[_]")[[1]][2]
@@ -220,6 +220,7 @@ for (s.idx in 1:length(scenario.filenames)){
   # set up CRAFTY job
   # create a new instance (to call non-static methods)
   CRAFTY_jobj <- new(J(CRAFTY_main_name)) 
+  # (can ignore the error this spits out)
   
   # prepares a run and returns run information 
   CRAFTY_RunInfo_jobj <- CRAFTY_jobj$EXTprepareRrun(CRAFTY_sargs)
@@ -238,6 +239,7 @@ for (s.idx in 1:length(scenario.filenames)){
   # check if exists and create if not
   if (file.exists(dirCRAFTYscenario)){
     # set as wd? / do nothing
+    print("folder exists")
   }else{dir.create(file.path(dirCRAFTYscenario))}
   
   # set RangeshiftR paths based on scenario
@@ -251,15 +253,18 @@ for (s.idx in 1:length(scenario.filenames)){
   # check if folders exist and create if no
   if (file.exists(dirRsftrInput)){
     # set as wd? / do nothing
+    print("folder exists")
   }else{dir.create(file.path(dirRsftrInput))}
   if (file.exists(dirRsftrOutput)){
     # set as wd? / do nothing
+    print("folder exists")
   }else{dir.create(file.path(dirRsftrOutput))}
   if (file.exists(dirRsftrOutputMaps)){
     # set as wd? / do nothing
+    print("folder exists")
   }else{dir.create(file.path(dirRsftrOutputMaps))}
   
-    ## important - need to add the / for this path to work in RunRS()
+  ## important - need to add the / for this path to work in RunRS()
   dirRsftr <- paste0(dirRsftr,"/") 
   
   # make sure RangeshiftR Inputs folder has required files
@@ -427,7 +432,7 @@ for (s.idx in 1:length(scenario.filenames)){
         capitals$Knowledge <- prevKnowledge$knowledge
         # add new
         capitals$Knowledge[which(capitals$OPM_presence==0)]<-0.2
-      #}
+      }
     }else{
       if (CRAFTY_tick==1){
         capitals$Knowledge<-0 # clear previous test capital
@@ -442,16 +447,14 @@ for (s.idx in 1:length(scenario.filenames)){
         capitals$Knowledge[which(capitals$OPM_presence==0)]<-1
       }
     }
-      
-      # check
-      p3 <- ggplot(capitals)+
+    
+    # check
+    p3 <- ggplot(capitals)+
       geom_tile(mapping = aes(x,y,fill=Knowledge))
-      print(p3)
-      capitals$GridID <- NULL
-      
-      # 
-      
-      capitals <- write.csv(capitals, paste0(dirCRAFTYInput,"worlds/GreaterLondon/",scenario.split,"/GreaterLondon_tstep_",CRAFTY_tick,".csv"),row.names = F)
+    print(p3)
+    
+    capitals$GridID <- NULL
+    capitals <- write.csv(capitals, paste0(dirCRAFTYInput,"worlds/GreaterLondon/",scenario.split,"/GreaterLondon_tstep_",CRAFTY_tick,".csv"),row.names = F)
     
     #####
     #####
@@ -482,8 +485,8 @@ for (s.idx in 1:length(scenario.filenames)){
     #   which((as.numeric(val_xy[rowid, 1]) == london_xy_df$X) & (as.numeric(val_xy[rowid, 2]) == london_xy_df$Y))
     # }
     
-    # simpler this year because square grid, no hexagonal
-    val_df$GridID <- lookUp$GridID
+    # simpler this year because square grid, not hexagonal
+    val_df$GridID <- lookUp$GridID # in same order so I can get away with this simple version
     sfResult <- left_join(sfGrid, val_df, by="GridID")
     sfResult$Agent <- factor(sfResult$Agent, levels=aft_names_fromzero)
     
@@ -590,8 +593,9 @@ for (s.idx in 1:length(scenario.filenames)){
     
     toc(log = TRUE, quiet = TRUE)
     }
-  }
 }
+
+
 
 
 # look at timings
