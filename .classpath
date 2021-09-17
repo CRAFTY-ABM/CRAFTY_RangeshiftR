@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry kind="lib" path="lib/CRAFTY_KIT_engine_Aug2021.jar"/>
 	<classpathentry kind="src" path="config"/>
 	<classpathentry kind="lib" path="lib/modelling-utiilities_Sep2020.jar"/>
-	<classpathentry kind="lib" path="lib/CRAFTY_KIT_engineOct2020.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="lib" path="lib_tools/ant4hg-0.8.1.jar"/>
 	<classpathentry kind="lib" path="lib_tools/jsch-0.1.44.jar"/>
 	<classpathentry kind="lib" path="lib_tools/maven-ant-tasks-2.1.3.jar"/>
