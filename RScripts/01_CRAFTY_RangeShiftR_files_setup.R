@@ -63,7 +63,7 @@ dfAgents <- read.csv(paste0(dirData,"/AgentMaster.csv"))
 head(dfAgents)
 
 lstAgents <- unique(dfAgents$Agent)
-lstScenarios <- c("with_social","no_social") # sensitivity to social capitals vs. not
+lstScenarios <- c("with-social","no-social") # for testing effect of social caps first
 
 for (AFT in lstAgents){
   
@@ -93,6 +93,39 @@ for (AFT in lstAgents){
   }
   
 }
+
+# then simple DEFRA scenarios from last year, with sensitivity to social caps
+lstScenarios <- c("de-regulation","govt-intervention")
+
+for (scenario in lstScenarios){
+  
+  #scenario <- lstScenarios[1]
+  
+  for (AFT in lstAgents){
+    
+    #AFT <- lstAgents[1]
+    
+    dfAFT <- filter(dfAgents, Paramset == "with_social")
+    dfAFT <- filter(dfAFT, Agent == AFT)
+    
+    dfAFT$Agent <- NULL
+    
+    print(AFT)
+    
+    dfAFT[is.na(dfAFT)] <- 0
+    
+    dfAFT2 <- dfAFT
+    dfAFT2$Paramset <- NULL
+    
+    write.csv(dfAFT2, paste0(dirOut,"/production/",scenario,"/",AFT,".csv"), row.names = F)
+    
+  }
+  
+}
+
+
+
+  
 
 
 ### agents ---------------------------------------------------------------------
