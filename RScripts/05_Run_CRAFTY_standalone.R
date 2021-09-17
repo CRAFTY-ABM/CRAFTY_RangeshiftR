@@ -40,34 +40,6 @@ setwd(dirWorking)
 source("RScripts/02_Functions_CRAFTY_rJava.R")
 
 
-### test set of capitals -------------------------------------------------------
-
-# put OPM and knowledge everywhere - test for agent response
-# dfCapitals <- read.csv(paste0(dirCRAFTYInput,"worlds/GreaterLondon/with_social/GreaterLondon.csv"), header = T, sep = ",")
-# head(dfCapitals)
-# #write.csv(capitals, paste0(dirCRAFTYInput,"worlds/LondonBoroughs/LondonBoroughs_XY.csv"),row.names = F)
-# 
-# dfCapitals$OPM_presence <- 0 # OPM everywhere
-# dfCapitals$Knowledge <- 1 # knowledge everywhere
-# write.csv(dfCapitals, paste0(dirCRAFTYInput,"worlds/GreaterLondon/with_social/GreaterLondon.csv"),row.names = F)
-# 
-# updaterFiles <- dfCapitals[1:10]
-# head(updaterFiles)
-# 
-# #updaterFiles$OPMinverted <- 1
-# #updaterFiles$knowledge <- 0
-# head(updaterFiles)
-# summary(updaterFiles)
-# 
-# ticks <- c(1,2,3,4,5,6,7,8,9,10)
-# 
-# for (i in ticks){
-#   
-#   #tick <- ticks[1]
-#   write.csv(updaterFiles, paste0(dirCRAFTYInput,"worlds/GreaterLondon/with_social/GreaterLondon_tstep_",i,".csv") ,row.names = FALSE)
-#   
-# }
-
 ### set up CRAFTY --------------------------------------------------------------
 
 # location of the CRAFTY Jar file
@@ -90,7 +62,7 @@ crafty_jclasspath <- c(path_crafty_jar, paste0(path_crafty_libs, crafty_libs))
 random_seed_crafty <- 99 
 
 # name of the scenario file
-scenario.filename <- "Scenario_with_social_GUI.xml"
+scenario.filename <- "Scenario_with-social_GUI.xml"
 
 # scenario file
 CRAFTY_sargs <- c("-d", dirCRAFTYInput, "-f", scenario.filename, "-o", "99", "-r", "1",  "-n", "1", "-sr", "0") 
