@@ -1,6 +1,6 @@
 
-# date: 26/01/21
-# authors: VB & BS
+# date updated: 17/09/21
+# authors: Vanessa Burton, Bumsuk Seo
 # description: script which runs coupled CRAFTY & RangeShiftR models
 
 
@@ -30,6 +30,7 @@ library(foreach)
 library(tictoc)
 
 
+
 ### directories/ file paths ----------------------------------------------------
 
 if (Sys.info()["user"] %in% c("alan", "seo-b")) { 
@@ -45,30 +46,32 @@ dirData <- file.path(dirWorking, 'data-store')
 dirCRAFTYInput <- path.expand(paste0(dirWorking, "/data_LondonOPM/"))
 dirCRAFTYOutput <- path.expand(paste0(dirWorking, "/output"))
 
-# this will change per scenario (store a RangeshiftR folder within each scenario output folder)
+# MOVED TO WITHIN LOOP BELOW as this will change per scenario (store a RangeshiftR folder within each scenario output folder)
 # store RangeshiftR files within CRAFTY output folder as it is the directory CRAFTY will need to run in
-dirRsftr <- file.path(dirCRAFTYOutput, 'RangeshiftR_coupled')#; dir.create(dirRsftr)
-# specific file structure needed for RangeshiftR to run
-dirRsftrInput <- file.path(dirRsftr,"Inputs")
-dirRsftrOutput <- file.path(dirRsftr,"Outputs")
-dirRsftrOutputMaps <- file.path(dirRsftr,"Output_Maps")
+# dirRsftr <- file.path(dirCRAFTYOutput, 'RangeshiftR_coupled')#; dir.create(dirRsftr)
+# # specific file structure needed for RangeshiftR to run
+# dirRsftrInput <- file.path(dirRsftr,"Inputs")
+# dirRsftrOutput <- file.path(dirRsftr,"Outputs")
+# dirRsftrOutputMaps <- file.path(dirRsftr,"Output_Maps")
 #dir.create(dirRsftrInput)
 #dir.create(dirRsftrOutput)
 #dir.create(dirRsftrOutputMaps)
 
 # important
 # need to add the / for this path to work in RunRS()
-dirRsftr <- paste0(dirRsftr,"/") 
+#dirRsftr <- paste0(dirRsftr,"/") 
 
 setwd(dirWorking)
 
 source("RScripts/02_Functions_CRAFTY_rJava.R")
 
 
+
 ### RangeshiftR set-up ---------------------------------------------------------
 
 rangeshiftrYears <- 2
 
+# PoC 2020 data
 # #rstHabitat <- raster(file.path(dirRsftrInput, 'Habitat-100m.tif'))
 # ascHabitat <- raster(file.path(dirRsftrInput, 'Habitat-100m.asc'))
 # # make sure BNG
@@ -80,11 +83,12 @@ rangeshiftrYears <- 2
 # spplot(ascHabitat)
 # habitatRes <- 100
 
+# new 2021 Greater London data
 ascHabitat <- raster(file.path(dirData, 'Habitat-100m.asc'))
 crs(ascHabitat)
 # make sure BNG
 sfGrid <- st_read(paste0(dirData,"/01_Grid_capitals_raw.shp")) %>% dplyr::select(GridID, geometry)
-st_crs(sfGrid)
+#st_crs(sfGrid)
 # extract centroid points, make spatial points dataframe
 spGrid <- as_Spatial(st_centroid(sfGrid))
 
@@ -93,12 +97,13 @@ st_crs(ascHabitat)
 spplot(ascHabitat)
 
 # write to RangeShiftR input folder
-writeRaster(ascHabitat, file.path(dirRsftrInput, 'Habitat-100m.asc'), format="ascii", overwrite=TRUE, NAflag=-9999)
+# writeRaster(ascHabitat, file.path(dirRsftrInput, 'Habitat-100m.asc'), format="ascii", overwrite=TRUE, NAflag=-9999)
 
 # read in initial individuals file (must be tab delimited)
 dfInitialIndividuals <- read.table(paste0(dirData,"/01_initial_inds_2012.txt"), sep = '\t', header = TRUE)
 # write to RangeShiftR input folder
-write.table(dfInitialIndividuals, file.path(dirRsftrInput, '01_initial_inds_2012.txt'), row.names = F, quote = F, sep = '\t')
+#write.table(dfInitialIndividuals, file.path(dirRsftrInput, '01_initial_inds_2012.txt'), row.names = F, quote = F, sep = '\t')
+
 
 
 ### CRAFTY set-up --------------------------------------------------------------
@@ -135,7 +140,7 @@ crafty_libs <- c(crafty_libs,  "geoapi-20050403.jar")
 # java configuration
 crafty_jclasspath <- c(path_crafty_jar, paste0(path_crafty_libs, crafty_libs))
 
-# Random seed used in CRAFTY
+# random seed used in CRAFTY
 random_seed_crafty <- 99 
 
 # CRAFTY timesteps
@@ -171,7 +176,7 @@ for (i in 1:length(crafty_jclasspath)) {
 
 ### Set up CRAFTY job ----------------------------------------------------------
 
-# moved to within scenario loop
+# MOVED TO WITHIN SCENARIO LOOP
 
 # Create a new instance (to call non-static methods)
 #CRAFTY_jobj <- new(J(CRAFTY_main_name)) 
@@ -196,22 +201,24 @@ for (i in 1:length(crafty_jclasspath)) {
 
 ### Run the models -------------------------------------------------------------
 
-# start setting up structure for scenarios
+# scenarios to loop through
 
 #scenario.filenames <- c("Scenario_Baseline_noGUI.xml", "Scenario_de-regulation_noGUI.xml","Scenario_govt-intervention_noGUI.xml") 
-scenario.filenames <- c("Scenario_with_social_GUI.xml")#, "Scenario_no_social_GUI.xml") 
+scenario.filenames <- c("Scenario_with-social_GUI.xml", "Scenario_no-social_GUI.xml", "Scenario_de-regulation_GUI.xml", "Scenario_govt-intervention.xml") 
 
-for (scenario in scenario.filenames){
+
+for (s.idx in 1:length(scenario.filenames)){
   
-  scenario <- scenario.filenames[1]
+  s.idx <- 1 # for testing
+  scenario <- scenario.filenames[s.idx] 
   scenario.filename <- scenario
-  scenario.split <- paste0(strsplit(scenario, "[_]")[[1]][2],"_",strsplit(scenario, "[_]")[[1]][3])
+  scenario.split <- strsplit(scenario, "[_]")[[1]][2]
  
-  # scenario file
+  # scenario file and arguments reguired for CRAFTY run
   CRAFTY_sargs <- c("-d", dirCRAFTYInput, "-f", scenario.filename, "-o", random_seed_crafty, "-r", "1",  "-n", "1", "-sr", "0") 
   
   # set up CRAFTY job
-  # Create a new instance (to call non-static methods)
+  # create a new instance (to call non-static methods)
   CRAFTY_jobj <- new(J(CRAFTY_main_name)) 
   
   # prepares a run and returns run information 
@@ -226,17 +233,38 @@ for (scenario in scenario.filenames){
   region <- CRAFTY_loader_jobj$getRegions()$getAllRegions()$iterator()$'next'()
   
   # change wd to a scenario folder to store output files
-  #dirCRAFTYscenario <- paste0(dirCRAFTYOutput,"/V4/",scenario.split)
+  dirCRAFTYscenario <- paste0(dirCRAFTYOutput,"/behaviour_baseline/",scenario.split)
+  
+  # check if exists and create if not
+  if (file.exists(dirCRAFTYscenario)){
+    # set as wd? / do nothing
+  }else{dir.create(file.path(dirCRAFTYscenario))}
   
   # set RangeshiftR paths based on scenario
-  #dirRsftr <- file.path(dirCRAFTYscenario)
+  dirRsftr <- file.path(dirCRAFTYscenario)
  
   # specific file structure needed for RangeshiftR to run
-  #dirRsftrInput <- file.path(dirRsftr,"Inputs")
-  #dirRsftrOutput <- file.path(dirRsftr,"Outputs")
-  #dirRsftrOutputMaps <- file.path(dirRsftr,"Output_Maps")
-  ## important - need to add the / for this path to work in RunRS()
-  #dirRsftr <- paste0(dirRsftr,"/") 
+  dirRsftrInput <- file.path(dirRsftr,"Inputs")
+  dirRsftrOutput <- file.path(dirRsftr,"Outputs")
+  dirRsftrOutputMaps <- file.path(dirRsftr,"Output_Maps")
+  
+  # check if folders exist and create if no
+  if (file.exists(dirRsftrInput)){
+    # set as wd? / do nothing
+  }else{dir.create(file.path(dirRsftrInput))}
+  if (file.exists(dirRsftrOutput)){
+    # set as wd? / do nothing
+  }else{dir.create(file.path(dirRsftrOutput))}
+  if (file.exists(dirRsftrOutputMaps)){
+    # set as wd? / do nothing
+  }else{dir.create(file.path(dirRsftrOutputMaps))}
+  
+    ## important - need to add the / for this path to work in RunRS()
+  dirRsftr <- paste0(dirRsftr,"/") 
+  
+  # make sure RangeshiftR Inputs folder has required files
+  writeRaster(ascHabitat, file.path(dirRsftrInput, 'Habitat-100m.asc'), format="ascii", overwrite=TRUE, NAflag=-9999)
+  write.table(dfInitialIndividuals, file.path(dirRsftrInput, '01_initial_inds_2012.txt'), row.names = F, quote = F, sep = '\t')
   
   # set-up RangeshiftR parameters for this scenario
   land <- ImportedLandscape(LandscapeFile='Habitat-100m.asc',
@@ -247,6 +275,15 @@ for (scenario in scenario.filenames){
   demo <- Demography(Rmax = 25,
                      ReproductionType = 0) # 0 = asexual / only female; 1 = simple sexual; 2 = sexual model with explicit mating system
   
+  ### ADD ANOTHER LOOP HERE TO RUN BOTH DISPERSAL KERNEL TYPES?
+  
+  # single kernel
+  # disp <-  Dispersal(Emigration = Emigration(EmigProb = 0.2),
+  #                    Transfer = DispersalKernel(Distances = 500), 
+  #                    Settlement = Settlement())
+  
+  # double kernel
+  # set up probability matrix - 95% prob dispersal will be 500m, some chance of long range dispersal
   dists <- matrix(c(500,7300,0.95),ncol = 3)
   
   disp <-  Dispersal(Emigration = Emigration(EmigProb = 0.2),
@@ -265,14 +302,16 @@ for (scenario in scenario.filenames){
   
   # loop through years for this scenario 
   
-  for (CRAFTY_tick in timesteps) {
+  for (yr.idx in 1:length(timesteps)) {
     
-    CRAFTY_tick <- 1
+    #yr.idx <- 1 for testing
     
-    # before EXTtick() (line 380)
+    CRAFTY_tick <- timesteps[yr.idx]
+    
+    # before EXTtick() (line 438)
     # run RangeshiftR to get OPM capital
     
-    tic(CRAFTY_tick)
+    tic(CRAFTY_tick) # time loop
     
     print(paste0("============CRAFTY JAVA-R API: Setting up RangeShiftR tick = ", CRAFTY_tick))
     
@@ -304,7 +343,7 @@ for (scenario in scenario.filenames){
     result <- RunRS(s, sprintf('%s', dirRsftr))
     
     # wait few seconds before reading the output
-    Sys.sleep(1)
+    #Sys.sleep(1)
     
     # set crs and extent
     crs(result) <- crs(ascHabitat)
@@ -350,7 +389,7 @@ for (scenario in scenario.filenames){
     OPMbinary[which(OPMbinary>0)] <- 1
     invert <- OPMbinary - 1
     OPMinv <- abs(invert)
-    dfOPMinv <- tibble(dfOPM$joinID,OPMinv)
+    dfOPMinv <- tibble(dfOPM$GridID,OPMinv)
     colnames(dfOPMinv)[1] <- "GridID"
     
     # update OPM inverted capital in updater files
@@ -364,24 +403,34 @@ for (scenario in scenario.filenames){
       geom_tile(mapping = aes(x,y,fill=OPM_presence))
     print(p2)
     
-    # update knowledge to be dependent on OPM presence
-    # for de-regulation scenario, there is no monitoring, so way minimal knowledge (0.2 instead of 1)
+    
+    ### IMPLEMENT SCENARIO DEPDENDENT CHANGES HERE:
+    
+    # 1. conditional update knowledge to be dependent on OPM presence
+    # for de-regulation scenario, there is no monitoring, so minimal knowledge (0.2 instead of 1)
     if (scenario.split == "de-regulation"){
-      #if (CRAFTY_tick==1){
-        capitals$Knowledge<-0 # clear previous test capital
-        # and add any new knowledge based on contact with OPM
-        #capitals$knowledge[which(capitals$OPMinverted==0)]<-0.2
-        #capitals$knowledge[which(capitals$OPMinverted==1)]<-0
-      #}else{
+      if (CRAFTY_tick==1){
+        
+        # clear previous test capital
+        capitals$Knowledge<-0 
+        
+        # and add small amount of knowledge based on contact with OPM
+        capitals$Knowledge[which(capitals$OPM_presence==0)]<-0.2
+        capitals$Knowledge[which(capitals$OPM_presence==1)]<-0
+        
+        # increase risk perception where there is OPM
+        capitals$Risk_perception[which(capitals$OPM_presence == 0)] <- 0.8
+        
+      }else{
         # keep previous knowledge
-        #prevKnowledge <- read.csv(paste0(dirCRAFTYInput,"worlds/LondonBoroughs/",scenario.split,"/LondonBoroughs_XY_tstep_",CRAFTY_tick-1,".csv"))
-        #capitals$knowledge <- prevKnowledge$knowledge
+        prevKnowledge <- read.csv(paste0(dirCRAFTYInput,"worlds/GreaterLondon/",scenario.split,"/GreaterLondon_tstep_",CRAFTY_tick-1,".csv"))
+        capitals$Knowledge <- prevKnowledge$knowledge
         # add new
-        #capitals$knowledge[which(capitals$OPMinverted==0)]<-0.2
+        capitals$Knowledge[which(capitals$OPM_presence==0)]<-0.2
       #}
     }else{
       if (CRAFTY_tick==1){
-        capitals$Knowledge<-NA # clear previous test capital
+        capitals$Knowledge<-0 # clear previous test capital
         # and add any new knowledge based on contact with OPM
         capitals$Knowledge[which(capitals$OPM_presence==0)]<-1
         capitals$Knowledge[which(capitals$OPM_presence==1)]<-0
@@ -393,13 +442,16 @@ for (scenario in scenario.filenames){
         capitals$Knowledge[which(capitals$OPM_presence==0)]<-1
       }
     }
-    
-    p3 <- ggplot(capitals)+
+      
+      # check
+      p3 <- ggplot(capitals)+
       geom_tile(mapping = aes(x,y,fill=Knowledge))
-    print(p3)
-    capitals$GridID <- NULL
-    
-    capitals <- write.csv(capitals, paste0(dirCRAFTYInput,"worlds/GreaterLondon/",scenario.split,"/GreaterLondon_tstep_",CRAFTY_tick,".csv"),row.names = F)
+      print(p3)
+      capitals$GridID <- NULL
+      
+      # 
+      
+      capitals <- write.csv(capitals, paste0(dirCRAFTYInput,"worlds/GreaterLondon/",scenario.split,"/GreaterLondon_tstep_",CRAFTY_tick,".csv"),row.names = F)
     
     #####
     #####
@@ -415,29 +467,30 @@ for (scenario in scenario.filenames){
     # extract agent locations and use them to edit RangeshiftR individuals
     print(paste0("============CRAFTY JAVA-R API: Extract agent locations tick = ", CRAFTY_tick))
     
-    # extract agent locations, match to hexagonal grid
+    # extract agent locations, match to sf grid
     val_df <- read.csv(paste0(dirCRAFTYscenario,"/",scenario.split,"-0-", random_seed_crafty,"-GreaterLondon-Cell-",CRAFTY_tick,".csv"))
     val_fr <- val_df[,"Agent"]
     val_fr_fac <- factor(val_fr,  labels = aft_names_fromzero, levels = aft_names_fromzero)
     
-    # match back to hexGrid using joinID/cellid
-    val_xy <- data.frame(val_df$X,val_df$Y)
-    colnames(val_xy) <- c("X", "Y")
-    x_coord <- london_xy_df[match(val_xy$X, london_xy_df$X), "x_coord"]
-    y_coord <- london_xy_df[match(val_xy$Y, london_xy_df$Y), "y_coord"]
+    # match back to sf Grid using GridID
+    # val_xy <- data.frame(val_df$X,val_df$Y)
+    # colnames(val_xy) <- c("X", "Y")
+    # x_coord <- lookUp[match(val_xy$X, lookUp$X), "x_coord"]
+    # y_coord <- lookUp[match(val_xy$Y, lookUp$Y), "y_coord"]
+    # 
+    # cellid <- foreach(rowid = 1:nrow(val_xy), .combine = "c") %do% { 
+    #   which((as.numeric(val_xy[rowid, 1]) == london_xy_df$X) & (as.numeric(val_xy[rowid, 2]) == london_xy_df$Y))
+    # }
     
-    cellid <- foreach(rowid = 1:nrow(val_xy), .combine = "c") %do% { 
-      which((as.numeric(val_xy[rowid, 1]) == london_xy_df$X) & (as.numeric(val_xy[rowid, 2]) == london_xy_df$Y))
-    }
-    
-    val_df$joinID <- cellid
-    sfResult <- left_join(hexGrid, val_df, by="joinID")
+    # simpler this year because square grid, no hexagonal
+    val_df$GridID <- lookUp$GridID
+    sfResult <- left_join(sfGrid, val_df, by="GridID")
     sfResult$Agent <- factor(sfResult$Agent, levels=aft_names_fromzero)
     
     print(paste0("============CRAFTY JAVA-R API: Show agents & OPM individuals = ", CRAFTY_tick)) 
     p1 <- ggplot() +
       geom_sf(sfResult, mapping = aes(fill = Agent), col = NA)+
-      geom_sf(data=shpIndividuals, color="black", pch=4)+
+      #geom_sf(data=shpIndividuals, color="black", pch=4)+
       scale_fill_brewer(palette="Dark2")
     print(p1)
     
@@ -445,45 +498,63 @@ for (scenario in scenario.filenames){
     print(paste0("============CRAFTY JAVA-R API: Edit RangeshiftR individuals tick = ", CRAFTY_tick))
     
     # find where OPM individuals intersect
-    lowInt <- sfResult %>% filter(Agent == "mgmt_lowInt")
-    highInt <- sfResult %>% filter(Agent == "mgmt_highInt")
+    mgmt_remove <- sfResult %>% filter(Agent == "mgmt_remove")
+    mgmt_pesticide <- sfResult %>% filter(Agent == "mgmt_pesticide")
+    mgmt_fell <- sfResult %>% filter(Agent == "mgmt_fell")
     
     # find OPM individuals within each agent type
     # https://gis.stackexchange.com/questions/245136/how-to-subset-point-data-by-outside-of-polygon-data-in-r
-    if (nrow(lowInt)>0) { 
-      lowInt <- st_transform(lowInt, crs = st_crs(shpIndividuals))
+    if (nrow(mgmt_remove)>0) { 
+      mgmt_remove <- st_transform(mgmt_remove, crs = st_crs(shpIndividuals))
       
-      low <- sapply(st_intersects(shpIndividuals, lowInt),function(x){length(x)>0})
+      remove <- sapply(st_intersects(shpIndividuals, mgmt_remove),function(x){length(x)>0})
       
-      # reduce population by half if low intensity
-      lowPops <- shpIndividuals$layer[low]
-      if (length(lowPops)>1){
-        for (pop in c(1:length(lowPops))){
-          lowPops[pop]<-round(lowPops[pop]/2)
-          if (lowPops[pop]<1){
-            lowPops[-pop]}
+      # reduce population by half if physical removal
+      remPops <- shpIndividuals$layer[remove]
+      if (length(remPops)>1){
+        for (pop in c(1:length(remPops))){
+          remPops[pop]<-round(remPops[pop]*0.5) # reduce by 50%
+          if (remPops[pop]<1){
+            remPops[-pop]}
         }
-        
-        # remove as test1
-        #shpIndividuals <- shpIndividuals[!low,] 
-        
       }
-      shpIndividuals$layer[low] <- lowPops
+      
+      shpIndividuals$layer[remove] <- remPops
     }
     
-    if (nrow(highInt)>0) { 
-      highInt <- st_transform(highInt, crs = st_crs(shpIndividuals))
+    if (nrow(mgmt_pesticide)>0) { 
+      mgmt_pesticide <- st_transform(mgmt_pesticide, crs = st_crs(shpIndividuals))
       
-      high <- sapply(st_intersects(shpIndividuals, highInt),function(x){length(x)>0})
+      pesticide <- sapply(st_intersects(shpIndividuals, mgmt_pesticide),function(x){length(x)>0})
       
-      # remove inidividuals if high intensity
-      shpIndividuals <- shpIndividuals[!high,] 
+      # reduce population by 80% if spraying pesticides
+      pestPops <- shpIndividuals$layer[pesticide]
+      if (length(pestPops)>1){
+        for (pop in c(1:length(pestPops))){
+          pestPops[pop]<-round(pestPops[pop]*0.2) # reduce by 80%
+          if (pestPops[pop]<1){
+            pestPops[-pop]}
+        }
+      }
+      shpIndividuals$layer[remove] <- pestPops
+      
     }
+    
+    
+    if (nrow(mgmt_fell)>0) { 
+      mgmt_fell <- st_transform(mgmt_fell, crs = st_crs(shpIndividuals))
+      
+      fell <- sapply(st_intersects(shpIndividuals, mgmt_fell),function(x){length(x)>0})
+      
+      # reduce pop by 80% if spraying pesticides
+      shpIndividuals <- shpIndividuals[!fell,] 
+    }
+    
     
     print(paste0("============CRAFTY JAVA-R API: Write new individuals file for RangeShiftR = ", CRAFTY_tick))
     
     # write new individuals file to be used by RangeShiftR on the next loop
-    shpIndividuals <- shpIndividuals %>% as_Spatial()
+    #shpIndividuals <- shpIndividuals %>% as_Spatial()
     #dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, ascHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
     dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, ascHabitat, field='layer'), shpIndividuals, cellnumbers=T, df=TRUE)
     dfNewIndsTable$Year <- 0 
@@ -518,86 +589,13 @@ for (scenario in scenario.filenames){
     }
     
     toc(log = TRUE, quiet = TRUE)
-    
+    }
   }
-  
 }
 
 
+# look at timings
 log.txt <- tic.log(format = TRUE)
 log.lst <- tic.log(format = FALSE)
 tic.clearlog()
 
-### look at outputs ------------------------------------------------------------
-
-#warnings() # crs warnings can ignore
-
-names(outRasterStack) <- c("Yr1","Yr2","Yr3","Yr4","Yr5","Yr6","Yr7","Yr8","Yr9","Yr10")
-clrs.viridis <- colorRampPalette(viridis::viridis(10))
-
-#png(paste0(dirFigs,"/rsftr_pops_CRAFTY-coupled_",test,".png"), width = 800, height = 600)
-spplot(outRasterStack, layout = c(5,2), col.regions=clrs.viridis(14), at = seq(0,70,10))
-#dev.off()
-
-
-### initial tests --------------------------------------------------------------
-
-dfRangeShiftrData <- read.csv(paste0(dirCRAFTYOutput,"/dfRangeshiftR_output_coupled_test1.csv"))
-dfRangeShiftrData_standalone <- read.csv(paste0(dirCRAFTYOutput,"/dfRangeshiftR_output_RsftR_standalone.csv"))
-dfRangeShiftrData_standalone$models <- "Uncoupled"
-dfRangeShiftrData$models <- "Coupled"
-
-dfRsftR_all <- rbind(dfRangeShiftrData_standalone,dfRangeShiftrData)
-head(dfRsftR_all)
-dfRsftR_all$models <- factor(dfRsftR_all$models, ordered = T, levels = c("Uncoupled","Coupled"))
-
-#png(paste0(dirFigs,"/rsftr_comparePops_uncoupled_vs_coupled_test1.png"), width = 700, height = 450)
-dfRsftR_all %>% filter(Year==2) %>% 
-  ggplot(aes(timestep,NInds))+
-  geom_smooth(color="purple3")+
-  facet_wrap(~models)+
-  scale_x_continuous(breaks=seq(1,10,1))+
-  xlab("Year")+ylab("Total number of individuals in landscape")+
-  theme_bw()+theme(text = element_text(size=20, family = "Roboto"),
-                   axis.text=element_text(size=10, family = "Roboto"),
-                   axis.title=element_text(size=14,face="bold", family = "Roboto"),
-                   axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
-                   axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)))
-#dev.off()
-
-
-# read in all CRAFTY results
-dirResults <- paste0(dirCRAFTYOutput,"/CRAFTY_coupled_",test,"/")
-dfResults <-
-  list.files(path = dirResults,
-             pattern = "*.csv", 
-             full.names = T) %>% 
-  grep("-Cell-", value=TRUE, .) %>% 
-  #map_df(~read_csv(., col_types = cols(.default = "c")))
-  map_df(~read.csv(.))
-
-head(dfResults)
-summary(dfResults)
-dfResults$Tick <- factor(dfResults$Tick)
-dfResults$Agent <- factor(dfResults$Agent)
-
-# match back to hex grid 
-tick <- filter(dfResults, Tick==10)
-val_xy <- data.frame(tick$X,tick$Y)
-colnames(val_xy) <- c("X", "Y")
-x_coord <- london_xy_df[match(val_xy$X, london_xy_df$X), "x_coord"]
-y_coord <- london_xy_df[match(val_xy$Y, london_xy_df$Y), "y_coord"]
-
-cellid <- foreach(rowid = 1:nrow(val_xy), .combine = "c") %do% { 
-  which((as.numeric(val_xy[rowid, 1]) == london_xy_df$X) & (as.numeric(val_xy[rowid, 2]) == london_xy_df$Y))
-}
-
-tick$joinID <- cellid
-sfResult <- left_join(hexGrid, tick, by="joinID")
-head(sfResult)
-
-# plot 
-ggplot() +
-  geom_sf(sfResult, mapping = aes(fill = Agent), col = NA)+
-  scale_fill_brewer(palette="Dark2")+
-  theme_bw()
