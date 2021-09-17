@@ -1,6 +1,6 @@
 <competition class="org.volante.abm.example.NormalisedCurveCompetitivenessModel" removeNegative="true">  <!-- normaliseCellResidual="false" normaliseCellSupply="false" -->
 	<curve service="biodiversity">
-		<curve class="com.moseph.modelutils.curve.LinearFunction" a="0.0" b="0.1" />
+		<curve class="com.moseph.modelutils.curve.LinearFunction" a="0.0" b="1" />
 	</curve>
 
 	<!-- <curve service="management">
@@ -8,6 +8,6 @@
 	</curve> -->
  
 	<curve service="recreation">
-		<curve class="com.moseph.modelutils.curve.LinearFunction" a="0.0" b="0.1" />
+		<curve class="com.moseph.modelutils.curve.LinearFunction" a="0.0" b="1" />
  	</curve>
 </competition>
