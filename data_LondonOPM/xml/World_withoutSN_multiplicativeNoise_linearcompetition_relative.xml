@@ -17,7 +17,7 @@
 
 	<initialiserFile>xml/Initialiser.xml</initialiserFile>
 	<!-- <updaterFile>xml/CsvCapitalUpdater_%s.xml</updaterFile> -->    
-  <updaterFile>xml/CsvCapitalUpdater_Baseline.xml</updaterFile>
+  <updaterFile>xml/CsvCapitalUpdater.xml</updaterFile>
 
    <!-- Regional institutions -->
    <!--	<updaterFile>xml/CsvLandUseUpdater_%s.xml</updaterFile>    -->
