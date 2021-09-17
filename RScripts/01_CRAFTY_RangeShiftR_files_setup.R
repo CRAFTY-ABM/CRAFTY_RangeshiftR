@@ -95,9 +95,9 @@ for (AFT in lstAgents){
 }
 
 # then simple DEFRA scenarios from last year, with sensitivity to social caps
-lstScenarios <- c("de-regulation","govt-intervention")
+lstScenarios2 <- c("de-regulation","govt-intervention")
 
-for (scenario in lstScenarios){
+for (scenario in lstScenarios2){
   
   #scenario <- lstScenarios[1]
   
@@ -124,8 +124,6 @@ for (scenario in lstScenarios){
 }
 
 
-
-  
 
 
 ### agents ---------------------------------------------------------------------
@@ -154,6 +152,12 @@ for (i in 1:nrow(dfBaseline)){
 
 # NOTE. do we need a behaviour set which makes agents more likely to give up every year?
 
+# check AgentColors.csv
+
+AgentCols <- read.csv(paste0(dirOut,"/csv/AgentColors.csv"))
+head(AgentCols)
+colnames(AgentCols) <- c("Name","Color")
+write.csv(AgentCols, paste0(dirOut,"/csv/AgentColors.csv"), row.names = FALSE)
 
 ### worlds ---------------------------------------------------------------------
 
@@ -234,6 +238,9 @@ write.csv(dfCoords, paste0(dirData,"/Cell_ID_XY_GreaterLondon.csv"), quote = F, 
 # order the capitals for CRAFTY 
 dfWorld <- dfWorld %>% dplyr::select(x = X, y = Y, OPM_presence:Zone)
 
+# store raw data for changes per scenario
+#dfWorld_raw <- dfWorld
+
 # normalise 0-1 (social capitals already 0-1 so don't need normalising)
 summary(dfWorld)
 
@@ -273,6 +280,160 @@ for (scenario in lstScenarios){
   
 }
 
+# updater files
+
+updaterFiles <- dfWorld[1:10]
+head(updaterFiles)
+
+#updaterFiles$OPMinverted <- 1
+#updaterFiles$knowledge <- 0
+head(updaterFiles)
+summary(updaterFiles)
+
+ticks <- c(1,2,3,4,5,6,7,8,9,10)
+
+for (scenario in lstScenarios){
+  
+  for (i in ticks){
+    
+    #tick <- ticks[1]
+    write.csv(updaterFiles, paste0(dirOut,"/worlds/GreaterLondon/",scenario,"/GreaterLondon_tstep_",i,".csv") ,row.names = FALSE)
+    
+  }
+  
+}
+
+
+
+### make changes per scenario --------------------------------------------------
+
+
+### de-regulation ###
+
+# budget stays the same as baseline
+
+# risk perception increases through time
+# implement this in loop where OPM occurs?
+# so essentially de-regulation scenario used same baseline updaters, but will get edited as model runs
+for (i in ticks){
+  
+  #tick <- ticks[1]
+  write.csv(updaterFiles, paste0(dirOut,"/worlds/GreaterLondon/de-regulation/GreaterLondon_tstep_",i,".csv") ,row.names = FALSE)
+  
+}
+
+# no updating of knowledge in loop either
+
+### govt-intervention ###
+
+# pull in type (for private residents) + increase their budget in the control zone
+# check zone
+ggplot(dfWorld_raw)+
+  geom_tile(aes(x,y,fill=Zone))+
+  theme_bw()
+# control zone = 2
+
+sfCapitals_RAW <- st_read(paste0(dirData,"/01_Grid_capitals_raw.shp"))
+head(sfCapitals_RAW)
+
+# make sure all non greenspace has no values for any capital (except zone which has no effect anyway)
+sfCapitals_RAW$Nature[which(sfCapitals_RAW$type == "Non.greenspace")] <- 0
+sfCapitals_RAW$Access[which(sfCapitals_RAW$type == "Non.greenspace")] <- 0
+sfCapitals_RAW$riskPerc[which(sfCapitals_RAW$type == "Non.greenspace")] <- 0
+sfCapitals_RAW$WTP[which(sfCapitals_RAW$type == "Non.greenspace")] <- 0
+sfCapitals_RAW$knowledge[which(sfCapitals_RAW$type == "Non.greenspace")] <- 0
+sfCapitals_RAW$riskAreas[which(sfCapitals_RAW$type == "Non.greenspace")] <- 0
+
+unique(sfCapitals_RAW$type)
+sfCapitals_RAW$WTP[which(sfCapitals_RAW$type == "Private.garden" & sfCapitals_RAW$Zone == 2)] <- 1 
+
+# process and write capital file & updaters
+dfWorldInt <- sfCapitals_RAW %>%
+  mutate(Long = st_coordinates(st_centroid(.))[,1], # get long & lat 
+         Lat = st_coordinates(st_centroid(.))[,2],
+         OPM_presence = 0) %>% # empty OPM presence capital column
+  dplyr::select(GridID, Long, Lat, OPM_presence, Risk_perception = riskPerc, Willingness_to_pay = WTP, Knowledge = knowledge, Risk_map = riskAreas,
+                Nature, Access, Zone) %>%  # select and rename columns
+  st_drop_geometry() # drop geometry so no longer sf
+
+# make coords regular - thanks to this https://stackoverflow.com/questions/60345163/how-to-generate-high-resolution-temperature-map-using-unevenly-spaced-coordinate
+dfWorldInt <- dfWorldInt %>%  mutate(X = plyr::round_any(Long, 0.1),  
+                               Y = plyr::round_any(Lat, 0.1))
+
+# and smaller so CRAFTY can cope with them
+xmin <- min(dfWorldInt$X)
+ymin <- min(dfWorldInt$Y)
+dfWorldInt$X <- dfWorldInt$X - xmin
+dfWorldInt$Y <- dfWorldInt$Y - ymin
+dfWorldInt$X <- dfWorldInt$X / 1000
+dfWorldInt$Y <- dfWorldInt$Y / 1000
+
+# unique coordinates 
+x_unq <- sort(unique(dfWorldInt$X), decreasing = F)
+y_unq <- sort(unique(dfWorldInt$Y), decreasing = F)
+
+# ranks (later row/col id in CRAFTY)
+x_rnk <- 1:length(x_unq)
+y_rnk <- 1:length(y_unq)
+
+# order of the grid coords
+x_ord <- match(dfWorldInt$X, x_unq)
+y_ord <- match(dfWorldInt$Y, y_unq)
+
+dfWorldInt$X <- x_ord
+dfWorldInt$Y <- y_ord
+
+# order the capitals for CRAFTY 
+dfWorldInt <- dfWorldInt %>% dplyr::select(x = X, y = Y, OPM_presence:Zone)
+
+# normalise 0-1 (social capitals already 0-1 so don't need normalising)
+summary(dfWorldInt)
+
+dfWorldInt <- dfWorldInt %>% mutate(Risk_map = normalize(Risk_map, method = "range", range = c(0,1)),
+                              Nature = normalize(Nature, method = "range", range = c(0,1)),
+                              Access = normalize(Access, method = "range", range = c(0,1)))
+
+dfWorldInt[is.na(dfWorldInt)] <- 0
+
+dfWorldInt_long <- pivot_longer(dfWorldInt,
+                             cols = Risk_perception:Access,
+                             names_to = "capital",
+                             values_to = "value")
+
+ggplot(dfWorldInt_long)+
+  geom_tile(aes(x,y,fill=value))+
+  facet_wrap(~capital)+
+  scale_fill_viridis()+
+  theme_bw()
+
+# agent locations (all no_mgmt to start)
+dfWorldInt$FR <- "no_mgmt"
+dfWorldInt$BT <- 0
+
+is.integer(dfWorldInt$x)
+
+write.csv(dfWorldInt, paste0(dirOut,"/worlds/GreaterLondon/govt-intervention/GreaterLondon.csv"), row.names = FALSE)
+
+# updater files
+
+updaterFiles <- dfWorldInt[1:10]
+head(updaterFiles)
+
+#updaterFiles$OPMinverted <- 1
+#updaterFiles$knowledge <- 0
+head(updaterFiles)
+summary(updaterFiles)
+
+ticks <- c(1,2,3,4,5,6,7,8,9,10)
+
+for (i in ticks){
+
+    write.csv(updaterFiles, paste0(dirOut,"/worlds/GreaterLondon/govt-intervention/GreaterLondon_tstep_",i,".csv") ,row.names = FALSE)
+    
+  }
+
+# risk perception stays the same as the baseline
+# knowledge updates in loop based on OPM presence (and private resident social network to be implemented)
 
 ### demand ---------------------------------------------------------------------
 
@@ -294,6 +455,13 @@ for (scenario in lstScenarios){
   
 }
 
+for (scenario in lstScenarios2){
+  
+  #scenario <- lstScenarios[1]
+  
+  write.csv(dfDemand, paste0(dirOut,"/worlds/GreaterLondon/",scenario,"/Demand.csv"), row.names = FALSE)
+  
+}
 
 ### RangeShiftR set-up ---------------------------------------------------------
 
