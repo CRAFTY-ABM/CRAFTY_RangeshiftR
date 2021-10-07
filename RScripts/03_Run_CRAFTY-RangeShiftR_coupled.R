@@ -83,7 +83,7 @@ rangeshiftrYears <- 2
 # spplot(ascHabitat)
 # habitatRes <- 100
 
-# new 2021 Greater London data
+# new 2021 Greater London data, in ascii format required by RangeShiftR
 ascHabitat <- raster(file.path(dirData, 'Habitat-100m.asc'))
 crs(ascHabitat)
 # make sure BNG
@@ -149,9 +149,8 @@ end_year_idx <- 10 # 10th year of the input data
 
 parallelize <- FALSE # not loads of data so don't need to run in parallel
 
-# if getting random Java errors, restart Rstudio
-# initialise Java
-if (!rJava::.jniInitialized) { # initialize only once 
+# initialise Java once only. If getting random Java errors, restart Rstudio
+if (!rJava::.jniInitialized) { 
   
   .jinit(parameters="-Dlog4j.configuration=log4j2020_normal.properties")
   .jinit(parameters = "-Dfile.encoding=UTF-8", silent = FALSE, force.init = FALSE)
@@ -204,7 +203,12 @@ for (i in 1:length(crafty_jclasspath)) {
 # scenarios to loop through
 
 #scenario.filenames <- c("Scenario_Baseline_noGUI.xml", "Scenario_de-regulation_noGUI.xml","Scenario_govt-intervention_noGUI.xml") 
-scenario.filenames <- c("Scenario_with-social_GUI.xml", "Scenario_no-social_GUI.xml", "Scenario_de-regulation_GUI.xml", "Scenario_govt-intervention.xml") 
+scenario.filenames <- c("Scenario_baseline-with-social_GUI.xml", 
+                        "Scenario_baseline-no-social_GUI.xml", 
+                        "Scenario_de-regulation-with-social_GUI.xml", 
+                        "Scenario_de-regulation-no-social_GUI.xml",
+                        "Scenario_govt-intervention-with-social.xml",
+                        "Scenario_govt-intervention-no-social.xml") 
 
 
 for (s.idx in 1:length(scenario.filenames)){
@@ -309,7 +313,7 @@ for (s.idx in 1:length(scenario.filenames)){
   
   for (yr.idx in 1:length(timesteps)) {
     
-    #yr.idx <- 1 for testing
+    #yr.idx <- 1 #for testing
     
     CRAFTY_tick <- timesteps[yr.idx]
     
