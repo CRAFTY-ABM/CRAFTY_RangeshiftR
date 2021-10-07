@@ -439,39 +439,45 @@ for (i in ticks){
 ### demand ---------------------------------------------------------------------
 
 # societal demand for ecosystem services
-# set/guess constant to start with, then once CRAFTY is running use supply after 1 yr to set (skip to line 467)
+# First step. Set/guess a value for constant demand to start with, 
+# then once CRAFTY is running use supply after 1 yr to set
 
-Year <- seq(1,10, by=1)
-biodiversity <- rep(1000, length(Year))
-recreation <- rep(1000, length(Year))
-
-dfDemand <- tibble(Year,biodiversity,recreation)
-dfDemand
-
-for (scenario in lstScenarios){
-  
-  #scenario <- lstScenarios[1]
-  
-  write.csv(dfDemand, paste0(dirOut,"/worlds/GreaterLondon/",scenario,"/Demand.csv"), row.names = FALSE)
-  
-}
-
-for (scenario in lstScenarios2){
-  
-  #scenario <- lstScenarios[1]
-  
-  write.csv(dfDemand, paste0(dirOut,"/worlds/GreaterLondon/",scenario,"/Demand.csv"), row.names = FALSE)
-  
-}
+# Year <- seq(1,10, by=1)
+# biodiversity <- rep(1000, length(Year))
+# recreation <- rep(1000, length(Year))
+# 
+# dfDemand <- tibble(Year,biodiversity,recreation)
+# dfDemand
+# 
+# for (scenario in lstScenarios){
+#   
+#   #scenario <- lstScenarios[1]
+#   
+#   write.csv(dfDemand, paste0(dirOut,"/worlds/GreaterLondon/",scenario,"/Demand.csv"), row.names = FALSE)
+#   
+# }
+# 
+# for (scenario in lstScenarios2){
+#   
+#   #scenario <- lstScenarios[1]
+#   
+#   write.csv(dfDemand, paste0(dirOut,"/worlds/GreaterLondon/",scenario,"/Demand.csv"), row.names = FALSE)
+#   
+# }
 
 # once the models have been run, can use initial supply of services after 1 yr to set appropriate demand level
 
-# read in a results file to get supply after 1 yr
+# Step 2. Read in a results file to get supply after 1 yr
 dfSupply <- read.csv(paste0(wd,"/output/behaviour_baseline/with-social/with-social-0-99-GreaterLondon-AggregateServiceDemand.csv"))
 head(dfSupply)
 
+# get the values after 1 year
 bio <- dfSupply$ServiceSupply.biodiversity[2]
 rec <- dfSupply$ServiceSupply.recreation[2]
+
+# increase by 20%
+bio <- bio*1.2
+rec <- rec*1.2
 
 Year <- seq(1,10, by=1)
 biodiversity <- rep(bio, length(Year))
