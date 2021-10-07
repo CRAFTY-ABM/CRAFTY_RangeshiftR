@@ -27,6 +27,7 @@ library(rJava)
 library(jdx)
 library(xml2)
 library(foreach)
+library(doSNOW)
 library(tictoc)
 
 
@@ -209,8 +210,18 @@ scenario.filenames <- c("Scenario_baseline-with-social_GUI.xml",
                         "Scenario_de-regulation-no-social_GUI.xml",
                         "Scenario_govt-intervention-with-social.xml",
                         "Scenario_govt-intervention-no-social.xml") 
+n.scenario <- length(scenario.filenames)
 
+# run in parallel for speed
+# parallelize <- TRUE # VM has 8 cores and 32GB dynamic RAM
+# if (parallelize) { 
+#   # 6 cores - 1 per scenario
+#   n_thread <- 6 # detectCores() 
+#   cl <- makeCluster(n_thread)
+#   registerDoSNOW(cl)
+# }
 
+#foreach(s.idx = 1:n.scenario, .errorhandling = "stop",.packages = c("doSNOW","rJava"), .verbose = T) %dopar% {
 for (s.idx in 1:length(scenario.filenames)){
   
   #s.idx <- 1 # for testing
@@ -598,7 +609,7 @@ for (s.idx in 1:length(scenario.filenames)){
     toc(log = TRUE, quiet = TRUE)
     }
 }
-
+#stopCluster(cl)
 
 
 
