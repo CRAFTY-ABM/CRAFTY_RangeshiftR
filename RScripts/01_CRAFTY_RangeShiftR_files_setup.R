@@ -132,7 +132,7 @@ for (i in 1:nrow(dfBaseline)){
   
 }
 
-# NOTE. do we need a behaviour set which makes agents more likely to give up every year?
+# NOTE. potential for a behaviour set which makes agents more likely to give up every year?
 
 # check AgentColors.csv
 
@@ -281,10 +281,14 @@ ticks <- c(1,2,3,4,5,6,7,8,9,10)
 
 for (scenario in lstScenarios){
   
-  for (i in ticks){
+  for (paramset in lstParamsets){
     
-    #tick <- ticks[1]
-    write.csv(updaterFiles, paste0(dirOut,"/worlds/GreaterLondon/",scenario,"/GreaterLondon_tstep_",i,".csv") ,row.names = FALSE)
+    for (i in ticks){
+      
+      #tick <- ticks[1]
+      write.csv(updaterFiles, paste0(dirOut,"/worlds/GreaterLondon/",scenario,"-",paramset,"/GreaterLondon_tstep_",i,".csv") ,row.names = FALSE)
+      
+    }
     
   }
   
@@ -301,13 +305,14 @@ for (scenario in lstScenarios){
 
 # risk perception increases through time
 # implement this in loop where OPM occurs?
-# so essentially de-regulation scenario used same baseline updaters, but will get edited as model runs
-for (i in ticks){
-  
-  #tick <- ticks[1]
-  write.csv(updaterFiles, paste0(dirOut,"/worlds/GreaterLondon/de-regulation/GreaterLondon_tstep_",i,".csv") ,row.names = FALSE)
-  
-}
+# so essentially de-regulation scenario uses same baseline updaters, but will get edited as model runs
+# for (i in ticks){
+#   
+#   #tick <- ticks[1]
+#   write.csv(updaterFiles, paste0(dirOut,"/worlds/GreaterLondon/de-regulation-with-social/GreaterLondon_tstep_",i,".csv") ,row.names = FALSE)
+#   write.csv(updaterFiles, paste0(dirOut,"/worlds/GreaterLondon/de-regulation-no-social/GreaterLondon_tstep_",i,".csv") ,row.names = FALSE)
+#   
+# }
 
 # no updating of knowledge in loop either
 
@@ -315,7 +320,7 @@ for (i in ticks){
 
 # pull in type (for private residents) + increase their budget in the control zone
 # check zone
-ggplot(dfWorld_raw)+
+ggplot(dfWorld)+
   geom_tile(aes(x,y,fill=Zone))+
   theme_bw()
 # control zone = 2
@@ -399,7 +404,8 @@ dfWorldInt$BT <- 0
 
 is.integer(dfWorldInt$x)
 
-write.csv(dfWorldInt, paste0(dirOut,"/worlds/GreaterLondon/govt-intervention/GreaterLondon.csv"), row.names = FALSE)
+write.csv(dfWorldInt, paste0(dirOut,"/worlds/GreaterLondon/govt-intervention-with-social/GreaterLondon.csv"), row.names = FALSE)
+write.csv(dfWorldInt, paste0(dirOut,"/worlds/GreaterLondon/govt-intervention-no-social/GreaterLondon.csv"), row.names = FALSE)
 
 # updater files
 
@@ -414,13 +420,15 @@ summary(updaterFiles)
 ticks <- c(1,2,3,4,5,6,7,8,9,10)
 
 for (i in ticks){
-
-    write.csv(updaterFiles, paste0(dirOut,"/worlds/GreaterLondon/govt-intervention/GreaterLondon_tstep_",i,".csv") ,row.names = FALSE)
-    
+  
+  write.csv(updaterFiles, paste0(dirOut,"/worlds/GreaterLondon/govt-intervention-with-social/GreaterLondon_tstep_",i,".csv") ,row.names = FALSE)
+  write.csv(updaterFiles, paste0(dirOut,"/worlds/GreaterLondon/govt-intervention-no-social/GreaterLondon_tstep_",i,".csv") ,row.names = FALSE)
+  
   }
 
 # risk perception stays the same as the baseline
 # knowledge updates in loop based on OPM presence (and private resident social network to be implemented)
+
 
 ### demand ---------------------------------------------------------------------
 
@@ -454,7 +462,7 @@ for (i in ticks){
 # once the models have been run, can use initial supply of services after 1 yr to set appropriate demand level
 
 # Step 2. Read in a results file to get supply after 1 yr
-dfSupply <- read.csv(paste0(wd,"/output/behaviour_baseline/with-social/with-social-0-99-GreaterLondon-AggregateServiceDemand.csv"))
+dfSupply <- read.csv(paste0(wd,"/output/behaviour_baseline/baseline-with-social/baseline-with-social-0-99-GreaterLondon-AggregateServiceDemand.csv"))
 head(dfSupply)
 
 # get the values after 1 year
@@ -475,18 +483,14 @@ dfDemand
 for (scenario in lstScenarios){
   
   #scenario <- lstScenarios[1]
-  
-  write.csv(dfDemand, paste0(dirOut,"/worlds/GreaterLondon/",scenario,"/Demand.csv"), row.names = FALSE)
+  for (paramset in lstParamsets){
+    
+    write.csv(dfDemand, paste0(dirOut,"/worlds/GreaterLondon/",scenario,"-",paramset,"/Demand.csv"), row.names = FALSE)
+    
+  }
   
 }
 
-for (scenario in lstScenarios2){
-  
-  #scenario <- lstScenarios[1]
-  
-  write.csv(dfDemand, paste0(dirOut,"/worlds/GreaterLondon/",scenario,"/Demand.csv"), row.names = FALSE)
-  
-}
 
 
 ### RangeShiftR set-up ---------------------------------------------------------
