@@ -63,7 +63,8 @@ dfAgents <- read.csv(paste0(dirData,"/AgentMaster.csv"))
 head(dfAgents)
 
 lstAgents <- unique(dfAgents$Agent)
-lstScenarios <- c("with-social","no-social") # for testing effect of social caps first
+lstScenarios <- c("baseline","de-regulation","govt-intervention")
+lstParamsets <- c("with-social","no-social")
 
 for (AFT in lstAgents){
   
@@ -78,51 +79,32 @@ for (AFT in lstAgents){
     
     #scenario <- lstScenarios[1]
     
-    dfAFT <- filter(dfAFT, Paramset == scenario)
+    dfAFT <- filter(dfAFT, Scenario == scenario)
     #dfAFT$Paramset <- NULL
+    
+    # no NAs accepted by CRAFTY, make 0
+    dfAFT[is.na(dfAFT)] <- 0
     
     print(dfAFT)
     
-    dfAFT[is.na(dfAFT)] <- 0
-    
-    dfAFT2 <- dfAFT
-    dfAFT2$Paramset <- NULL
-    
-    write.csv(dfAFT2, paste0(dirOut,"/production/",scenario,"/",AFT,".csv"), row.names = F)
+    for (paramset in lstParamsets){
+      
+      #paramset <- lstParamsets[1]
+      
+      dfAFT2 <- filter(dfAFT, Paramset == paramset)
+      
+      print(dfAFT2)
+  
+      dfAFT2$Scenario <- NULL
+      dfAFT2$Paramset <- NULL
+      
+      write.csv(dfAFT2, paste0(dirOut,"/production/",scenario,"-",paramset,"/",AFT,".csv"), row.names = F)
+      
+    }
     
   }
   
 }
-
-# then simple DEFRA scenarios from last year, with sensitivity to social caps
-lstScenarios2 <- c("de-regulation","govt-intervention")
-
-for (scenario in lstScenarios2){
-  
-  #scenario <- lstScenarios[1]
-  
-  for (AFT in lstAgents){
-    
-    #AFT <- lstAgents[1]
-    
-    dfAFT <- filter(dfAgents, Paramset == "with_social")
-    dfAFT <- filter(dfAFT, Agent == AFT)
-    
-    dfAFT$Agent <- NULL
-    
-    print(AFT)
-    
-    dfAFT[is.na(dfAFT)] <- 0
-    
-    dfAFT2 <- dfAFT
-    dfAFT2$Paramset <- NULL
-    
-    write.csv(dfAFT2, paste0(dirOut,"/production/",scenario,"/",AFT,".csv"), row.names = F)
-    
-  }
-  
-}
-
 
 
 
@@ -277,7 +259,11 @@ for (scenario in lstScenarios){
   
   #scenario <- lstScenarios[1]
   
-  write.csv(dfWorld, paste0(dirOut,"/worlds/GreaterLondon/",scenario,"/GreaterLondon.csv"), row.names = FALSE)
+  for (paramset in lstParamsets){
+    
+    write.csv(dfWorld, paste0(dirOut,"/worlds/GreaterLondon/",scenario,"-",paramset,"/GreaterLondon.csv"), row.names = FALSE)
+    
+  }
   
 }
 
@@ -440,7 +426,7 @@ for (i in ticks){
 
 # societal demand for ecosystem services
 # First step. Set/guess a value for constant demand to start with, 
-# then once CRAFTY is running use supply after 1 yr to set
+# then once CRAFTY is running use supply after 1 yr to set (see below)
 
 # Year <- seq(1,10, by=1)
 # biodiversity <- rep(1000, length(Year))
