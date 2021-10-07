@@ -159,6 +159,7 @@ head(AgentCols)
 colnames(AgentCols) <- c("Name","Color")
 write.csv(AgentCols, paste0(dirOut,"/csv/AgentColors.csv"), row.names = FALSE)
 
+
 ### worlds ---------------------------------------------------------------------
 
 # this is where capital files are held
@@ -438,7 +439,7 @@ for (i in ticks){
 ### demand ---------------------------------------------------------------------
 
 # societal demand for ecosystem services
-# set constant to start with, then once CRAFTY is running use supply after 1 yr to set
+# set/guess constant to start with, then once CRAFTY is running use supply after 1 yr to set (skip to line 467)
 
 Year <- seq(1,10, by=1)
 biodiversity <- rep(1000, length(Year))
@@ -462,6 +463,39 @@ for (scenario in lstScenarios2){
   write.csv(dfDemand, paste0(dirOut,"/worlds/GreaterLondon/",scenario,"/Demand.csv"), row.names = FALSE)
   
 }
+
+# once the models have been run, can use initial supply of services after 1 yr to set appropriate demand level
+
+# read in a results file to get supply after 1 yr
+dfSupply <- read.csv(paste0(wd,"/output/behaviour_baseline/with-social/with-social-0-99-GreaterLondon-AggregateServiceDemand.csv"))
+head(dfSupply)
+
+bio <- dfSupply$ServiceSupply.biodiversity[2]
+rec <- dfSupply$ServiceSupply.recreation[2]
+
+Year <- seq(1,10, by=1)
+biodiversity <- rep(bio, length(Year))
+recreation <- rep(rec, length(Year))
+
+dfDemand <- tibble(Year,biodiversity,recreation)
+dfDemand
+
+for (scenario in lstScenarios){
+  
+  #scenario <- lstScenarios[1]
+  
+  write.csv(dfDemand, paste0(dirOut,"/worlds/GreaterLondon/",scenario,"/Demand.csv"), row.names = FALSE)
+  
+}
+
+for (scenario in lstScenarios2){
+  
+  #scenario <- lstScenarios[1]
+  
+  write.csv(dfDemand, paste0(dirOut,"/worlds/GreaterLondon/",scenario,"/Demand.csv"), row.names = FALSE)
+  
+}
+
 
 ### RangeShiftR set-up ---------------------------------------------------------
 
