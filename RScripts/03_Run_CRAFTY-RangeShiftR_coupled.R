@@ -225,7 +225,7 @@ if (parallelize) {
 foreach(s.idx = 1:n.scenario, .errorhandling = "stop",.packages = c("doSNOW","rJava","jdx"), .verbose = T) %dopar% {
 #for (s.idx in 1:length(scenario.filenames)){
   
-  #s.idx <- 4 # for testing
+  #s.idx <- 1 # for testing
   scenario <- scenario.filenames[s.idx] 
   scenario.filename <- scenario
   scenario.split <- strsplit(scenario, "[_]")[[1]][2]

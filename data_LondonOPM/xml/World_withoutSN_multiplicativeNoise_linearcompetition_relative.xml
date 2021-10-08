@@ -1,7 +1,7 @@
 <world>
 	<region id="GreaterLondon">
 	
-	<allocation class="org.volante.abm.example.GiveUpGiveInAllocationModel" percentageCells="10" percentageTakeOvers="10" relativeThresholding="true"/> 
+	<allocation class="org.volante.abm.example.GiveUpGiveInAllocationModel" tryToComeInMode = "SORTED_CELLS" percentageCells="10" percentageTakeOvers="10" relativeThresholding="true"/> 
 
 	<!--<allocation class="org.volante.abm.example.GiveUpGiveInAllocationModel" tryToComeInMode = "SORTED_CELLS" percentageCells="10" percentageTakeOvers="10" relativeThresholding="true"/>--> 
    
