@@ -214,20 +214,20 @@ scenario.filenames <- c("Scenario_baseline-with-social_GUI.xml",
 n.scenario <- length(scenario.filenames)
 
 # run in parallel for speed
-# parallelize <- TRUE # VM has 8 cores and 32GB dynamic RAM
-# if (parallelize) {
-#   # 6 cores - 1 per scenario
-#   n_thread <- 6 # detectCores()
-#   cl <- makeCluster(n_thread)
-#   registerDoSNOW(cl)
-# }
+parallelize <- TRUE # VM has 8 cores and 32GB dynamic RAM
+if (parallelize) {
+  # 6 cores - 1 per scenario
+  n_thread <- 6 # detectCores()
+  cl <- makeCluster(n_thread)
+  registerDoSNOW(cl)
+}
 
 path_crafty_batch_run <- "D:/CRAFTY_RangeshiftR_21-22_outputs"
 
 setwd(path_crafty_batch_run)
 
-#foreach(s.idx = 1:n.scenario, .errorhandling = "stop",.packages = c("doSNOW","rJava","jdx"), .verbose = T) %dopar% {
-for (s.idx in 1:length(scenario.filenames)){
+foreach(s.idx = 1:n.scenario, .errorhandling = "stop",.packages = c("doSNOW","rJava","jdx"), .verbose = T) %dopar% {
+#for (s.idx in 1:length(scenario.filenames)){
   
   #s.idx <- 1 # for testing
   scenario <- scenario.filenames[s.idx] 
@@ -614,7 +614,7 @@ for (s.idx in 1:length(scenario.filenames)){
     toc(log = TRUE, quiet = TRUE)
     }
 }
-#stopCluster(cl)
+stopCluster(cl)
 
 
 
