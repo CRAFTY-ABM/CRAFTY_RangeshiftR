@@ -214,16 +214,16 @@ scenario.filenames <- c("Scenario_baseline-with-social_GUI.xml",
 n.scenario <- length(scenario.filenames)
 
 # run in parallel for speed
-parallelize <- TRUE # VM has 8 cores and 32GB dynamic RAM
-if (parallelize) {
-  # 6 cores - 1 per scenario
-  n_thread <- 6 # detectCores()
-  cl <- makeCluster(n_thread)
-  registerDoSNOW(cl)
-}
+# parallelize <- TRUE # VM has 8 cores and 32GB dynamic RAM
+# if (parallelize) {
+#   # 6 cores - 1 per scenario
+#   n_thread <- 6 # detectCores()
+#   cl <- makeCluster(n_thread)
+#   registerDoSNOW(cl)
+# }
 
-foreach(s.idx = 1:n.scenario, .errorhandling = "stop",.packages = c("doSNOW","rJava","jdx"), .verbose = T) %dopar% {
-#for (s.idx in 1:length(scenario.filenames)){
+#foreach(s.idx = 1:n.scenario, .errorhandling = "stop",.packages = c("doSNOW","rJava","jdx"), .verbose = T) %dopar% {
+for (s.idx in 1:length(scenario.filenames)){
   
   #s.idx <- 1 # for testing
   scenario <- scenario.filenames[s.idx] 
@@ -251,6 +251,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",.packages = c("doSNOW","rJ
   
   # change wd to a scenario folder to store output files
   dirCRAFTYscenario <- paste0(dirCRAFTYOutput,"/",scenario.split)
+  setwd(dirCRAFTYscenario)
   
   # check if exists and create if not
   if (file.exists(dirCRAFTYscenario)){
