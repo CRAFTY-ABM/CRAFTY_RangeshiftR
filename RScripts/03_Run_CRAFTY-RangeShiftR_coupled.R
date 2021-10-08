@@ -222,6 +222,10 @@ n.scenario <- length(scenario.filenames)
 #   registerDoSNOW(cl)
 # }
 
+path_crafty_batch_run <- "D:/CRAFTY_RangeshiftR_21-22_outputs"
+
+setwd(path_crafty_batch_run)
+
 #foreach(s.idx = 1:n.scenario, .errorhandling = "stop",.packages = c("doSNOW","rJava","jdx"), .verbose = T) %dopar% {
 for (s.idx in 1:length(scenario.filenames)){
   
@@ -229,7 +233,10 @@ for (s.idx in 1:length(scenario.filenames)){
   scenario <- scenario.filenames[s.idx] 
   scenario.filename <- scenario
   scenario.split <- strsplit(scenario, "[_]")[[1]][2]
- 
+  
+  # change wd to a scenario folder to store output files
+  dirCRAFTYscenario <- paste0(dirCRAFTYOutput,"/output/behaviour_baseline/",scenario.split)
+
   # scenario file and arguments reguired for CRAFTY run
   CRAFTY_sargs <- c("-d", dirCRAFTYInput, "-f", scenario.filename, "-o", random_seed_crafty, "-r", "1",  "-n", "1", "-sr", "0") 
   
@@ -248,10 +255,6 @@ for (s.idx in 1:length(scenario.filenames)){
   
   ### pre-process CRAFTY Java object
   region <- CRAFTY_loader_jobj$getRegions()$getAllRegions()$iterator()$'next'()
-  
-  # change wd to a scenario folder to store output files
-  dirCRAFTYscenario <- paste0(dirCRAFTYOutput,"/",scenario.split)
-  setwd(dirCRAFTYscenario)
   
   # check if exists and create if not
   if (file.exists(dirCRAFTYscenario)){
@@ -611,7 +614,7 @@ for (s.idx in 1:length(scenario.filenames)){
     toc(log = TRUE, quiet = TRUE)
     }
 }
-stopCluster(cl)
+#stopCluster(cl)
 
 
 
