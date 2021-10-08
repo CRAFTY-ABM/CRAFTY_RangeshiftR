@@ -44,10 +44,11 @@ if (Sys.info()["user"] %in% c("alan", "seo-b")) {
 dirFigs <- "~/OPM-model-prep-21-22/figs"
 dirData <- file.path(dirWorking, 'data-store')
 
-dataDisk <- "D:/CRAFTY_RangeshiftR/output"
+dataDisk <- "D:/CRAFTY_RangeShiftR_21-22_outputs"
 
 dirCRAFTYInput <- path.expand(paste0(dirWorking, "/data_LondonOPM/"))
-dirCRAFTYOutput <- path.expand(paste0(dirWorking, "/output"))
+#dirCRAFTYOutput <- path.expand(paste0(dirWorking, "/output"))
+dirCRAFTYOutput <- path.expand(dataDisk)
 
 # MOVED TO WITHIN LOOP BELOW as this will change per scenario (store a RangeshiftR folder within each scenario output folder)
 # store RangeshiftR files within CRAFTY output folder as it is the directory CRAFTY will need to run in
@@ -150,8 +151,6 @@ random_seed_crafty <- 99
 start_year_idx <- 1 # first year of the input data
 end_year_idx <- 10 # 10th year of the input data 
 
-parallelize <- FALSE # not loads of data so don't need to run in parallel
-
 # initialise Java once only. If getting random Java errors, restart Rstudio
 if (!rJava::.jniInitialized) { 
   
@@ -215,18 +214,18 @@ scenario.filenames <- c("Scenario_baseline-with-social_GUI.xml",
 n.scenario <- length(scenario.filenames)
 
 # run in parallel for speed
-# parallelize <- TRUE # VM has 8 cores and 32GB dynamic RAM
-# if (parallelize) { 
-#   # 6 cores - 1 per scenario
-#   n_thread <- 6 # detectCores() 
-#   cl <- makeCluster(n_thread)
-#   registerDoSNOW(cl)
-# }
+parallelize <- TRUE # VM has 8 cores and 32GB dynamic RAM
+if (parallelize) {
+  # 6 cores - 1 per scenario
+  n_thread <- 6 # detectCores()
+  cl <- makeCluster(n_thread)
+  registerDoSNOW(cl)
+}
 
-#foreach(s.idx = 1:n.scenario, .errorhandling = "stop",.packages = c("doSNOW","rJava"), .verbose = T) %dopar% {
-for (s.idx in 1:length(scenario.filenames)){
+foreach(s.idx = 1:n.scenario, .errorhandling = "stop",.packages = c("doSNOW","rJava","jdx"), .verbose = T) %dopar% {
+#for (s.idx in 1:length(scenario.filenames)){
   
-  #s.idx <- 1 # for testing
+  #s.idx <- 4 # for testing
   scenario <- scenario.filenames[s.idx] 
   scenario.filename <- scenario
   scenario.split <- strsplit(scenario, "[_]")[[1]][2]
@@ -251,7 +250,7 @@ for (s.idx in 1:length(scenario.filenames)){
   region <- CRAFTY_loader_jobj$getRegions()$getAllRegions()$iterator()$'next'()
   
   # change wd to a scenario folder to store output files
-  dirCRAFTYscenario <- paste0(dirCRAFTYOutput,"/behaviour_baseline/",scenario.split)
+  dirCRAFTYscenario <- paste0(dirCRAFTYOutput,"/",scenario.split)
   
   # check if exists and create if not
   if (file.exists(dirCRAFTYscenario)){
@@ -611,7 +610,7 @@ for (s.idx in 1:length(scenario.filenames)){
     toc(log = TRUE, quiet = TRUE)
     }
 }
-#stopCluster(cl)
+stopCluster(cl)
 
 
 
