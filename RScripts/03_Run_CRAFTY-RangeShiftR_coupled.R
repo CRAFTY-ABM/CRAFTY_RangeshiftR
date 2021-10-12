@@ -215,9 +215,10 @@ scenario.filenames <- c("Scenario_baseline-with-social_NoGUI.xml",
                         "Scenario_govt-intervention-no-social_NoGUI.xml") 
 
 n.scenario <- length(scenario.filenames)
+
+
 # run in parallel for speed
-parallelize <- T # VM has 8 cores and 32GB dynamic RAM
-n_thread_crafty = 8 # number of threads CRAFTY uses in an invididual run (e.g. 1 for a single thread)
+parallelize <- F # VM has 8 cores and 32GB dynamic RAM
 
 if (parallelize) {
   # 6 cores - 1 per scenario
@@ -227,6 +228,9 @@ if (parallelize) {
 
   # JVM parameter  
   n_thread_crafty = 1 # set to 1 when parallelised
+} else { 
+  # number of threads CRAFTY uses in an invididual run (e.g. 1 for a single thread)
+  n_thread_crafty = 8 
 }
 
 
@@ -239,17 +243,15 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",.packages = c("doSNOW","rJ
   
   # initialise Java once only. If getting random Java errors, restart Rstudio
   # should do it for each thread, means it has to be done in a foreach loop.
-  if (!rJava::.jniInitialized) { 
+  # if (!rJava::.jniInitialized) { 
     
     print("initialise JNI")
     
-    .jinit(parameters="-Dlog4j.configuration=log4j2020_normal.properties")
-    .jinit(parameters = "-Dfile.encoding=UTF-8", silent = FALSE, force.init = FALSE)
-    .jinit( parameters=paste0("-Xms", java.ms, " -Xmx", java.mx)) # The .jinit returns 0 if the JVM got initialized and a negative integer if it did not. A positive integer is returned if the JVM got initialized partially. Before initializing the JVM, the rJava library must be loaded.
-    .jinit( parameters=paste0("-XX:ActiveProcessorCount=", n_thread_crafty)) # The .jinit returns 0 if the JVM got initialized and a negative integer if it did not. A positive integer is returned if the JVM got initialized partially. Before initializing the JVM, the rJava library must be loaded.
+    .jinit(parameters=c("-Dlog4j.configuration=log4j2020_normal.properties",   "-Dfile.encoding=UTF-8", paste0("-Xms", java.ms, " -Xmx", java.mx), paste0("-XX:ActiveProcessorCount=", n_thread_crafty) ), silent = FALSE, force.init = TRUE)
+ 
     
     # .jinit(parameters = paste0("user.dir=", path_crafty_batch_run )) # does not work.. 
-  }
+  # }
   
   # add java classpath
   .jclassPath() # print out the current class path settings.
