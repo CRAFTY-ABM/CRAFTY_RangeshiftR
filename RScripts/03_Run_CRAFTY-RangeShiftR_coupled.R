@@ -35,10 +35,15 @@ library(tictoc)
 ### directories/ file paths ----------------------------------------------------
 
 if (Sys.info()["user"] %in% c("alan", "seo-b")) { 
-  dirWorking<- "~/git/CRAFTY_RangeshiftR2"
+  dirWorking<- "~/git/CRAFTY_RangeshiftR"
+  dirData = "~/Dropbox/CRAFTY_RangeShiftR_data_2021"
+  path_crafty_batch_run <- "~/Downloads/CRAFTY_RangeshiftR_21-22_outputs"
   
-} else { 
+  
+  } else { 
   dirWorking<- "~/eclipse-workspace/CRAFTY_RangeshiftR"
+  path_crafty_batch_run <- "D:/CRAFTY_RangeshiftR_21-22_outputs"
+  
 }
 
 dirFigs <- "~/OPM-model-prep-21-22/figs"
@@ -151,27 +156,7 @@ random_seed_crafty <- 99
 start_year_idx <- 1 # first year of the input data
 end_year_idx <- 10 # 10th year of the input data 
 
-# initialise Java once only. If getting random Java errors, restart Rstudio
-if (!rJava::.jniInitialized) { 
-  
-  .jinit(parameters="-Dlog4j.configuration=log4j2020_normal.properties")
-  .jinit(parameters = "-Dfile.encoding=UTF-8", silent = FALSE, force.init = FALSE)
-  .jinit( parameters=paste0("-Xms", java.ms, " -Xmx", java.mx)) # The .jinit returns 0 if the JVM got initialized and a negative integer if it did not. A positive integer is returned if the JVM got initialized partially. Before initializing the JVM, the rJava library must be loaded.
-  
-  # .jinit(parameters = paste0("user.dir=", path_crafty_batch_run )) # does not work.. 
-}
 
-# add java classpath
-.jclassPath() # print out the current class path settings.
-for (i in 1:length(crafty_jclasspath)) { 
-  .jaddClassPath(crafty_jclasspath[i])
-}
-
-# set the batch run folder (dirCRAFTYOutput)
-#.jcall( 'java/lang/System', 'S', 'setProperty', 'user.dir',  dirCRAFTYOutput )
-
-# assertion
-#stopifnot(dirCRAFTYOutput == .jcall( 'java/lang/System', 'S', 'getProperty', 'user.dir' ))
 
 
 
@@ -222,11 +207,40 @@ if (parallelize) {
   registerDoSNOW(cl)
 }
 
-path_crafty_batch_run <- "D:/CRAFTY_RangeshiftR_21-22_outputs"
 
 setwd(path_crafty_batch_run)
 
 foreach(s.idx = 1:n.scenario, .errorhandling = "stop",.packages = c("doSNOW","rJava","jdx"), .verbose = T) %dopar% {
+  
+  setwd(dirWorking)
+  
+  
+  # initialise Java once only. If getting random Java errors, restart Rstudio
+  # should do it for each thread, means it has to be done in a foreach loop.
+  if (!rJava::.jniInitialized) { 
+    
+    .jinit(parameters="-Dlog4j.configuration=log4j2020_normal.properties")
+    .jinit(parameters = "-Dfile.encoding=UTF-8", silent = FALSE, force.init = FALSE)
+    .jinit( parameters=paste0("-Xms", java.ms, " -Xmx", java.mx)) # The .jinit returns 0 if the JVM got initialized and a negative integer if it did not. A positive integer is returned if the JVM got initialized partially. Before initializing the JVM, the rJava library must be loaded.
+    
+    # .jinit(parameters = paste0("user.dir=", path_crafty_batch_run )) # does not work.. 
+  }
+  
+  # add java classpath
+  .jclassPath() # print out the current class path settings.
+  for (i in 1:length(crafty_jclasspath)) { 
+    .jaddClassPath(crafty_jclasspath[i])
+  }
+  
+  # set the batch run folder (dirCRAFTYOutput)
+  #.jcall( 'java/lang/System', 'S', 'setProperty', 'user.dir',  dirCRAFTYOutput )
+  
+  # assertion
+  #stopifnot(dirCRAFTYOutput == .jcall( 'java/lang/System', 'S', 'getProperty', 'user.dir' ))
+  
+  
+  
+  
 #for (s.idx in 1:length(scenario.filenames)){
   
   #s.idx <- 1 # for testing
