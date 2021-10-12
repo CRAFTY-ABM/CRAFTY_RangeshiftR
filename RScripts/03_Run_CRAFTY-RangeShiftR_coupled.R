@@ -1,5 +1,4 @@
-
-# date updated: 07/10/21
+# date updated: 12/10/21
 # authors: Vanessa Burton, Bumsuk Seo
 # description: script which runs coupled CRAFTY & RangeShiftR models
 
@@ -38,18 +37,29 @@ if (Sys.info()["user"] %in% c("alan", "seo-b")) {
   dirWorking<- "~/git/CRAFTY_RangeshiftR"
   dirData = "~/Dropbox/CRAFTY_RangeShiftR_data_2021"
   path_crafty_batch_run <- "~/Downloads/CRAFTY_RangeshiftR_21-22_outputs"
+  dataDisk <- "~/Downloads/CRAFTY_RangeshiftR_21-22_outputs"
   
   
   } else { 
   dirWorking<- "~/eclipse-workspace/CRAFTY_RangeshiftR"
   path_crafty_batch_run <- "D:/CRAFTY_RangeshiftR_21-22_outputs"
+  dataDisk <- "D:/CRAFTY_RangeShiftR_21-22_outputs"
   
 }
 
 dirFigs <- "~/OPM-model-prep-21-22/figs"
 dirData <- file.path(dirWorking, 'data-store')
 
-dataDisk <- "D:/CRAFTY_RangeShiftR_21-22_outputs"
+# create Inputs and output 
+if (!dir.exists(file.path(paste0(dataDisk, "/Inputs")))) { 
+  dir.create(file.path(paste0(dataDisk, "/Inputs")))
+} 
+if (!dir.exists(file.path(paste0(dataDisk, "/output")))) { 
+  dir.create(file.path(paste0(dataDisk, "/output")))
+} 
+
+
+
 
 dirCRAFTYInput <- path.expand(paste0(dirWorking, "/data_LondonOPM/"))
 #dirCRAFTYOutput <- path.expand(paste0(dirWorking, "/output"))
@@ -190,21 +200,33 @@ end_year_idx <- 10 # 10th year of the input data
 # scenarios to loop through
 
 #scenario.filenames <- c("Scenario_Baseline_noGUI.xml", "Scenario_de-regulation_noGUI.xml","Scenario_govt-intervention_noGUI.xml") 
-scenario.filenames <- c("Scenario_baseline-with-social_GUI.xml", 
-                        "Scenario_baseline-no-social_GUI.xml", 
-                        "Scenario_de-regulation-with-social_GUI.xml", 
-                        "Scenario_de-regulation-no-social_GUI.xml",
-                        "Scenario_govt-intervention-with-social.xml",
-                        "Scenario_govt-intervention-no-social.xml") 
-n.scenario <- length(scenario.filenames)
+# scenario.filenames <- c("Scenario_baseline-with-social_GUI.xml", 
+#                         "Scenario_baseline-no-social_GUI.xml", 
+#                         "Scenario_de-regulation-with-social_GUI.xml", 
+#                         "Scenario_de-regulation-no-social_GUI.xml",
+#                         "Scenario_govt-intervention-with-social_GUI.xml",
+#                         "Scenario_govt-intervention-no-social_GUI.xml") 
 
+scenario.filenames <- c("Scenario_baseline-with-social_NoGUI.xml", 
+                        "Scenario_baseline-no-social_NoGUI.xml", 
+                        "Scenario_de-regulation-with-social_NoGUI.xml", 
+                        "Scenario_de-regulation-no-social_NoGUI.xml",
+                        "Scenario_govt-intervention-with-social_NoGUI.xml",
+                        "Scenario_govt-intervention-no-social_NoGUI.xml") 
+
+n.scenario <- length(scenario.filenames)
 # run in parallel for speed
-parallelize <- TRUE # VM has 8 cores and 32GB dynamic RAM
+parallelize <- T # VM has 8 cores and 32GB dynamic RAM
+n_thread_crafty = 8 # number of threads CRAFTY uses in an invididual run (e.g. 1 for a single thread)
+
 if (parallelize) {
   # 6 cores - 1 per scenario
-  n_thread <- 6 # detectCores()
+  n_thread <- 2 # detectCores()
   cl <- makeCluster(n_thread)
   registerDoSNOW(cl)
+
+  # JVM parameter  
+  n_thread_crafty = 1 # set to 1 when parallelised
 }
 
 
@@ -219,9 +241,12 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",.packages = c("doSNOW","rJ
   # should do it for each thread, means it has to be done in a foreach loop.
   if (!rJava::.jniInitialized) { 
     
+    print("initialise JNI")
+    
     .jinit(parameters="-Dlog4j.configuration=log4j2020_normal.properties")
     .jinit(parameters = "-Dfile.encoding=UTF-8", silent = FALSE, force.init = FALSE)
     .jinit( parameters=paste0("-Xms", java.ms, " -Xmx", java.mx)) # The .jinit returns 0 if the JVM got initialized and a negative integer if it did not. A positive integer is returned if the JVM got initialized partially. Before initializing the JVM, the rJava library must be loaded.
+    .jinit( parameters=paste0("-XX:ActiveProcessorCount=", n_thread_crafty)) # The .jinit returns 0 if the JVM got initialized and a negative integer if it did not. A positive integer is returned if the JVM got initialized partially. Before initializing the JVM, the rJava library must be loaded.
     
     # .jinit(parameters = paste0("user.dir=", path_crafty_batch_run )) # does not work.. 
   }
