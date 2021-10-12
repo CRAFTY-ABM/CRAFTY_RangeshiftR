@@ -1,10 +1,10 @@
 <world>
 	<region id="GreaterLondon">
 	
-	<!-- <allocation class="org.volante.abm.example.GiveUpGiveInAllocationModel" percentageCells="10" percentageTakeOvers="10" relativeThresholding="true"/>-->
-	<allocation class="org.volante.abm.example.GiveUpGiveInAllocationModel" percentageCells="10" percentageTakeOvers="10" relativeThresholding="true">
+	<allocation class="org.volante.abm.example.GiveUpGiveInAllocationModel" percentageCells="10" percentageTakeOvers="10" relativeThresholding="true"/>
+	<!-- <allocation class="org.volante.abm.example.GiveUpGiveInAllocationModel" percentageCells="10" percentageTakeOvers="10" relativeThresholding="true">
 		<tryToComeInMode>SORTED_CELLS</tryToComeInMode>
-	</allocation>
+	</allocation>-->
    
 	<demandFile>xml/RegionalDemand.xml</demandFile>
    <competitionFile>xml/Competition_linear_London.xml</competitionFile>
