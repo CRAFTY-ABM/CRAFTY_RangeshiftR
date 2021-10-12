@@ -146,7 +146,9 @@ random_seed_crafty <- 99
 start_year_idx <- 1 # first year of the input data
 end_year_idx <- 10 # 10th year of the input data 
 
-parallelize <- FALSE # not loads of data so don't need to run in parallel
+# parallelize <- FALSE # not loads of data so don't need to run in parallel
+n_thread_crafty = 1 # 16 (number of threads CRAFTY uses in an invididual run. 1: for a single thread. 
+
 
 # if getting random Java errors, restart Rstudio
 # initialise Java
@@ -154,7 +156,8 @@ if (!rJava::.jniInitialized) { # initialize only once
   
   .jinit(parameters="-Dlog4j.configuration=log4j2020_normal.properties")
   .jinit(parameters = "-Dfile.encoding=UTF-8", silent = FALSE, force.init = FALSE)
-  .jinit( parameters=paste0("-Xms", java.ms, " -Xmx", java.mx)) # The .jinit returns 0 if the JVM got initialized and a negative integer if it did not. A positive integer is returned if the JVM got initialized partially. Before initializing the JVM, the rJava library must be loaded.
+  .jinit( parameters=paste0("-Xms", java.ms, " -Xmx", java.mx))
+  .jinit( parameters=paste0("-XX:ActiveProcessorCount=", n_thread_crafty)) # The .jinit returns 0 if the JVM got initialized and a negative integer if it did not. A positive integer is returned if the JVM got initialized partially. Before initializing the JVM, the rJava library must be loaded.
   
   # .jinit(parameters = paste0("user.dir=", path_crafty_batch_run )) # does not work.. 
 }
