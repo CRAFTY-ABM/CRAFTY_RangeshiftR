@@ -439,7 +439,8 @@ for (s.idx in 1:length(scenario.filenames)){
         # clear previous test capital
         capitals$Knowledge<-0 
         
-        # and add small amount of knowledge based on contact with OPM
+        # and add small amount of knowledge based on contact with OPM 
+        # (previously didn't update knowledge at all in this scenario, but this meant no management response at all - too extreme?)
         capitals$Knowledge[which(capitals$OPM_presence==0)]<-0.2
         capitals$Knowledge[which(capitals$OPM_presence==1)]<-0
         
@@ -572,6 +573,76 @@ for (s.idx in 1:length(scenario.filenames)){
       # reduce pop by 80% if spraying pesticides
       shpIndividuals <- shpIndividuals[!fell,] 
     }
+    
+    # ### Social network effects & predation ####
+    # # 1. update a new (set of) capital(s) describing knowledge of management options among private residents:
+    # #     either one capital for knowledge of management options, or three capitals for specific knowledge of each
+    # #     (code adaptable, but assumes that the capitals included here are implemented in CRAFTY)
+    # # 2. Alter OPM population via simple predator-prey dynamics, based on Lotka-Volterra
+    # 
+    # # First define a 'knowledge neighbourhood' radius (no of cells)
+    # nbrhd.r<-2
+    # # Set up lists for no. neighbours of each management type
+    # nbrhd.rem<-nbrhd.fell<-nbrhd.pest<-rep(0,length(val_df$X))
+    # 
+    # for (id in c(1:length(val_df$X))) {
+    #   
+    #   # define neighbour ids (because X and Y are integers)
+    #   xlims<-c(val_df$X[id]-nbrhd.r,val_df$X[id]+nbrhd.r)
+    #   ylims<-c(val_df$Y[id]-nbrhd.r,val_df$Y[id]+nbrhd.r)
+    #   
+    #   n.agents<-val_df$Agent[val_df$X>=xlims[1] & val_df$X<=xlims[2] & val_df$Y>=ylims[1] & val_df$Y<=ylims[2]]
+    #   
+    #   nbrhd.rem[id]<-length(n.agents[n.agents=="mgmt_remove"])/(length(n.agents)) # proportion of neighbours (scaled by no. neighbouring cell with radius r)
+    #   nbrhd.fell[id]<-length(n.agents[n.agents=="mgmt_fell"])/(length(n.agents))
+    #   nbrhd.pest[id]<-length(n.agents[n.agents=="mgmt_pesticide"])/(length(n.agents))
+    # }
+    # 
+    # # Now these can be added to the overall knowledge capital or specific management knowledge capitals, accessed by private residents
+    # # NB capitals are adjusted above, so perhaps things need to be moved around - maybe just wait to write them back out until after this?
+    # # NB2: should knowledge be instantaneous only (just this time step)? Or retained? With some decay? Try with (10% annual) decay, but can be altered...
+    # # Option 1 (with memory and decay term, straight addition of neighbourhood values; could be scaled):
+    # capitals$Knowledge_mgmt[i]<-capitals$Knowledge_mgmt[i]-(capitals$Knowledge_mgmt[i]/10)+((nbrhd.rem[id]+nbrhd.fell[id]+nbrhd.pest[id]))
+    # # Option 2 (with components as in Option 1):
+    # capitals$Knowledge_rem[i]<-capitals$Knowledge_rem[i]-(capitals$Knowledge_rem[i]/10)+nbrhd.rem[id]
+    # capitals$Knowledge_pest[i]<-capitals$Knowledge_pest[i]-(capitals$Knowledge_pest[i]/10)+nbrhd.pest[id]
+    # capitals$Knowledge_fell[i]<-capitals$Knowledge_fell[i]-(capitals$Knowledge_fell[i]/10)+nbrhd.fell[id]
+    # 
+    # # Then write out the new capitals...
+    # 
+    # ##################
+    # # Predation
+    # 
+    # # Assume for now that predator-prey dynamics are cell specific
+    # # Implement basic Lotka-Volterra eqns
+    # # Placed after the management changes, which I think is right?
+    # 
+    # no.cells<-length(val_df$X)
+    # 
+    # # Set params (to be varied):
+    # beta<-0.1 # Predation rate (encountering & consuming)
+    # delta<-0.1 # Predator popn growth rate
+    # gamma<-0.1 # Predator popn loss rate (mortality, movement)
+    # 
+    # # Assuming for now that the predator population per cell is a retained variable in this R code,
+    # # which we initiate in the first tick (initiating at 0, with later probability of occurrence)
+    # if (CRAFTY_tick==1){
+    #   pred.pop<-rep(0, no.cells)    
+    # }
+    # 
+    # # Extract OPM population in each cell (where should this come from?)
+    # OPM.pop<-df$OPM.pop
+    # 
+    # # Now change predator population based on potential immigration, growth, and loss
+    # immig<-runif(no.cells, 0, 1)-0.9
+    # immig[immig<0]<-0
+    # pred.pop<-pred.pop+immig+(delta*OPM.pop*pred.pop)-(gamma*pred.pop)
+    # 
+    # # We have alpha*x (OPM popn change) from RS, so just need to correct with predation loss: 
+    # # (OPM population record location to be changed again)
+    # df$OPM.pop<-df$OPM.pop-(beta*OPM.pop*pred.pop)
+    # 
+    # #################
     
     
     print(paste0("============CRAFTY JAVA-R API: Write new individuals file for RangeShiftR = ", CRAFTY_tick))
