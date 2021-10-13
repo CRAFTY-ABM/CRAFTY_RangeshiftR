@@ -79,26 +79,26 @@ for (AFT in lstAgents){
     
     #scenario <- lstScenarios[1]
     
-    dfAFT <- filter(dfAFT, Scenario == scenario)
+    dfAFT2 <- filter(dfAFT, Scenario == scenario)
     #dfAFT$Paramset <- NULL
     
     # no NAs accepted by CRAFTY, make 0
-    dfAFT[is.na(dfAFT)] <- 0
+    dfAFT2[is.na(dfAFT2)] <- 0
     
-    print(dfAFT)
+    print(dfAFT2)
     
     for (paramset in lstParamsets){
       
       #paramset <- lstParamsets[1]
       
-      dfAFT2 <- filter(dfAFT, Paramset == paramset)
+      dfAFT3 <- filter(dfAFT2, Paramset == paramset)
       
-      print(dfAFT2)
+      print(dfAFT3)
   
-      dfAFT2$Scenario <- NULL
-      dfAFT2$Paramset <- NULL
+      dfAFT3$Scenario <- NULL
+      dfAFT3$Paramset <- NULL
       
-      write.csv(dfAFT2, paste0(dirOut,"/production/",scenario,"-",paramset,"/",AFT,".csv"), row.names = F)
+      write.csv(dfAFT3, paste0(dirOut,"/production/",scenario,"-",paramset,"/",AFT,".csv"), row.names = F)
       
     }
     
