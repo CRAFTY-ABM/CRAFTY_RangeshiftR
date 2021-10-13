@@ -20,10 +20,7 @@ library(sf)
 library(viridis)
 library(ggplot2)
 library(sp)
-# increase java heap space before loading package, from here: https://stackoverflow.com/questions/21937640/handling-java-lang-outofmemoryerror-when-writing-to-excel-from-r
-options(java.parameters = "-Xmx8000m")
-library(rJava)
-library(jdx)
+
 library(xml2)
 library(foreach)
 library(doSNOW)
@@ -218,37 +215,46 @@ parallelize <- T # VM has 8 cores and 32GB dynamic RAM
 
 if (parallelize) {
   # 6 cores - 1 per scenario
-  n_thread <- 2 # detectCores()
+  n_thread <- 6 # detectCores() # consider the max heap size is java.mx 
   cl <- makeCluster(n_thread)
   registerDoSNOW(cl)
 
-  # JVM parameter  
   n_thread_crafty = 1 # set to 1 when parallelised
 } else { 
+   
+  n_thread <- 1
   # number of threads CRAFTY uses in an invididual run (e.g. 1 for a single thread)
-  n_thread_crafty = 8 
+  n_thread_crafty <- 8 
 }
 
 
 setwd(path_crafty_batch_run)
 
-foreach(s.idx = 1:n.scenario, .errorhandling = "stop",.packages = c("doSNOW","rJava","jdx"), .verbose = T) %dopar% {
+foreach(s.idx = 1:n.scenario, .errorhandling = "stop",.packages = c("doSNOW","rJava", "raster"), .verbose = T) %dopar% {
   
   setwd(dirWorking)
-  
+  gc()
   # try increasing jave heap space within foreach
-  #options(java.parameters = "-Xmx8000m")
+  # options(java.parameters = "-Xmx1000m")
+  # increase java heap space before loading package, from here: https://stackoverflow.com/questions/21937640/handling-java-lang-outofmemoryerror-when-writing-to-excel-from-r
+  # options(java.parameters = "-Xmx16g")
+  
+  
+  # Load rJava package only within the foreach loop
+  library(rJava)
+  # library(jdx) # perhaps not used for the time being? 
+  
   
   # initialise Java once only. If getting random Java errors, restart Rstudio
-  # should do it for each thread, means it has to be done in a foreach loop.
-  # if (!rJava::.jniInitialized) { 
+  # if (!rJava::.jniInitialized) {
     
     print("initialise JNI")
+    # JVM parameter  
     
-    .jinit(parameters=c("-Dlog4j.configuration=log4j2020_normal.properties",   "-Dfile.encoding=UTF-8", paste0("-Xms", java.ms, " -Xmx", java.mx), paste0("-XX:ActiveProcessorCount=", n_thread_crafty) ), silent = FALSE, force.init = TRUE)
- 
+    # should do it for each thread, means it has to be done in a foreach loop.
     
-    # .jinit(parameters = paste0("user.dir=", path_crafty_batch_run )) # does not work.. 
+    .jinit(parameters=c("-Dlog4j.configuration=log4j2020_normal.properties",   "-Dfile.encoding=UTF-8", paste0("-Xms", java.ms), paste0("-Xmx", java.mx), paste0("-XX:ActiveProcessorCount=", n_thread_crafty), jvm.option.default), silent = FALSE, force.init = TRUE)
+     # .jinit(parameters = paste0("user.dir=", path_crafty_batch_run )) # does not work.. 
   # }
   
   # add java classpath

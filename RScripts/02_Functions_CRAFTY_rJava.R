@@ -19,8 +19,9 @@ getJdkPath = function(x) {
   return(jdk.bin.path)
 }
 
-java.mx <- "12g" # 25 GB max in LRZ
-java.ms <- "1g -d64"  
+java.mx <- "5g" # 25 GB max in LRZ
+java.ms <- "512m" 
+jvm.option.default = "-d64"
 
 # .jinit( parameters="-Dfile.encoding=UTF-8 -Dlog4j.configuration=log4j_cluster.properties")
 # .jinit(parameters = "-Dfile.encoding=UTF-8", silent = FALSE, force.init = FALSE)
