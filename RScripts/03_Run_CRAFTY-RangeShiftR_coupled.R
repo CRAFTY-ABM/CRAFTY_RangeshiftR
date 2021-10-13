@@ -1,4 +1,4 @@
-# date updated: 12/10/21
+# date updated: 13/10/21
 # authors: Vanessa Burton, Bumsuk Seo
 # description: script which runs coupled CRAFTY & RangeShiftR models
 
@@ -34,14 +34,14 @@ library(tictoc)
 ### directories/ file paths ----------------------------------------------------
 
 if (Sys.info()["user"] %in% c("alan", "seo-b")) { 
-  dirWorking<- "~/git/CRAFTY_RangeshiftR"
-  dirData = "~/Dropbox/CRAFTY_RangeShiftR_data_2021"
+  dirWorking <- "~/git/CRAFTY_RangeshiftR"
+  dirData <- "~/Dropbox/CRAFTY_RangeShiftR_data_2021"
   path_crafty_batch_run <- "~/Downloads/CRAFTY_RangeshiftR_21-22_outputs"
   dataDisk <- "~/Downloads/CRAFTY_RangeshiftR_21-22_outputs"
   
   
   } else { 
-  dirWorking<- "~/eclipse-workspace/CRAFTY_RangeshiftR"
+  dirWorking <- "~/eclipse-workspace/CRAFTY_RangeshiftR"
   path_crafty_batch_run <- "D:/CRAFTY_RangeshiftR_21-22_outputs"
   dataDisk <- "D:/CRAFTY_RangeShiftR_21-22_outputs"
   
@@ -57,9 +57,6 @@ if (!dir.exists(file.path(paste0(dataDisk, "/Inputs")))) {
 if (!dir.exists(file.path(paste0(dataDisk, "/output")))) { 
   dir.create(file.path(paste0(dataDisk, "/output")))
 } 
-
-
-
 
 dirCRAFTYInput <- path.expand(paste0(dirWorking, "/data_LondonOPM/"))
 #dirCRAFTYOutput <- path.expand(paste0(dirWorking, "/output"))
@@ -199,7 +196,6 @@ end_year_idx <- 10 # 10th year of the input data
 
 # scenarios to loop through
 
-#scenario.filenames <- c("Scenario_Baseline_noGUI.xml", "Scenario_de-regulation_noGUI.xml","Scenario_govt-intervention_noGUI.xml") 
 # scenario.filenames <- c("Scenario_baseline-with-social_GUI.xml", 
 #                         "Scenario_baseline-no-social_GUI.xml", 
 #                         "Scenario_de-regulation-with-social_GUI.xml", 
@@ -218,7 +214,7 @@ n.scenario <- length(scenario.filenames)
 
 
 # run in parallel for speed
-parallelize <- F # VM has 8 cores and 32GB dynamic RAM
+parallelize <- T # VM has 8 cores and 32GB dynamic RAM
 
 if (parallelize) {
   # 6 cores - 1 per scenario
@@ -240,6 +236,8 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",.packages = c("doSNOW","rJ
   
   setwd(dirWorking)
   
+  # try increasing jave heap space within foreach
+  #options(java.parameters = "-Xmx8000m")
   
   # initialise Java once only. If getting random Java errors, restart Rstudio
   # should do it for each thread, means it has to be done in a foreach loop.
@@ -265,9 +263,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",.packages = c("doSNOW","rJ
   # assertion
   #stopifnot(dirCRAFTYOutput == .jcall( 'java/lang/System', 'S', 'getProperty', 'user.dir' ))
   
-  
-  
-  
+# test loop whilst parallelisation not working
 #for (s.idx in 1:length(scenario.filenames)){
   
   #s.idx <- 1 # for testing
