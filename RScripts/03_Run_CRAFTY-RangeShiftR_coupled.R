@@ -193,47 +193,49 @@ end_year_idx <- 10 # 10th year of the input data
 
 # scenarios to loop through
 
-# scenario.filenames <- c("Scenario_baseline-with-social_GUI.xml", 
-#                         "Scenario_baseline-no-social_GUI.xml", 
-#                         "Scenario_de-regulation-with-social_GUI.xml", 
-#                         "Scenario_de-regulation-no-social_GUI.xml",
-#                         "Scenario_govt-intervention-with-social_GUI.xml",
-#                         "Scenario_govt-intervention-no-social_GUI.xml") 
-
-scenario.filenames <- c("Scenario_baseline-with-social_NoGUI.xml", 
-                        "Scenario_baseline-no-social_NoGUI.xml", 
-                        "Scenario_de-regulation-with-social_NoGUI.xml", 
-                        "Scenario_de-regulation-no-social_NoGUI.xml",
-                        "Scenario_govt-intervention-with-social_NoGUI.xml",
-                        "Scenario_govt-intervention-no-social_NoGUI.xml") 
+scenario.filenames <- c("Scenario_baseline-with-social_GUI.xml",
+                        "Scenario_baseline-no-social_GUI.xml",
+                        "Scenario_de-regulation-with-social_GUI.xml",
+                        "Scenario_de-regulation-no-social_GUI.xml",
+                        "Scenario_govt-intervention-with-social_GUI.xml",
+                        "Scenario_govt-intervention-no-social_GUI.xml")
+ 
+# scenario.filenames <- c("Scenario_baseline-with-social_NoGUI.xml", 
+#                         "Scenario_baseline-no-social_NoGUI.xml", 
+#                         "Scenario_de-regulation-with-social_NoGUI.xml", 
+#                         "Scenario_de-regulation-no-social_NoGUI.xml",
+#                         "Scenario_govt-intervention-with-social_NoGUI.xml",
+#                         "Scenario_govt-intervention-no-social_NoGUI.xml") 
 
 n.scenario <- length(scenario.filenames)
 
 
 # run in parallel for speed
-parallelize <- T # VM has 8 cores and 32GB dynamic RAM
+parallelize <- F # VM has 8 cores and 32GB dynamic RAM
 
 if (parallelize) {
   # 6 cores - 1 per scenario
-  n_thread <- 6 # detectCores() # consider the max heap size is java.mx 
-  cl <- makeCluster(n_thread)
+  n_thread <- 6 # detectCores() # consider the max heap size is java.mx
+  cl <- makeCluster(n_thread, outfile = "")
   registerDoSNOW(cl)
 
   n_thread_crafty = 1 # set to 1 when parallelised
-} else { 
-   
+} else {
+
   n_thread <- 1
   # number of threads CRAFTY uses in an invididual run (e.g. 1 for a single thread)
-  n_thread_crafty <- 8 
+  n_thread_crafty <- 8
 }
 
 
 setwd(path_crafty_batch_run)
 
-foreach(s.idx = 1:n.scenario, .errorhandling = "stop",.packages = c("doSNOW","rJava", "raster"), .verbose = T) %dopar% {
-  
-  setwd(dirWorking)
-  gc()
+# foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
+#         .packages = c("doSNOW","rJava", "raster","RangeShiftR","tidyverse","sf","tictoc","sp","ggplot2")
+#         , .verbose = T) %dopar% {
+#   
+#   setwd(dirWorking)
+#   gc()
   # try increasing jave heap space within foreach
   # options(java.parameters = "-Xmx1000m")
   # increase java heap space before loading package, from here: https://stackoverflow.com/questions/21937640/handling-java-lang-outofmemoryerror-when-writing-to-excel-from-r
