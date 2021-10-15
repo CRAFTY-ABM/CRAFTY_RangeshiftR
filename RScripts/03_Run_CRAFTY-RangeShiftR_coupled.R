@@ -250,13 +250,13 @@ setwd(path_crafty_batch_run)
   # initialise Java once only. If getting random Java errors, restart Rstudio
   # if (!rJava::.jniInitialized) {
     
-    print("initialise JNI")
-    # JVM parameter  
+  print("initialise JNI")
+  # JVM parameter  
     
-    # should do it for each thread, means it has to be done in a foreach loop.
+  # should do it for each thread, means it has to be done in a foreach loop.
     
-    .jinit(parameters=c("-Dlog4j.configuration=log4j2020_normal.properties",   "-Dfile.encoding=UTF-8", paste0("-Xms", java.ms), paste0("-Xmx", java.mx), paste0("-XX:ActiveProcessorCount=", n_thread_crafty), jvm.option.default), silent = FALSE, force.init = TRUE)
-     # .jinit(parameters = paste0("user.dir=", path_crafty_batch_run )) # does not work.. 
+  .jinit(parameters=c("-Dlog4j.configuration=log4j2020_normal.properties",   "-Dfile.encoding=UTF-8", paste0("-Xms", java.ms), paste0("-Xmx", java.mx), paste0("-XX:ActiveProcessorCount=", n_thread_crafty), jvm.option.default), silent = FALSE, force.init = TRUE)
+   # .jinit(parameters = paste0("user.dir=", path_crafty_batch_run )) # does not work.. 
   # }
   
   # add java classpath
@@ -272,7 +272,7 @@ setwd(path_crafty_batch_run)
   #stopifnot(dirCRAFTYOutput == .jcall( 'java/lang/System', 'S', 'getProperty', 'user.dir' ))
   
 # test loop whilst parallelisation not working
-#for (s.idx in 1:length(scenario.filenames)){
+for (s.idx in 1:length(scenario.filenames)){
   
   #s.idx <- 1 # for testing
   scenario <- scenario.filenames[s.idx] 
@@ -469,9 +469,9 @@ setwd(path_crafty_batch_run)
     capitals$GridID <- lookUp$GridID
     capitals$OPM_presence <- dfOPMinv$OPMinv[match(capitals$GridID, dfOPM$GridID)]
     # check
-    p2 <- ggplot(capitals)+
-      geom_tile(mapping = aes(x,y,fill=OPM_presence))
-    print(p2)
+    # p2 <- ggplot(capitals)+
+    #   geom_tile(mapping = aes(x,y,fill=OPM_presence))
+    # print(p2)
     
     
     ### IMPLEMENT SCENARIO DEPDENDENT CHANGES HERE:
@@ -515,9 +515,9 @@ setwd(path_crafty_batch_run)
     }
     
     # check
-    p3 <- ggplot(capitals)+
-      geom_tile(mapping = aes(x,y,fill=Knowledge))
-    print(p3)
+    # p3 <- ggplot(capitals)+
+    #   geom_tile(mapping = aes(x,y,fill=Knowledge))
+    # print(p3)
     
     capitals$GridID <- NULL
     capitals <- write.csv(capitals, paste0(dirCRAFTYInput,"worlds/GreaterLondon/",scenario.split,"/GreaterLondon_tstep_",CRAFTY_tick,".csv"),row.names = F)
@@ -615,7 +615,7 @@ setwd(path_crafty_batch_run)
       
       fell <- sapply(st_intersects(shpIndividuals, mgmt_fell),function(x){length(x)>0})
       
-      # reduce pop by 80% if spraying pesticides
+      # reduce pop completely if felling
       shpIndividuals <- shpIndividuals[!fell,] 
     }
     
@@ -730,7 +730,7 @@ setwd(path_crafty_batch_run)
     toc(log = TRUE, quiet = TRUE)
     }
 }
-stopCluster(cl)
+#stopCluster(cl)
 
 
 
