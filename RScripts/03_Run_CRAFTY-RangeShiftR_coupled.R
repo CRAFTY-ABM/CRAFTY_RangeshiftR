@@ -1,4 +1,4 @@
-# date updated: 13/10/21
+# date updated: 15/10/21
 # authors: Vanessa Burton, Bumsuk Seo
 # description: script which runs coupled CRAFTY & RangeShiftR models
 
@@ -8,24 +8,15 @@
 library(rgdal)
 library(raster)
 library(tidyverse)
-
-#if (!require(RangeShiftR)) { 
-# Install RangeShiftR from GitHub:
-#devtools::install_github("RangeShifter/RangeShiftR-package", ref="main")
-#library(RangeShiftR)
-#} else {}
-
 library(RangeShiftR)
 library(sf)
 library(viridis)
 library(ggplot2)
 library(sp)
-
 library(xml2)
 library(foreach)
 library(doSNOW)
 library(tictoc)
-
 
 
 ### directories/ file paths ----------------------------------------------------
@@ -107,7 +98,7 @@ spGrid <- as_Spatial(st_centroid(sfGrid))
 
 crs(ascHabitat) <- crs(spGrid)
 st_crs(ascHabitat)
-spplot(ascHabitat)
+#spplot(ascHabitat)
 
 # write to RangeShiftR input folder
 # writeRaster(ascHabitat, file.path(dirRsftrInput, 'Habitat-100m.asc'), format="ascii", overwrite=TRUE, NAflag=-9999)
@@ -211,7 +202,7 @@ n.scenario <- length(scenario.filenames)
 
 
 # run in parallel for speed
-parallelize <- F # VM has 8 cores and 32GB dynamic RAM
+parallelize <- T # FR virtual machine has 8 cores and 32GB dynamic RAM
 
 if (parallelize) {
   # 6 cores - 1 per scenario
@@ -230,13 +221,13 @@ if (parallelize) {
 
 setwd(path_crafty_batch_run)
 
-# foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
-#         .packages = c("doSNOW","rJava", "raster","RangeShiftR","tidyverse","sf","tictoc","sp","ggplot2")
-#         , .verbose = T) %dopar% {
-#   
-#   setwd(dirWorking)
-#   gc()
-  # try increasing jave heap space within foreach
+foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
+        .packages = c("doSNOW","rJava", "raster","RangeShiftR","tidyverse","sf","tictoc","sp","ggplot2")
+        , .verbose = T) %dopar% {
+
+  setwd(dirWorking)
+  gc()
+  # try increasing java heap space within foreach
   # options(java.parameters = "-Xmx1000m")
   # increase java heap space before loading package, from here: https://stackoverflow.com/questions/21937640/handling-java-lang-outofmemoryerror-when-writing-to-excel-from-r
   # options(java.parameters = "-Xmx16g")
@@ -272,7 +263,7 @@ setwd(path_crafty_batch_run)
   #stopifnot(dirCRAFTYOutput == .jcall( 'java/lang/System', 'S', 'getProperty', 'user.dir' ))
   
 # test loop whilst parallelisation not working
-for (s.idx in 1:length(scenario.filenames)){
+#for (s.idx in 1:length(scenario.filenames)){
   
   #s.idx <- 1 # for testing
   scenario <- scenario.filenames[s.idx] 
