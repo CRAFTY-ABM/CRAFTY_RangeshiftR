@@ -22,11 +22,17 @@ library(tictoc)
 ### directories/ file paths ----------------------------------------------------
 
 if (Sys.info()["user"] %in% c("alan", "seo-b")) { 
-  dirWorking <- "~/git/CRAFTY_RangeshiftR"
-  path_crafty_batch_run <- "~/Downloads/CRAFTY_RangeshiftR_21-22_outputs"
-  dataDisk <- "~/Downloads/CRAFTY_RangeshiftR_21-22_outputs"
+  dirWorking <- "/pd/data/crafty/CRAFTY_RangeshiftR"
+  path_crafty_batch_run <- "/pd/data/crafty/CRAFTY_RangeshiftR_21-22_outputs"
+  dataDisk <- "/pd/data/crafty/CRAFTY_RangeshiftR_21-22_outputs"
   
-  } else { 
+  
+# } else if (Sys.info()["user"] %in% c("alan", "seo-b")) { 
+#     dirWorking <- "~/git/CRAFTY_RangeshiftR"
+#     path_crafty_batch_run <- "~/Downloads/CRAFTY_RangeshiftR_21-22_outputs"
+#     dataDisk <- "~/Downloads/CRAFTY_RangeshiftR_21-22_outputs"
+#     
+} else { 
   dirWorking <- "~/eclipse-workspace/CRAFTY_RangeshiftR"
   path_crafty_batch_run <- "D:/CRAFTY_RangeshiftR_21-22_outputs"
   dataDisk <- "D:/CRAFTY_RangeShiftR_21-22_outputs"
