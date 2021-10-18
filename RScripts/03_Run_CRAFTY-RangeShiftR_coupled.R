@@ -23,28 +23,27 @@ library(tictoc)
 
 if (Sys.info()["user"] %in% c("alan", "seo-b")) { 
   dirWorking <- "~/git/CRAFTY_RangeshiftR"
-  dirData <- "~/Dropbox/CRAFTY_RangeShiftR_data_2021"
   path_crafty_batch_run <- "~/Downloads/CRAFTY_RangeshiftR_21-22_outputs"
   dataDisk <- "~/Downloads/CRAFTY_RangeshiftR_21-22_outputs"
-  
   
   } else { 
   dirWorking <- "~/eclipse-workspace/CRAFTY_RangeshiftR"
   path_crafty_batch_run <- "D:/CRAFTY_RangeshiftR_21-22_outputs"
   dataDisk <- "D:/CRAFTY_RangeShiftR_21-22_outputs"
   
+  
 }
-
-dirFigs <- "~/OPM-model-prep-21-22/figs"
 dirData <- file.path(dirWorking, 'data-store')
+dirFigs <- "~/OPM-model-prep-21-22/figs"
 
-# create Inputs and output 
-if (!dir.exists(file.path(paste0(dataDisk, "/Inputs")))) { 
-  dir.create(file.path(paste0(dataDisk, "/Inputs")))
-} 
-if (!dir.exists(file.path(paste0(dataDisk, "/output")))) { 
-  dir.create(file.path(paste0(dataDisk, "/output")))
-} 
+# 
+# # create Inputs and output
+# if (!dir.exists(file.path(paste0(dataDisk, "/Inputs")))) {
+#   dir.create(file.path(paste0(dataDisk, "/Inputs")))
+# }
+# if (!dir.exists(file.path(paste0(dataDisk, "/output")))) {
+#   dir.create(file.path(paste0(dataDisk, "/output")))
+# }
 
 dirCRAFTYInput <- path.expand(paste0(dirWorking, "/data_LondonOPM/"))
 #dirCRAFTYOutput <- path.expand(paste0(dirWorking, "/output"))
@@ -215,17 +214,18 @@ if (parallelize) {
 
   n_thread <- 1
   # number of threads CRAFTY uses in an invididual run (e.g. 1 for a single thread)
-  n_thread_crafty <- 8
+  n_thread_crafty <- detectCores() - 2 # 8
 }
 
 
-setwd(path_crafty_batch_run)
 
 foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
         .packages = c("doSNOW","rJava", "raster","RangeShiftR","tidyverse","sf","tictoc","sp","ggplot2")
         , .verbose = T) %dopar% {
-
-  setwd(dirWorking)
+          
+  # setwd(dirWorking)
+  setwd(path_crafty_batch_run)
+          
   gc()
   # try increasing java heap space within foreach
   # options(java.parameters = "-Xmx1000m")
@@ -310,15 +310,15 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
   if (file.exists(dirRsftrInput)){
     # set as wd? / do nothing
     print("folder exists")
-  }else{dir.create(file.path(dirRsftrInput))}
+  }else{dir.create(file.path(dirRsftrInput), recursive = T)}
   if (file.exists(dirRsftrOutput)){
     # set as wd? / do nothing
     print("folder exists")
-  }else{dir.create(file.path(dirRsftrOutput))}
+  }else{dir.create(file.path(dirRsftrOutput), recursive = T)}
   if (file.exists(dirRsftrOutputMaps)){
     # set as wd? / do nothing
     print("folder exists")
-  }else{dir.create(file.path(dirRsftrOutputMaps))}
+  }else{dir.create(file.path(dirRsftrOutputMaps), recursive = T)}
   
   ## important - need to add the / for this path to work in RunRS()
   dirRsftr <- paste0(dirRsftr,"/") 
