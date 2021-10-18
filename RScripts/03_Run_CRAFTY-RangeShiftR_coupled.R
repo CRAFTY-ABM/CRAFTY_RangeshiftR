@@ -234,7 +234,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
           
   gc()
   # try increasing java heap space within foreach
-  # options(java.parameters = "-Xmx1000m")
+  options(java.parameters = "-Xmx1000m")
   # increase java heap space before loading package, from here: https://stackoverflow.com/questions/21937640/handling-java-lang-outofmemoryerror-when-writing-to-excel-from-r
   # options(java.parameters = "-Xmx16g")
   
