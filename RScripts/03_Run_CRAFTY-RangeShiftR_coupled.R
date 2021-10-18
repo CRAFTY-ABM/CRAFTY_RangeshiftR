@@ -358,8 +358,9 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
                      Settlement = Settlement())
   
   # for storing RangeshiftR output data
-  dfRangeShiftrData <- data.frame()
-  outRasterStack <- stack()
+  #dfRangeShiftrData <- data.frame()
+  #outRasterStack <- stack()
+  # testing effect of removing this accumulative approach - write to files per tstep instead
   
   # set the batch run folder (dirCRAFTYOutput)
   .jcall( 'java/lang/System', 'S', 'setProperty', 'user.dir',  dirCRAFTYOutput)
@@ -393,7 +394,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     # run RangeShiftR for 2-years per CRAFTY_tick and extract mean of 10 reps as result
     sim <- Simulation(Simulation = CRAFTY_tick,
                       Years = rangeshiftrYears,
-                      Replicates = 10,
+                      Replicates = 5, #10, # reduce replicates to speed up
                       OutIntPop = 1,
                       OutIntInd = 1,
                       ReturnPopRaster=TRUE)
@@ -421,16 +422,21 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     # calculate average of 10 reps for current timestep
     idx <- grep("year1", names(result)) # this selects the second years data
     resultMean <- mean(result[[idx]])
-    print(spplot(resultMean))
+    #print(spplot(resultMean))
     
     # store population raster in output stack.
     #outRasterStack <- addLayer(outRasterStack, result[[rangeshiftrYears]])
-    outRasterStack <- addLayer(outRasterStack, resultMean)
+    #outRasterStack <- addLayer(outRasterStack, resultMean)
+    # write to file instead
+    writeRaster(resultMean, paste0(dirCRAFTYscenario, "/OPM_pops_tstep_",CRAFTY_tick,".tif"))
     
     # store population data in output data frame.
-    dfRange <- readRange(s, sprintf('%s',dirRsftr))
-    dfRange$timestep <- CRAFTY_tick
-    dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[,])
+    #dfRange <- readRange(s, sprintf('%s',dirRsftr))
+    #dfRange$timestep <- CRAFTY_tick
+    #dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[,])
+    # write to file instead
+    #write.csv(dfRange, paste0(dirCRAFTYscenario, "OPM_pops_tstep_",CRAFTY_tick,".csv"))
+    # or just read from output folder when model has run
     
     print(paste0("============CRAFTY JAVA-R API: Extract RangeShiftR population results = ", CRAFTY_tick))
     
