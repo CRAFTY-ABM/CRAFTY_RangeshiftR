@@ -721,8 +721,11 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     toc(log = TRUE, quiet = TRUE)
     }
 }
-#stopCluster(cl)
 
+
+if (parallelize) { 
+  stopCluster(cl)
+}
 
 
 # look at timings
