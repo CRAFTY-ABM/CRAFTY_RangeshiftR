@@ -428,7 +428,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     #outRasterStack <- addLayer(outRasterStack, result[[rangeshiftrYears]])
     #outRasterStack <- addLayer(outRasterStack, resultMean)
     # write to file instead
-    writeRaster(resultMean, paste0(dirCRAFTYscenario, "/OPM_pops_tstep_",CRAFTY_tick,".tif"))
+    writeRaster(resultMean, paste0(dirCRAFTYscenario, "/OPM_pops_tstep_",CRAFTY_tick,".tif"), overwrite = TRUE)
     
     # store population data in output data frame.
     #dfRange <- readRange(s, sprintf('%s',dirRsftr))
