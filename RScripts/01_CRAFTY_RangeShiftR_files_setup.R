@@ -63,7 +63,7 @@ dfAgents <- read.csv(paste0(dirData,"/AgentMaster.csv"))
 head(dfAgents)
 
 lstAgents <- unique(dfAgents$Agent)
-lstScenarios <- c("baseline","de-regulation","govt-intervention")
+lstScenarios <- c("baseline","de-regulation","govt-intervention","un-coupled")
 lstParamsets <- c("with-social","no-social")
 
 for (AFT in lstAgents){
@@ -77,7 +77,7 @@ for (AFT in lstAgents){
   
   for (scenario in lstScenarios){
     
-    #scenario <- lstScenarios[1]
+    #scenario <- lstScenarios[4]
     
     dfAFT2 <- filter(dfAFT, Scenario == scenario)
     #dfAFT$Paramset <- NULL
@@ -97,6 +97,16 @@ for (AFT in lstAgents){
   
       dfAFT3$Scenario <- NULL
       dfAFT3$Paramset <- NULL
+      
+      # check dir exists and create if not
+      filePath <- paste0(dirOut,"/production/",scenario,"-",paramset,"/")
+      
+      if (dir.exists(path = filePath)){
+        print("Directory exists")
+      }else{
+        print("Directory created")
+        dir.create(path = filePath)
+      }
       
       write.csv(dfAFT3, paste0(dirOut,"/production/",scenario,"-",paramset,"/",AFT,".csv"), row.names = F)
       
