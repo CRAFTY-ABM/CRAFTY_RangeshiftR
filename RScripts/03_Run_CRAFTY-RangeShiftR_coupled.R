@@ -1,4 +1,5 @@
-# date updated: 15/10/21
+
+# date updated: 19/10/21
 # authors: Vanessa Burton, Bumsuk Seo
 # description: script which runs coupled CRAFTY & RangeShiftR models
 
@@ -124,7 +125,7 @@ sfPoints <- st_read(paste0(dirWorking,"/data-store/01_Grid_points.shp"))
 spPoints <- as_Spatial(sfPoints)
 
 # agent names
-aft_names_fromzero <- c("no_mgmt", "mgmt_remove", "mgmt_pesticide", "mgmt_fell")
+aft_names_fromzero <- c("no_mgmt", "mgmt_remove", "mgmt_pesticide", "mgmt_fell", "mgmt_nat")
 
 # read in look-up for GridID & coords
 lookUp <- read.csv(paste0(dirWorking,"/data-store/Cell_ID_XY_GreaterLondon.csv"))
@@ -194,7 +195,9 @@ scenario.filenames <- c("Scenario_baseline-with-social_GUI.xml",
                         "Scenario_de-regulation-with-social_GUI.xml",
                         "Scenario_de-regulation-no-social_GUI.xml",
                         "Scenario_govt-intervention-with-social_GUI.xml",
-                        "Scenario_govt-intervention-no-social_GUI.xml")
+                        "Scenario_govt-intervention-no-social_GUI.xml",
+                        "Scenario_un-coupled-with-social_GUI.xml",
+                        "Scenario_un-coupled-no-social_GUI.xml")
  
 # scenario.filenames <- c("Scenario_baseline-with-social_NoGUI.xml", 
 #                         "Scenario_baseline-no-social_NoGUI.xml", 
@@ -436,7 +439,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     #dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[,])
     # write to file instead
     #write.csv(dfRange, paste0(dirCRAFTYscenario, "OPM_pops_tstep_",CRAFTY_tick,".csv"))
-    # or just read from output folder when model has run
+    # or just read from output folder when model has run using readRange function
     
     print(paste0("============CRAFTY JAVA-R API: Extract RangeShiftR population results = ", CRAFTY_tick))
     
@@ -559,12 +562,12 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     sfResult <- left_join(sfGrid, val_df, by="GridID")
     sfResult$Agent <- factor(sfResult$Agent, levels=aft_names_fromzero)
     
-    print(paste0("============CRAFTY JAVA-R API: Show agents & OPM individuals = ", CRAFTY_tick)) 
-    p1 <- ggplot() +
-      geom_sf(sfResult, mapping = aes(fill = Agent), col = NA)+
-      #geom_sf(data=shpIndividuals, color="black", pch=4)+
-      scale_fill_brewer(palette="Dark2")
-    print(p1)
+    # print(paste0("============CRAFTY JAVA-R API: Show agents & OPM individuals = ", CRAFTY_tick)) 
+    # p1 <- ggplot() +
+    #   geom_sf(sfResult, mapping = aes(fill = Agent), col = NA)+
+    #   #geom_sf(data=shpIndividuals, color="black", pch=4)+
+    #   scale_fill_brewer(palette="Dark2")
+    # print(p1)
     
     # now use to edit RangeshiftR individuals
     print(paste0("============CRAFTY JAVA-R API: Edit RangeshiftR individuals tick = ", CRAFTY_tick))
@@ -573,6 +576,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     mgmt_remove <- sfResult %>% filter(Agent == "mgmt_remove")
     mgmt_pesticide <- sfResult %>% filter(Agent == "mgmt_pesticide")
     mgmt_fell <- sfResult %>% filter(Agent == "mgmt_fell")
+    mgmt_nat <- sfResult %>% filter(Agent == "mgmt_nat")
     
     # find OPM individuals within each agent type
     # https://gis.stackexchange.com/questions/245136/how-to-subset-point-data-by-outside-of-polygon-data-in-r
@@ -620,6 +624,24 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
       
       # reduce pop completely if felling
       shpIndividuals <- shpIndividuals[!fell,] 
+    }
+    
+    if (nrow(mgmt_nat)>0) { 
+      mgmt_nat <- st_transform(mgmt_nat, crs = st_crs(shpIndividuals))
+      
+      remove <- sapply(st_intersects(shpIndividuals, mgmt_nat),function(x){length(x)>0})
+      
+      # reduce population by 37% if encouraging natural predation
+      natPops <- shpIndividuals$layer[remove]
+      if (length(natPops)>1){
+        for (pop in c(1:length(natPops))){
+          natPops[pop]<-round(natPops[pop]*0.37) # reduce by 37%
+          if (natPops[pop]<1){
+            natPops[-pop]}
+        }
+      }
+      
+      shpIndividuals$layer[remove] <- natPops
     }
     
     # ### Social network effects & predation ####
