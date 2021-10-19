@@ -271,6 +271,15 @@ for (scenario in lstScenarios){
   
   for (paramset in lstParamsets){
     
+    filePath <- paste0(dirOut,"/worlds/GreaterLondon/",scenario,"-",paramset,"/")
+    
+    if (dir.exists(path = filePath)){
+      print("Directory exists")
+    }else{
+      print("Directory created")
+      dir.create(path = filePath)
+    }
+    
     write.csv(dfWorld, paste0(dirOut,"/worlds/GreaterLondon/",scenario,"-",paramset,"/GreaterLondon.csv"), row.names = FALSE)
     
   }
@@ -290,6 +299,8 @@ summary(updaterFiles)
 ticks <- c(1,2,3,4,5,6,7,8,9,10)
 
 for (scenario in lstScenarios){
+  
+  scenario <- "un-coupled"
   
   for (paramset in lstParamsets){
     
@@ -501,7 +512,23 @@ for (scenario in lstScenarios){
   
 }
 
+# 0 demands for uncoupled scenario - should mean no agent response
+# so service output will be only affected by OPM presence... in theory
+bio <- 0
+rec <- 0
 
+Year <- seq(1,10, by=1)
+biodiversity <- rep(bio, length(Year))
+recreation <- rep(rec, length(Year))
+
+dfDemand <- tibble(Year,biodiversity,recreation)
+dfDemand
+
+for (paramset in lstParamsets){
+  
+  write.csv(dfDemand, paste0(dirOut,"/worlds/GreaterLondon/un-coupled-",paramset,"/Demand.csv"), row.names = FALSE)
+  
+}
 
 ### RangeShiftR set-up ---------------------------------------------------------
 
