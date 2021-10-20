@@ -417,8 +417,8 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     #Sys.sleep(1)
     
     # set crs and extent
-    crs(result) <- crs(ascHabitat)
-    extent(result) <- extent(ascHabitat)
+    #crs(result) <- crs(ascHabitat)
+    #extent(result) <- extent(ascHabitat)
     
     #names(result)
     
@@ -431,7 +431,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     #outRasterStack <- addLayer(outRasterStack, result[[rangeshiftrYears]])
     #outRasterStack <- addLayer(outRasterStack, resultMean)
     # write to file instead
-    writeRaster(resultMean, paste0(dirCRAFTYscenario, "/OPM_pops_tstep_",CRAFTY_tick,".tif"), overwrite = TRUE)
+    #writeRaster(resultMean, paste0(dirCRAFTYscenario, "/OPM_pops_tstep_",CRAFTY_tick,".tif"), overwrite = TRUE)
     
     # store population data in output data frame.
     #dfRange <- readRange(s, sprintf('%s',dirRsftr))
