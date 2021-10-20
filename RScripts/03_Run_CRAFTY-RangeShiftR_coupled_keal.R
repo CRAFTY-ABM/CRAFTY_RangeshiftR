@@ -1,4 +1,5 @@
-# date updated: 15/10/21
+
+# date updated: 19/10/21
 # authors: Vanessa Burton, Bumsuk Seo
 # description: script which runs coupled CRAFTY & RangeShiftR models
 
@@ -124,7 +125,7 @@ sfPoints <- st_read(paste0(dirWorking,"/data-store/01_Grid_points.shp"))
 spPoints <- as_Spatial(sfPoints)
 
 # agent names
-aft_names_fromzero <- c("no_mgmt", "mgmt_remove", "mgmt_pesticide", "mgmt_fell")
+aft_names_fromzero <- c("no_mgmt", "mgmt_remove", "mgmt_pesticide", "mgmt_fell", "mgmt_nat")
 
 # read in look-up for GridID & coords
 lookUp <- read.csv(paste0(dirWorking,"/data-store/Cell_ID_XY_GreaterLondon.csv"))
@@ -134,8 +135,7 @@ sfGrid <- sfGrid %>% dplyr::select(GridID, geometry)
 
 
 # location of the CRAFTY Jar file
-#path_crafty_jar <- path.expand(paste0(dirWorking, "/lib/CRAFTY_KIT_engineOct2020.jar"))
-path_crafty_jar <- path.expand(paste0(dirWorking, "/lib/CRAFTY_KIT_engineOkt2021_JDK11.jar"))
+path_crafty_jar <- path.expand(paste0(dirWorking, "/lib/CRAFTY_KIT_engine_Okt2021_JDK11.jar"))
 
 # location of the CRAFTY lib files
 path_crafty_libs <- path.expand(paste0(dirWorking, "/lib/"))
@@ -194,14 +194,18 @@ scenario.filenames <- c("Scenario_baseline-with-social_GUI.xml",
                         "Scenario_de-regulation-with-social_GUI.xml",
                         "Scenario_de-regulation-no-social_GUI.xml",
                         "Scenario_govt-intervention-with-social_GUI.xml",
-                        "Scenario_govt-intervention-no-social_GUI.xml")
+                        "Scenario_govt-intervention-no-social_GUI.xml",
+                        "Scenario_un-coupled-with-social_GUI.xml",
+                        "Scenario_un-coupled-no-social_GUI.xml")
  
  scenario.filenames <- c("Scenario_baseline-with-social_NoGUI.xml", 
                          "Scenario_baseline-no-social_NoGUI.xml", 
                          "Scenario_de-regulation-with-social_NoGUI.xml", 
                          "Scenario_de-regulation-no-social_NoGUI.xml",
                          "Scenario_govt-intervention-with-social_NoGUI.xml",
-                         "Scenario_govt-intervention-no-social_NoGUI.xml") 
+                         "Scenario_govt-intervention-no-social_NoGUI.xml", 
+                        "Scenario_un-coupled-with-social_GUI.xml",
+                        "Scenario_un-coupled-no-social_GUI.xml")
 
 n.scenario <- length(scenario.filenames)
 
@@ -358,8 +362,9 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
                      Settlement = Settlement())
   
   # for storing RangeshiftR output data
-  dfRangeShiftrData <- data.frame()
-  outRasterStack <- stack()
+  #dfRangeShiftrData <- data.frame()
+  #outRasterStack <- stack()
+  # testing effect of removing this accumulative approach - write to files per tstep instead
   
   # set the batch run folder (dirCRAFTYOutput)
   .jcall( 'java/lang/System', 'S', 'setProperty', 'user.dir',  dirCRAFTYOutput)
@@ -393,7 +398,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     # run RangeShiftR for 2-years per CRAFTY_tick and extract mean of 10 reps as result
     sim <- Simulation(Simulation = CRAFTY_tick,
                       Years = rangeshiftrYears,
-                      Replicates = 10,
+                      Replicates = 5, #10, # reduce replicates to speed up
                       OutIntPop = 1,
                       OutIntInd = 1,
                       ReturnPopRaster=TRUE)
@@ -413,24 +418,29 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     #Sys.sleep(1)
     
     # set crs and extent
-    crs(result) <- crs(ascHabitat)
-    extent(result) <- extent(ascHabitat)
+    #crs(result) <- crs(ascHabitat)
+    #extent(result) <- extent(ascHabitat)
     
     #names(result)
     
     # calculate average of 10 reps for current timestep
     idx <- grep("year1", names(result)) # this selects the second years data
     resultMean <- mean(result[[idx]])
-    print(spplot(resultMean))
+    #print(spplot(resultMean))
     
     # store population raster in output stack.
     #outRasterStack <- addLayer(outRasterStack, result[[rangeshiftrYears]])
-    outRasterStack <- addLayer(outRasterStack, resultMean)
+    #outRasterStack <- addLayer(outRasterStack, resultMean)
+    # write to file instead
+    #writeRaster(resultMean, paste0(dirCRAFTYscenario, "/OPM_pops_tstep_",CRAFTY_tick,".tif"), overwrite = TRUE)
     
     # store population data in output data frame.
-    dfRange <- readRange(s, sprintf('%s',dirRsftr))
-    dfRange$timestep <- CRAFTY_tick
-    dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[,])
+    #dfRange <- readRange(s, sprintf('%s',dirRsftr))
+    #dfRange$timestep <- CRAFTY_tick
+    #dfRangeShiftrData <- rbind(dfRangeShiftrData, dfRange[,])
+    # write to file instead
+    #write.csv(dfRange, paste0(dirCRAFTYscenario, "OPM_pops_tstep_",CRAFTY_tick,".csv"))
+    # or just read from output folder when model has run using readRange function
     
     print(paste0("============CRAFTY JAVA-R API: Extract RangeShiftR population results = ", CRAFTY_tick))
     
@@ -553,12 +563,12 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     sfResult <- left_join(sfGrid, val_df, by="GridID")
     sfResult$Agent <- factor(sfResult$Agent, levels=aft_names_fromzero)
     
-    print(paste0("============CRAFTY JAVA-R API: Show agents & OPM individuals = ", CRAFTY_tick)) 
-    p1 <- ggplot() +
-      geom_sf(sfResult, mapping = aes(fill = Agent), col = NA)+
-      #geom_sf(data=shpIndividuals, color="black", pch=4)+
-      scale_fill_brewer(palette="Dark2")
-    print(p1)
+    # print(paste0("============CRAFTY JAVA-R API: Show agents & OPM individuals = ", CRAFTY_tick)) 
+    # p1 <- ggplot() +
+    #   geom_sf(sfResult, mapping = aes(fill = Agent), col = NA)+
+    #   #geom_sf(data=shpIndividuals, color="black", pch=4)+
+    #   scale_fill_brewer(palette="Dark2")
+    # print(p1)
     
     # now use to edit RangeshiftR individuals
     print(paste0("============CRAFTY JAVA-R API: Edit RangeshiftR individuals tick = ", CRAFTY_tick))
@@ -567,6 +577,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     mgmt_remove <- sfResult %>% filter(Agent == "mgmt_remove")
     mgmt_pesticide <- sfResult %>% filter(Agent == "mgmt_pesticide")
     mgmt_fell <- sfResult %>% filter(Agent == "mgmt_fell")
+    mgmt_nat <- sfResult %>% filter(Agent == "mgmt_nat")
     
     # find OPM individuals within each agent type
     # https://gis.stackexchange.com/questions/245136/how-to-subset-point-data-by-outside-of-polygon-data-in-r
@@ -614,6 +625,24 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
       
       # reduce pop completely if felling
       shpIndividuals <- shpIndividuals[!fell,] 
+    }
+    
+    if (nrow(mgmt_nat)>0) { 
+      mgmt_nat <- st_transform(mgmt_nat, crs = st_crs(shpIndividuals))
+      
+      remove <- sapply(st_intersects(shpIndividuals, mgmt_nat),function(x){length(x)>0})
+      
+      # reduce population by 37% if encouraging natural predation
+      natPops <- shpIndividuals$layer[remove]
+      if (length(natPops)>1){
+        for (pop in c(1:length(natPops))){
+          natPops[pop]<-round(natPops[pop]*0.37) # reduce by 37%
+          if (natPops[pop]<1){
+            natPops[-pop]}
+        }
+      }
+      
+      shpIndividuals$layer[remove] <- natPops
     }
     
     # ### Social network effects & predation ####
