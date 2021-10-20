@@ -135,8 +135,7 @@ sfGrid <- sfGrid %>% dplyr::select(GridID, geometry)
 
 
 # location of the CRAFTY Jar file
-#path_crafty_jar <- path.expand(paste0(dirWorking, "/lib/CRAFTY_KIT_engineOct2020.jar"))
-path_crafty_jar <- path.expand(paste0(dirWorking, "/lib/CRAFTY_KIT_engineAug2021.jar"))
+path_crafty_jar <- path.expand(paste0(dirWorking, "/lib/CRAFTY_KIT_engine_Okt2021_JDK15.jar"))
 
 # location of the CRAFTY lib files
 path_crafty_libs <- path.expand(paste0(dirWorking, "/lib/"))
