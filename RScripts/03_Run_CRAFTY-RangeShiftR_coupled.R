@@ -485,7 +485,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     
     # 1. conditional update knowledge to be dependent on OPM presence
     # for de-regulation scenario, there is no monitoring, so minimal knowledge (0.2 instead of 1)
-    if (scenario.split == "de-regulation"){
+    if (grepl("de-regulation", scenario.split) == TRUE){
       if (CRAFTY_tick==1){
         
         # clear previous test capital
