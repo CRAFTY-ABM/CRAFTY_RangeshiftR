@@ -219,7 +219,7 @@ if (parallelize) {
   cl <- makeCluster(n_thread, outfile = "")
   registerDoSNOW(cl)
 
-  n_thread_crafty = 1 # set to 1 when parallelised
+  n_thread_crafty = 10 # set to 1 when parallelised
 } else {
 
   n_thread <- 1
