@@ -19,7 +19,7 @@ library(RangeShiftR)
 # extracted usinf 7Zip to folder "from_KIT"
 
 dirCRAFTY <- "C:/Users/vanessa.burton.sb/Documents/eclipse-workspace/CRAFTY_RangeshiftR/"
-dataDrive <- "D:/CRAFTY_RangeShiftR_21-22_outputs/"
+dataDrive <- "D:/CRAFTY_RangeShiftR_21-22_outputs/from_KIT/"
 
 #dirOut <- paste0(dataDrive, "from_KIT/output")
 dirOut <- paste0(dataDrive, "output")
@@ -74,6 +74,34 @@ for (idx in 1:length(lstScenarios)){
 
 dfPopsMaster$Year <- factor(dfPopsMaster$Year, levels = lstRsftrYrs)
 
-ggplot(dfPopsMaster)+
-  geom_point(aes(x=Year,y=NInds, colour = Scenario))+
+ggplot(data = dfPopsMaster, aes(x=Year,y=NInds, colour = Scenario, group = Scenario))+
+  geom_point()+
+  geom_line()+
+  facet_wrap(~Scenario)+
   theme_bw()
+
+
+# rasters
+library(raster)
+
+rstBaseline <- stack(paste0(dataDrive,"/rstRangeshiftR_output_coupled_baseline-with-social.tif"))
+rstDereg <- stack(paste0(dataDrive,"/rstRangeshiftR_output_coupled_de-regulation-with-social.tif"))
+rstGovt <- stack(paste0(dataDrive,"/rstRangeshiftR_output_coupled_govt-intervention-with-social.tif"))
+
+names(rstBaseline) <- c("Yr1","Yr2","Yr3","Yr4","Yr5","Yr6","Yr7","Yr8","Yr9","Yr10")
+clrs.viridis <- colorRampPalette(viridis::viridis(10))
+#png(paste0(dirFigs,"/rsftr_pops_CRAFTY-coupled_baseline.png"), width = 800, height = 600)
+spplot(rstBaseline, layout = c(5,2))#, col.regions=clrs.viridis(14), at = seq(0,70,10))
+#dev.off()
+
+names(rstDereg) <- c("Yr1","Yr2","Yr3","Yr4","Yr5","Yr6","Yr7","Yr8","Yr9","Yr10")
+clrs.viridis <- colorRampPalette(viridis::viridis(10))
+#png(paste0(dirFigs,"/rsftr_pops_CRAFTY-coupled_de-regulation.png"), width = 800, height = 600)
+spplot(rstDereg, layout = c(5,2))#, col.regions=clrs.viridis(14), at = seq(0,70,10))
+#dev.off()
+
+names(rstGovt) <- c("Yr1","Yr2","Yr3","Yr4","Yr5","Yr6","Yr7","Yr8","Yr9","Yr10")
+clrs.viridis <- colorRampPalette(viridis::viridis(10))
+#png(paste0(dirFigs,"/rsftr_pops_CRAFTY-coupled_govt-intervention.png"), width = 800, height = 600)
+spplot(rstGovt, layout = c(5,2))#, col.regions=clrs.viridis(14), at = seq(0,70,10))
+#dev.off()
