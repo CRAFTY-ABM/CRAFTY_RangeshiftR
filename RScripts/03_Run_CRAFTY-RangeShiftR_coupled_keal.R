@@ -752,8 +752,8 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     } else {
       
       print(paste0("============CRAFTY JAVA-R API: Simulation done (tick=", CRAFTY_tick, ")"))
-      write.csv(dfRangeShiftrData, paste0(dirCRAFTYOutput,"/dfRangeshiftR_output_coupled_",scenario.split,".csv"), row.names = F)
-      writeRaster(outRasterStack, paste0(dirCRAFTYOutput,"/rstRangeshiftR_output_coupled_",scenario.split,".tif"), overwrite = T)
+      #write.csv(dfRangeShiftrData, paste0(dirCRAFTYOutput,"/dfRangeshiftR_output_coupled_",scenario.split,".csv"), row.names = F)
+      #writeRaster(outRasterStack, paste0(dirCRAFTYOutput,"/rstRangeshiftR_output_coupled_",scenario.split,".tif"), overwrite = T)
       
     }
     
