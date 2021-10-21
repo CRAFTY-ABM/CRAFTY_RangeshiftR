@@ -210,7 +210,7 @@ n.scenario <- length(scenario.filenames)
 
 
 # run in parallel for speed
-parallelize <- T # FR virtual machine has 8 cores and 32GB dynamic RAM
+parallelize <- F # FR virtual machine has 8 cores and 32GB dynamic RAM
 
 if (parallelize) {
   # 6 cores - 1 per scenario
@@ -305,7 +305,9 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
   if (file.exists(dirCRAFTYscenario)){
     # set as wd? / do nothing
     print("folder exists")
-  }else{dir.create(file.path(dirCRAFTYscenario))}
+  }else{
+    dir.create(file.path(dirCRAFTYscenario))
+    print("folder created")}
   
   # set RangeshiftR paths based on scenario
   dirRsftr <- file.path(dirCRAFTYscenario)
@@ -417,8 +419,8 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     #Sys.sleep(1)
     
     # set crs and extent
-    #crs(result) <- crs(ascHabitat)
-    #extent(result) <- extent(ascHabitat)
+    crs(result) <- crs(ascHabitat)
+    extent(result) <- extent(ascHabitat)
     
     #names(result)
     
