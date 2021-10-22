@@ -198,12 +198,14 @@ scenario.filenames <- c("Scenario_baseline-with-social_GUI.xml",
                         "Scenario_un-coupled-with-social_GUI.xml",
                         "Scenario_un-coupled-no-social_GUI.xml")
  
-# scenario.filenames <- c("Scenario_baseline-with-social_NoGUI.xml", 
-#                         "Scenario_baseline-no-social_NoGUI.xml", 
-#                         "Scenario_de-regulation-with-social_NoGUI.xml", 
+# scenario.filenames <- c("Scenario_baseline-with-social_NoGUI.xml",
+#                         "Scenario_baseline-no-social_NoGUI.xml",
+#                         "Scenario_de-regulation-with-social_NoGUI.xml",
 #                         "Scenario_de-regulation-no-social_NoGUI.xml",
 #                         "Scenario_govt-intervention-with-social_NoGUI.xml",
-#                         "Scenario_govt-intervention-no-social_NoGUI.xml") 
+#                         "Scenario_govt-intervention-no-social_NoGUI.xml",
+#                         "Scenario_un-coupled-with-social_NoGUI.xml",
+#                         "Scenario_un-coupled-no-social_NoGUI.xml")
 
 n.scenario <- length(scenario.filenames)
 
@@ -255,7 +257,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
   # should do it for each thread, means it has to be done in a foreach loop.
     
   .jinit(parameters=c("-Dlog4j.configuration=log4j2020_normal.properties",   "-Dfile.encoding=UTF-8", paste0("-Xms", java.ms), paste0("-Xmx", java.mx), paste0("-XX:ActiveProcessorCount=", n_thread_crafty), jvm.option.default), silent = FALSE, force.init = TRUE)
-   # .jinit(parameters = paste0("user.dir=", path_crafty_batch_run )) # does not work.. 
+  # .jinit(parameters = paste0("user.dir=", path_crafty_batch_run )) # does not work.. 
   # }
   
   # add java classpath
@@ -273,7 +275,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
 # test loop whilst parallelisation not working
 #for (s.idx in 1:length(scenario.filenames)){
   
-  #s.idx <- 1 # for testing
+  s.idx <- 3 # for testing
   scenario <- scenario.filenames[s.idx] 
   scenario.filename <- scenario
   scenario.split <- strsplit(scenario, "[_]")[[1]][2]
@@ -376,7 +378,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
   
   for (yr.idx in 1:length(timesteps)) {
     
-    #yr.idx <- 1 #for testing
+    yr.idx <- 1 #for testing
     
     CRAFTY_tick <- timesteps[yr.idx]
     

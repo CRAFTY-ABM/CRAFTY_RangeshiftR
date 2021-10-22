@@ -198,14 +198,14 @@ scenario.filenames <- c("Scenario_baseline-with-social_GUI.xml",
                         "Scenario_un-coupled-with-social_GUI.xml",
                         "Scenario_un-coupled-no-social_GUI.xml")
  
- scenario.filenames <- c("Scenario_baseline-with-social_NoGUI.xml", 
-                         "Scenario_baseline-no-social_NoGUI.xml", 
-                         "Scenario_de-regulation-with-social_NoGUI.xml", 
-                         "Scenario_de-regulation-no-social_NoGUI.xml",
-                         "Scenario_govt-intervention-with-social_NoGUI.xml",
-                         "Scenario_govt-intervention-no-social_NoGUI.xml", 
-                        "Scenario_un-coupled-with-social_GUI.xml",
-                        "Scenario_un-coupled-no-social_GUI.xml")
+scenario.filenames <- c("Scenario_baseline-with-social_NoGUI.xml",
+                        "Scenario_baseline-no-social_NoGUI.xml",
+                        "Scenario_de-regulation-with-social_NoGUI.xml",
+                        "Scenario_de-regulation-no-social_NoGUI.xml",
+                        "Scenario_govt-intervention-with-social_NoGUI.xml",
+                        "Scenario_govt-intervention-no-social_NoGUI.xml",
+                        "Scenario_un-coupled-with-social_NoGUI.xml",
+                        "Scenario_un-coupled-no-social_NoGUI.xml")
 
 n.scenario <- length(scenario.filenames)
 
