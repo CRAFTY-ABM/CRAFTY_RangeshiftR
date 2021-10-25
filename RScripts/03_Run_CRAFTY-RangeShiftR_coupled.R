@@ -378,7 +378,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
   
   for (yr.idx in 1:length(timesteps)) {
     
-    yr.idx <- 1 #for testing
+    yr.idx <- 2 #for testing
     
     CRAFTY_tick <- timesteps[yr.idx]
     
@@ -478,9 +478,9 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     capitals$GridID <- lookUp$GridID
     capitals$OPM_presence <- dfOPMinv$OPMinv[match(capitals$GridID, dfOPM$GridID)]
     # check
-    # p2 <- ggplot(capitals)+
-    #   geom_tile(mapping = aes(x,y,fill=OPM_presence))
-    # print(p2)
+    p2 <- ggplot(capitals)+
+      geom_tile(mapping = aes(x,y,fill=OPM_presence))
+    print(p2)
     
     
     ### IMPLEMENT SCENARIO DEPDENDENT CHANGES HERE:
@@ -497,18 +497,23 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
         # (previously didn't update knowledge at all in this scenario, but this meant no management response at all - too extreme?)
         capitals$Knowledge[which(capitals$OPM_presence==0)]<-0.2
         capitals$Knowledge[which(capitals$OPM_presence==1)]<-0
+        print("Minimal knowledge based on OPM presence")
         
         # increase risk perception where there is OPM
         capitals$Risk_perception[which(capitals$OPM_presence == 0)] <- 0.8
+        print("Risk perception close to OPM increased")
         
       }else{
         # keep previous knowledge
         prevKnowledge <- read.csv(paste0(dirCRAFTYInput,"worlds/GreaterLondon/",scenario.split,"/GreaterLondon_tstep_",CRAFTY_tick-1,".csv"))
-        capitals$Knowledge <- prevKnowledge$knowledge
+        capitals$Knowledge <- prevKnowledge$Knowledge
         # add new
         capitals$Knowledge[which(capitals$OPM_presence==0)]<-0.2
       }
-    }else{
+    }
+    
+    # In govt-intervention scenario, there is good monitoring and therefore knowledge
+    if (grepl("baseline|govt-intervention", scenario.split) == TRUE){
       if (CRAFTY_tick==1){
         capitals$Knowledge<-0 # clear previous test capital
         # and add any new knowledge based on contact with OPM
@@ -524,9 +529,9 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     }
     
     # check
-    # p3 <- ggplot(capitals)+
-    #   geom_tile(mapping = aes(x,y,fill=Knowledge))
-    # print(p3)
+    p3 <- ggplot(capitals)+
+      geom_tile(mapping = aes(x,y,fill=Knowledge))
+    print(p3)
     
     capitals$GridID <- NULL
     capitals <- write.csv(capitals, paste0(dirCRAFTYInput,"worlds/GreaterLondon/",scenario.split,"/GreaterLondon_tstep_",CRAFTY_tick,".csv"),row.names = F)
@@ -566,11 +571,11 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     sfResult$Agent <- factor(sfResult$Agent, levels=aft_names_fromzero)
     
     # print(paste0("============CRAFTY JAVA-R API: Show agents & OPM individuals = ", CRAFTY_tick)) 
-    # p1 <- ggplot() +
-    #   geom_sf(sfResult, mapping = aes(fill = Agent), col = NA)+
-    #   #geom_sf(data=shpIndividuals, color="black", pch=4)+
-    #   scale_fill_brewer(palette="Dark2")
-    # print(p1)
+    p1 <- ggplot() +
+      geom_sf(sfResult, mapping = aes(fill = Agent), col = NA)+
+      #geom_sf(data=shpIndividuals, color="black", pch=4)+
+      scale_fill_brewer(palette="Dark2")
+    print(p1)
     
     # now use to edit RangeshiftR individuals
     print(paste0("============CRAFTY JAVA-R API: Edit RangeshiftR individuals tick = ", CRAFTY_tick))
@@ -629,7 +634,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
       shpIndividuals <- shpIndividuals[!fell,] 
     }
     
-    if (nrow(mgmt_nat)>0) { 
+    if (nrow(mgmt_nat)>0) {
       mgmt_nat <- st_transform(mgmt_nat, crs = st_crs(shpIndividuals))
       
       remove <- sapply(st_intersects(shpIndividuals, mgmt_nat),function(x){length(x)>0})
