@@ -59,7 +59,7 @@ dfServices
 
 # scenario sub-folders within production mean these parameters can change per scenario
 
-dfAgents <- read.csv(paste0(dirData,"/AgentMaster.csv"))
+dfAgents <- read.csv(paste0(dirOut,"/csv/AgentMaster.csv"))
 head(dfAgents)
 
 lstAgents <- unique(dfAgents$Agent)
@@ -68,7 +68,7 @@ lstParamsets <- c("with-social","no-social")
 
 for (AFT in lstAgents){
   
-  #AFT <- lstAgents[1]
+  #AFT <- lstAgents[5]
   
   dfAFT <- filter(dfAgents, Agent == AFT)
   dfAFT$Agent <- NULL
