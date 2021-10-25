@@ -1,5 +1,5 @@
 
-# date updated: 19/10/21
+# date updated: 25/10/21
 # authors: Vanessa Burton, Bumsuk Seo
 # description: script which runs coupled CRAFTY & RangeShiftR models
 
@@ -40,10 +40,10 @@ if (Sys.info()["user"] %in% c("alan", "seo-b")) {
   
   
 }
+
 dirData <- file.path(dirWorking, 'data-store')
 dirFigs <- "~/OPM-model-prep-21-22/figs"
 
-# 
 # # create Inputs and output
 # if (!dir.exists(file.path(paste0(dataDisk, "/Inputs")))) {
 #   dir.create(file.path(paste0(dataDisk, "/Inputs")))
@@ -189,23 +189,23 @@ end_year_idx <- 10 # 10th year of the input data
 
 # scenarios to loop through
 
-scenario.filenames <- c("Scenario_baseline-with-social_GUI.xml",
-                        "Scenario_baseline-no-social_GUI.xml",
-                        "Scenario_de-regulation-with-social_GUI.xml",
-                        "Scenario_de-regulation-no-social_GUI.xml",
-                        "Scenario_govt-intervention-with-social_GUI.xml",
-                        "Scenario_govt-intervention-no-social_GUI.xml",
-                        "Scenario_un-coupled-with-social_GUI.xml",
-                        "Scenario_un-coupled-no-social_GUI.xml")
+# scenario.filenames <- c("Scenario_baseline-with-social_GUI.xml",
+#                         "Scenario_baseline-no-social_GUI.xml",
+#                         "Scenario_de-regulation-with-social_GUI.xml",
+#                         "Scenario_de-regulation-no-social_GUI.xml",
+#                         "Scenario_govt-intervention-with-social_GUI.xml",
+#                         "Scenario_govt-intervention-no-social_GUI.xml",
+#                         "Scenario_un-coupled-with-social_GUI.xml",
+#                         "Scenario_un-coupled-no-social_GUI.xml")
  
-# scenario.filenames <- c("Scenario_baseline-with-social_NoGUI.xml",
-#                         "Scenario_baseline-no-social_NoGUI.xml",
-#                         "Scenario_de-regulation-with-social_NoGUI.xml",
-#                         "Scenario_de-regulation-no-social_NoGUI.xml",
-#                         "Scenario_govt-intervention-with-social_NoGUI.xml",
-#                         "Scenario_govt-intervention-no-social_NoGUI.xml",
-#                         "Scenario_un-coupled-with-social_NoGUI.xml",
-#                         "Scenario_un-coupled-no-social_NoGUI.xml")
+scenario.filenames <- c("Scenario_baseline-with-social_NoGUI.xml",
+                        "Scenario_baseline-no-social_NoGUI.xml",
+                        "Scenario_de-regulation-with-social_NoGUI.xml",
+                        "Scenario_de-regulation-no-social_NoGUI.xml",
+                        "Scenario_govt-intervention-with-social_NoGUI.xml",
+                        "Scenario_govt-intervention-no-social_NoGUI.xml",
+                        "Scenario_un-coupled-with-social_NoGUI.xml",
+                        "Scenario_un-coupled-no-social_NoGUI.xml")
 
 n.scenario <- length(scenario.filenames)
 
