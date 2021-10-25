@@ -29,8 +29,8 @@ dirFigs <- paste0(dirCRAFTY,"figures")
 
 lstScenarios <- c("baseline-with-social","baseline-no-social",
                   "de-regulation-with-social","de-regulation-no-social",
-                  "govt-intervention-with-social","govt-intervention-no-social")#,
-                  #"un-coupled-with-social","un-coupled-no-social")
+                  "govt-intervention-with-social","govt-intervention-no-social",
+                  "un-coupled-with-social","un-coupled-no-social")
 
 lstRsftrYrs <- sprintf("Sim%s",seq(1:10))
 
@@ -55,22 +55,26 @@ for (idx in 1:length(lstScenarios)){
     #year <- lstRsftrYrs[1]
     year <- lstRsftrYrs[idx2]
     
+    path <- paste0(dirRsftr,"Batch1_",year,"_Land1_Range.txt")
+      
+    if(!file.exists(path)) {
+        next
+    }
+    
     dfRange <- read.delim2(paste0(dirRsftr,"Batch1_",year,"_Land1_Range.txt"))
-    
+      
     dfRange <- dfRange %>% 
-      filter(Year == 2) %>% # select just 2nd output "year" (RangeshiftR is run for 2 yrs per CRAFTY year - we take second yr as the result)
-      group_by(Year) %>% 
-      summarise(NInds = mean(NInds)) %>% # average across reps
-      #select(., Rep, NInds, Occup.Suit) %>% 
-      mutate(Year = year,
-             Scenario = scenario)
-    
-    dfPopsMaster <- rbind(dfPopsMaster, dfRange[,])
-    
+        filter(Year == 2) %>% # select just 2nd output "year" (RangeshiftR is run for 2 yrs per CRAFTY year - we take second yr as the result)
+        group_by(Year) %>% 
+        summarise(NInds = mean(NInds)) %>% # average across reps
+        #select(., Rep, NInds, Occup.Suit) %>% 
+        mutate(Year = year,
+               Scenario = scenario)
+      
+      dfPopsMaster <- rbind(dfPopsMaster, dfRange[,])
+      
   }
-
-
-}
+  }
 
 dfPopsMaster$Year <- factor(dfPopsMaster$Year, levels = lstRsftrYrs)
 
