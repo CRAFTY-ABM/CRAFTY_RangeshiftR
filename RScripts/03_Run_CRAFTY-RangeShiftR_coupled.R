@@ -44,6 +44,7 @@ if (Sys.info()["user"] %in% c("alan", "seo-b")) {
 dirData <- file.path(dirWorking, 'data-store')
 dirFigs <- "~/OPM-model-prep-21-22/figs"
 
+# 
 # # create Inputs and output
 # if (!dir.exists(file.path(paste0(dataDisk, "/Inputs")))) {
 #   dir.create(file.path(paste0(dataDisk, "/Inputs")))
@@ -211,7 +212,7 @@ n.scenario <- length(scenario.filenames)
 
 
 # run in parallel for speed
-parallelize <- F # FR virtual machine has 8 cores and 32GB dynamic RAM
+parallelize <- T # FR virtual machine has 8 cores and 32GB dynamic RAM
 
 if (parallelize) {
   # 6 cores - 1 per scenario
@@ -256,8 +257,8 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     
   # should do it for each thread, means it has to be done in a foreach loop.
     
-  .jinit(parameters=c("-Dlog4j.configuration=log4j2020_normal.properties",   "-Dfile.encoding=UTF-8", paste0("-Xms", java.ms), paste0("-Xmx", java.mx), paste0("-XX:ActiveProcessorCount=", n_thread_crafty), jvm.option.default), silent = FALSE, force.init = TRUE)
-  # .jinit(parameters = paste0("user.dir=", path_crafty_batch_run )) # does not work.. 
+  .jinit(parameters=c("-Dlog4j.configuration=log4j2020_normal.properties",   "-Dfile.encoding=UTF-8", paste0("-Xms", java.ms), paste0("-Xmx", java.mx), paste0("-XX:ActiveProcessorCount=", n_thread_crafty) ), silent = FALSE, force.init = TRUE)
+   # .jinit(parameters = paste0("user.dir=", path_crafty_batch_run )) # does not work.. 
   # }
   
   # add java classpath
@@ -378,7 +379,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
   
   for (yr.idx in 1:length(timesteps)) {
     
-    yr.idx <- 2 #for testing
+    #yr.idx <- 2 #for testing
     
     CRAFTY_tick <- timesteps[yr.idx]
     
