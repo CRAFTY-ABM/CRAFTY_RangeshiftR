@@ -89,6 +89,8 @@ g1 <- ggplot(data = dfPopsMaster, aes(x=Year,y=NInds, colour = Scenario, group =
   #facet_wrap(~Scenario)+
   theme_bw()
 
+print(g1)
+
 ggsave(g1, file=paste0(dirFigs, "/OPM_pops_per_scenario.jpg"), width=8, height=6, dpi=300)
 
 
@@ -213,7 +215,7 @@ dfMaster %>% pivot_longer(cols = Service.biodiversity:Service.recreation,
   group_by(scenario, Benefit, Tick) %>% 
   summarise(Value = mean(Value)) %>% 
   ggplot(aes(Tick,Value,col=scenario))+
-  geom_line(lwd=1,position=position_dodge(width=0.2))+
+  geom_line(lwd=0.8,position=position_dodge(width=0.2))+
   scale_color_brewer(palette = "Paired")+
   facet_wrap(~Benefit)+
   ylim(c(0,1))+ylab("Service level")+
