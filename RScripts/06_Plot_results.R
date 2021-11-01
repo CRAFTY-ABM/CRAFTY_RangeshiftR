@@ -38,6 +38,15 @@ agent.pal <- c("no_mgmt" = "#839192",
                "mgmt_fell" = "#A93226",
                "mgmt_nat" = "#138D75")
 
+# read in greenspace types to plot % agents only by suitable habitat, not entire landscape area
+sfGrid <- st_read(paste0(dirCRAFTY,"/data-store/01_Grid_capitals_raw.shp"))
+sfGrid <- sfGrid %>% dplyr::select(GridID, type) %>% st_drop_geometry()
+sfGrid_rep <- as.data.frame(sapply(sfGrid, rep.int, times=10))
+
+# read in suitable habitat
+sfHabitat <- st_read(paste0(dirCRAFTY, "/data-store/01_Grid_RshiftR_habitat.shp")) %>% st_drop_geometry()
+sfHabitat_rep <- as.data.frame(sapply(sfHabitat, rep.int, times=10))
+
 
 ### RangeShiftR results --------------------------------------------------------
 
@@ -46,7 +55,7 @@ dfPopsMaster <- data.frame()
 # read in RangeshiftR population results
 for (idx in 1:length(lstScenarios)){
   
-  #scenario <- lstScenarios[1]
+  #scenario <- lstScenarios[2]
   scenario <- lstScenarios[idx]
   
   dirRsftr <- paste0(dirOut, "/behaviour_baseline/", scenario,"/Outputs/")
@@ -56,7 +65,7 @@ for (idx in 1:length(lstScenarios)){
   # read in Range txt files
   for (idx2 in 1:length(lstRsftrYrs)){
     
-    #year <- lstRsftrYrs[1]
+    #year <- lstRsftrYrs[2]
     year <- lstRsftrYrs[idx2]
     
     path <- paste0(dirRsftr,"Batch1_",year,"_Land1_Range.txt")
@@ -77,7 +86,7 @@ for (idx in 1:length(lstScenarios)){
       
       dfPopsMaster <- rbind(dfPopsMaster, dfRange[,])
       
-  }
+      }
   }
 
 dfPopsMaster$Year <- factor(dfPopsMaster$Year, levels = lstRsftrYrs)
@@ -121,28 +130,52 @@ for (idx in 1:length(lstScenarios)){
   z <- abs(invert)
   dfResults$OPMpresence <- z
   
+  # use habitat suitability to plot % agents only by suitable habitat, not entire landscape area
+  # add greenspace type too
+  dfResults$type <- sfGrid_rep$type
+  dfResults$habSuit <- sfHabitat_rep$habSuit 
+  
+
   # bar plot agents --------------------------------------------------------------
   
-  agentSummary <- dfResults %>% 
-    group_by(Tick,Agent) %>% 
-    summarise(agentCount = length(Agent)) %>% 
-    ungroup() %>% 
+  OPMSummary <- dfResults %>% 
+    filter(habSuit > 0 & type != "Non.greenspace") %>% 
     group_by(Tick) %>% 
-    mutate(tot=sum(agentCount),
-           perc=agentCount/tot*100)
+    summarise(n.tot = n(), # total number of greenspace squares suitable for OPM
+              n.opm = sum(OPMpresence)) %>%  # sum number of 100m suitable squares with OPM in
+    mutate(perc.opm = n.opm/n.tot*100)
   
-  p1 <- agentSummary %>% 
-    #filter(Agent != "no_mgmt") %>% 
+  agentSummary <- dfResults %>%
+    filter(habSuit > 0 & type != "Non.greenspace") %>%  
+    group_by(Tick,Agent) %>% 
+    summarise(n.agents = n()) %>%  # number of agent types per yr
+    mutate(perc.mgmt = n.agents/11808*100)
+  
+  p1a <-  OPMSummary %>% 
     ggplot()+
-    geom_col(aes(x=Tick,y=perc, fill=Agent), position = "stack")+
-    scale_fill_manual(values=agent.pal)+
-    ylab("Percentage of area (%)")+xlab("Year")+
+    geom_col(aes(x=Tick,y=perc.opm), fill = "gray20", position = "stack")+
+    ggtitle("OPM coverage")+
+    ylab("Percentage of suitable habitat (%)")+xlab("Year")+
     theme_bw()
   
-  plot(p1)
+  plot(p1a)
+  
+  png(paste0(dirFigs,"/OPMcoverage_",scenario,".png"), units="cm", width = 12, height = 8, res=1000)
+  print(p1a)
+  dev.off()
+  
+  p1b <- agentSummary %>% 
+    ggplot()+
+    geom_col(aes(x=Tick,y=perc.mgmt, fill=Agent), position = "stack")+
+    scale_fill_manual(values=agent.pal)+
+    ggtitle("Management coverage")+
+    ylab("Percentage of suitable habitat (%)")+xlab("Year")+
+    theme_bw()
+  
+  plot(p1b)
   
   png(paste0(dirFigs,"/agentBarPlot_",scenario,".png"), units="cm", width = 12, height = 8, res=1000)
-  print(p1)
+  print(p1b)
   dev.off()
   
   # plot service provision through time ------------------------------------------
