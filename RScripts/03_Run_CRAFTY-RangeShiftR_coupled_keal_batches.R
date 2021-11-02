@@ -189,25 +189,23 @@ end_year_idx <- 10 # 10th year of the input data
 
 # scenarios to loop through
 
-# scenario.filenames <- c("Scenario_baseline-with-social_GUI.xml",
-#                         "Scenario_baseline-no-social_GUI.xml",
-#                         "Scenario_de-regulation-with-social_GUI.xml",
-#                         "Scenario_de-regulation-no-social_GUI.xml",
-#                         "Scenario_govt-intervention-with-social_GUI.xml",
-#                         "Scenario_govt-intervention-no-social_GUI.xml",
-#                         "Scenario_un-coupled-with-social_GUI.xml",
-#                         "Scenario_un-coupled-no-social_GUI.xml")
+scenario.filenames <- c("Scenario_baseline-with-social_GUI.xml",
+                        "Scenario_baseline-no-social_GUI.xml",
+                        "Scenario_de-regulation-with-social_GUI.xml",
+                        "Scenario_de-regulation-no-social_GUI.xml",
+                        "Scenario_govt-intervention-with-social_GUI.xml",
+                        "Scenario_govt-intervention-no-social_GUI.xml",
+                        "Scenario_un-coupled-with-social_GUI.xml",
+                        "Scenario_un-coupled-no-social_GUI.xml")
  
-scen_pref = "batches/behaviour_scen1_0_09/"
+pref = "behaviour_scen1_00_09"
+scen_pref = paste0("batches/", pref, "/")
+scen_names = c("baseline-with-social", "baseline-no-social", "de-regulation-with-social",
+               "de-regulation-no-social", "govt-intervention-with-social", "govt-intervention-no-social",
+               "un-coupled-with-social", "un-coupled-no-social")
 
-scenario.filenames <- paste0(scen_pref, c("Scenario_baseline-with-social_NoGUI.xml",
-                        "Scenario_baseline-no-social_NoGUI.xml",
-                        "Scenario_de-regulation-with-social_NoGUI.xml",
-                        "Scenario_de-regulation-no-social_NoGUI.xml",
-                        "Scenario_govt-intervention-with-social_NoGUI.xml",
-                        "Scenario_govt-intervention-no-social_NoGUI.xml",
-                        "Scenario_un-coupled-with-social_NoGUI.xml",
-                        "Scenario_un-coupled-no-social_NoGUI.xml"))
+
+scenario.filenames <- paste0(scen_pref, "Scenario_", scen_names, "_noGUI.xml") 
 
 n.scenario <- length(scenario.filenames)
 
@@ -280,10 +278,11 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
   #s.idx <- 1 # for testing
   scenario <- scenario.filenames[s.idx] 
   scenario.filename <- scenario
-  scenario.split <- strsplit(scenario, "[_]")[[1]][2]
+  # scenario.split <- strsplit(scenario, "[_]")[[1]][2]
+  scenario.split <- scen_names[s.idx]
   
   # change wd to a scenario folder to store output files
-  dirCRAFTYscenario <- paste0(dirCRAFTYOutput,"/output/behaviour_baseline/",scenario.split)
+  dirCRAFTYscenario <- paste0(dirCRAFTYOutput,"/output/", pref, "/",scenario.split)
 
   # scenario file and arguments reguired for CRAFTY run
   CRAFTY_sargs <- c("-d", dirCRAFTYInput, "-f", scenario.filename, "-o", random_seed_crafty, "-r", "1",  "-n", "1", "-sr", "0") 

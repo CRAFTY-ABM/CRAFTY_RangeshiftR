@@ -278,6 +278,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
   #s.idx <- 1 # for testing
   scenario <- scenario.filenames[s.idx] 
   scenario.filename <- scenario
+  # scenario.split <- strsplit(scenario, "[_]")[[1]][2]
   scenario.split <- strsplit(scenario, "[_]")[[1]][2]
   
   # change wd to a scenario folder to store output files
