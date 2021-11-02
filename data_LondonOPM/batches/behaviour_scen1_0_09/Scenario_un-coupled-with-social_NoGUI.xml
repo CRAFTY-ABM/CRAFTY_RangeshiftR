@@ -1,5 +1,5 @@
 <scenario startTick="1" endTick="10" world="GreaterLondon" 
-version = "behaviour_scen1_0_09"
+version = "behaviour_scen1"
 scenario = "un-coupled-with-social">
   <capitals class="org.volante.abm.serialization.CSVCapitalLoader" file="csv/Capitals.csv" indexed="true"/>
   <services class="org.volante.abm.serialization.CSVServiceLoader" file="csv/Services.csv" indexed="true"/>
