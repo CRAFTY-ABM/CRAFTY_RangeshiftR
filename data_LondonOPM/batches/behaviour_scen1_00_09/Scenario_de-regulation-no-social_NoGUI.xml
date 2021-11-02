@@ -1,6 +1,6 @@
 <scenario startTick="1" endTick="10" world="GreaterLondon" 
-version = "behaviour_scen1"
-scenario = "un-coupled-with-social">
+version = "behaviour_scen1_00_09"
+scenario = "de-regulation-no-social">
   <capitals class="org.volante.abm.serialization.CSVCapitalLoader" file="csv/Capitals.csv" indexed="true"/>
   <services class="org.volante.abm.serialization.CSVServiceLoader" file="csv/Services.csv" indexed="true"/>
    <outputs outputDirectory="output/%v/%s" filePattern="%s-%i-%r-%o" tickPattern="%s-%i-%r-%o-%y">
