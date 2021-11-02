@@ -189,14 +189,14 @@ end_year_idx <- 10 # 10th year of the input data
 
 # scenarios to loop through
 
-scenario.filenames <- c("Scenario_baseline-with-social_GUI.xml",
-                        "Scenario_baseline-no-social_GUI.xml",
-                        "Scenario_de-regulation-with-social_GUI.xml",
-                        "Scenario_de-regulation-no-social_GUI.xml",
-                        "Scenario_govt-intervention-with-social_GUI.xml",
-                        "Scenario_govt-intervention-no-social_GUI.xml",
-                        "Scenario_un-coupled-with-social_GUI.xml",
-                        "Scenario_un-coupled-no-social_GUI.xml")
+# scenario.filenames <- c("Scenario_baseline-with-social_GUI.xml",
+#                         "Scenario_baseline-no-social_GUI.xml",
+#                         "Scenario_de-regulation-with-social_GUI.xml",
+#                         "Scenario_de-regulation-no-social_GUI.xml",
+#                         "Scenario_govt-intervention-with-social_GUI.xml",
+#                         "Scenario_govt-intervention-no-social_GUI.xml",
+#                         "Scenario_un-coupled-with-social_GUI.xml",
+#                         "Scenario_un-coupled-no-social_GUI.xml")
  
 pref = "behaviour_scen1_00_09"
 scen_pref = paste0("batches/", pref, "/")
@@ -205,7 +205,7 @@ scen_names = c("baseline-with-social", "baseline-no-social", "de-regulation-with
                "un-coupled-with-social", "un-coupled-no-social")
 
 
-scenario.filenames <- paste0(scen_pref, "Scenario_", scen_names, "_noGUI.xml") 
+scenario.filenames <- paste0(scen_pref, "Scenario_", scen_names, "_NoGUI.xml") 
 
 n.scenario <- length(scenario.filenames)
 
