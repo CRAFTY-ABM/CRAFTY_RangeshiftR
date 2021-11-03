@@ -201,15 +201,22 @@ end_year_idx <- 10 # 10th year of the input data
 
 
 # run in parallel for speed
+
+
+scen_names = c("baseline-with-social", "baseline-no-social", "de-regulation-with-social",
+               "de-regulation-no-social", "govt-intervention-with-social", "govt-intervention-no-social",
+               "un-coupled-with-social", "un-coupled-no-social")
+n.scenario <- length(scen_names)
+
 parallelize <- T # FR virtual machine has 8 cores and 32GB dynamic RAM
 
 if (parallelize) {
   # 6 cores - 1 per scenario
-  n_thread <- 6 # detectCores() # consider the max heap size is java.mx
+  n_thread <- n.scenario # detectCores() # consider the max heap size is java.mx
   cl <- makeCluster(n_thread, outfile = "")
   registerDoSNOW(cl)
   
-  n_thread_crafty = 12 # set to 1 when parallelised
+  n_thread_crafty = 10 # set to 1 when parallelised
 } else {
   
   n_thread <- 1
@@ -221,20 +228,16 @@ if (parallelize) {
 # pref = "behaviour_scen3_01_10"
 
 
-prefs = c("behaviour_scen1_00_09", "behaviour_scen2_00_08", "behaviour_scen3_01_10", "behaviour_scen4_01_09", "behaviour_scen5_01_08", "behaviour_scen6_02_10", "behaviour_scen7_02_09", "behaviour_scen8_02_08")
+prefs = c(
+  "behaviour_scen1_00_09", "behaviour_scen2_00_08"
+, "behaviour_scen3_01_10", "behaviour_scen4_01_09", "behaviour_scen5_01_08", "behaviour_scen6_02_10"
+,  "behaviour_scen7_02_09", "behaviour_scen8_02_08"
+  )
 
 foreach(pref = prefs, .errorhandling = "stop", .verbose = T) %do% { 
   
   scen_pref = paste0("batches/", pref, "/")
-  scen_names = c("baseline-with-social", "baseline-no-social", "de-regulation-with-social",
-                 "de-regulation-no-social", "govt-intervention-with-social", "govt-intervention-no-social",
-                 "un-coupled-with-social", "un-coupled-no-social")
-  
-  
   scenario.filenames <- paste0(scen_pref, "Scenario_", scen_names, "_NoGUI.xml") 
-  
-  n.scenario <- length(scenario.filenames)
-  
   
   foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
           .packages = c("doSNOW","rJava", "raster","RangeShiftR","tidyverse","sf","tictoc","sp","ggplot2")
