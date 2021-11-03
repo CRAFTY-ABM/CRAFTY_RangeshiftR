@@ -355,7 +355,7 @@ foreach(pref = prefs, .errorhandling = "stop", .verbose = T) %do% {
                                       HabPercent=TRUE,
                                       K_or_DensDep=1000) # carrying capacity (individuals per hectare) when habitat at 100% quality
             
-            demo <- Demography(Rmax = 25,
+            demo <- Demography(Rmax = 5,
                                ReproductionType = 0) # 0 = asexual / only female; 1 = simple sexual; 2 = sexual model with explicit mating system
             
             ### ADD ANOTHER LOOP HERE TO RUN BOTH DISPERSAL KERNEL TYPES?
@@ -369,7 +369,7 @@ foreach(pref = prefs, .errorhandling = "stop", .verbose = T) %do% {
             # set up probability matrix - 95% prob dispersal will be 500m, some chance of long range dispersal
             dists <- matrix(c(500,7300,0.95),ncol = 3)
             
-            disp <-  Dispersal(Emigration = Emigration(EmigProb = 0.2),
+            disp <-  Dispersal(Emigration = Emigration(EmigProb = 0.1),
                                Transfer = DispersalKernel(Distances = dists, DoubleKernel = TRUE), 
                                Settlement = Settlement())
             
@@ -407,16 +407,16 @@ foreach(pref = prefs, .errorhandling = "stop", .verbose = T) %do% {
                 init <- Initialise(InitType=2, InitIndsFile=sprintf('inds_tick_%s.txt', CRAFTY_tick-1))
               }
               
-              # run RangeShiftR for 2-years per CRAFTY_tick and extract mean of 10 reps as result
+              # run RangeShiftR for 2-years per CRAFTY_tick and extract result
               sim <- Simulation(Simulation = CRAFTY_tick,
                                 Years = rangeshiftrYears,
-                                Replicates = 5, #10, # reduce replicates to speed up
+                                Replicates = 1, # no reps, if they are required then run entire coupled set-up in reps
                                 OutIntPop = 1,
                                 OutIntInd = 1,
                                 ReturnPopRaster=TRUE)
               
               # set up simulation
-              s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init, seed = 261090) # set seed to enable replication
+              s <- RSsim(simul = sim, land = land, demog = demo, dispersal = disp, init = init, seed = 261090) # set seed to enable replication (would need to remove this if running multiple coupled reps)
               
               # stop if set up incorrectly
               stopifnot(validateRSparams(s)==TRUE) 
@@ -435,10 +435,11 @@ foreach(pref = prefs, .errorhandling = "stop", .verbose = T) %do% {
               
               #names(result)
               
-              # calculate average of 10 reps for current timestep
               idx <- grep("year1", names(result)) # this selects the second years data
-              resultMean <- mean(result[[idx]])
+              #resultMean <- mean(result[[idx]]) # calculate average of 10 reps for current timestep
               #print(spplot(resultMean))
+              result <- result[[idx]] # just take result from single rep
+              #spplot(result)
               
               # store population raster in output stack.
               #outRasterStack <- addLayer(outRasterStack, result[[rangeshiftrYears]])
@@ -458,15 +459,16 @@ foreach(pref = prefs, .errorhandling = "stop", .verbose = T) %do% {
               
               # extract the population raster to a shapefile of the individuals
               #shpIndividuals <- rasterToPoints(result[[rangeshiftrYears]], fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
-              shpIndividuals <- rasterToPoints(resultMean, fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf()
+              #shpIndividuals <- rasterToPoints(resultMean, fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf() # for mean of replicates
+              shpIndividuals <- rasterToPoints(result, fun=function(x){x > 0}, spatial=TRUE) %>% st_as_sf() # for single replicate
               shpIndividuals <- shpIndividuals %>% st_set_crs(st_crs(ascHabitat))
               shpIndividuals$id <- 1:nrow(shpIndividuals)
-              shpIndividuals$layer <- ceiling(shpIndividuals$layer)
+              #shpIndividuals$layer <- ceiling(shpIndividuals$layer) # for dealing with mean of replicates
+              shpIndividuals$rep0_year1 <- ceiling(shpIndividuals$rep0_year1)
               
               # extract OPM population raster and use as OPM capital
-              #result2 <- result[[rangeshiftrYears]]
-              #hexPointsOPM <- raster::extract(result2, hexPointsSP)
-              spPointsOPM <- raster::extract(resultMean, spPoints)
+              #spPointsOPM <- raster::extract(resultMean, spPoints)
+              spPointsOPM <- raster::extract(result, spPoints)
               dfOPM <- cbind(spPoints,spPointsOPM) %>% as.data.frame()
               colnames(dfOPM)[2] <- "population"
               dfOPM$population[which(is.na(dfOPM$population))] <- 0
@@ -736,9 +738,8 @@ foreach(pref = prefs, .errorhandling = "stop", .verbose = T) %do% {
               print(paste0("============CRAFTY JAVA-R API: Write new individuals file for RangeShiftR = ", CRAFTY_tick))
               
               # write new individuals file to be used by RangeShiftR on the next loop
-              #shpIndividuals <- shpIndividuals %>% as_Spatial()
-              #dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, ascHabitat, field=sprintf('rep0_year%s', rangeshiftrYears-1)), shpIndividuals, cellnumbers=T, df=TRUE)
-              dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, ascHabitat, field='layer'), shpIndividuals, cellnumbers=T, df=TRUE)
+              #dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, ascHabitat, field='layer'), shpIndividuals, cellnumbers=T, df=TRUE) # for mean of replicates
+              dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, ascHabitat, field='rep0_year1'), shpIndividuals, cellnumbers=T, df=TRUE) # for single rep
               dfNewIndsTable$Year <- 0 
               dfNewIndsTable$Species <- 0
               dfNewIndsTable$X <- dfNewIndsTable$cells %% ncol(ascHabitat)
