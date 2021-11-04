@@ -763,6 +763,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
     }
     
     toc(log = TRUE, quiet = TRUE)
+    gc()
     }
 }
 

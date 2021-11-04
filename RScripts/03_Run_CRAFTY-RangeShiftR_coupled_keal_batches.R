@@ -774,6 +774,7 @@ foreach(pref = prefs, .errorhandling = "stop", .verbose = T) %do% {
                 
               }
               
+              gc()
               toc(log = TRUE, quiet = TRUE)
             }
           }
