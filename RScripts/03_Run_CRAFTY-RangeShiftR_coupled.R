@@ -212,7 +212,7 @@ n.scenario <- length(scenario.filenames)
 
 
 # run in parallel for speed
-parallelize <- T # FR virtual machine has 8 cores and 32GB dynamic RAM
+parallelize <- F # FR virtual machine has 8 cores and 32GB dynamic RAM
 
 if (parallelize) {
   # 6 cores - 1 per scenario
@@ -379,7 +379,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
   
   for (yr.idx in 1:length(timesteps)) {
     
-    #yr.idx <- 1 #for testing
+    #yr.idx <- 2 #for testing
     
     CRAFTY_tick <- timesteps[yr.idx]
     
@@ -498,7 +498,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
         
         # and add small amount of knowledge based on contact with OPM 
         # (previously didn't update knowledge at all in this scenario, but this meant no management response at all - too extreme?)
-        capitals$Knowledge[which(capitals$OPM_presence==0)]<-0.2
+        capitals$Knowledge[which(capitals$OPM_presence==0)]<-0.1
         capitals$Knowledge[which(capitals$OPM_presence==1)]<-0
         print("Minimal knowledge based on OPM presence")
         
@@ -597,7 +597,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
       remove <- sapply(st_intersects(shpIndividuals, mgmt_remove),function(x){length(x)>0})
       
       # reduce population by half if physical removal
-      remPops <- shpIndividuals$layer[remove]
+      remPops <- shpIndividuals$rep0_year1[remove]
       if (length(remPops)>1){
         for (pop in c(1:length(remPops))){
           remPops[pop]<-round(remPops[pop]*0.5) # reduce by 50%
@@ -606,7 +606,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
         }
       }
       
-      shpIndividuals$layer[remove] <- remPops
+      shpIndividuals$rep0_year1[remove] <- remPops
     }
     
     if (nrow(mgmt_pesticide)>0) { 
@@ -615,7 +615,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
       pesticide <- sapply(st_intersects(shpIndividuals, mgmt_pesticide),function(x){length(x)>0})
       
       # reduce population by 80% if spraying pesticides
-      pestPops <- shpIndividuals$layer[pesticide]
+      pestPops <- shpIndividuals$rep0_year1[pesticide]
       if (length(pestPops)>1){
         for (pop in c(1:length(pestPops))){
           pestPops[pop]<-round(pestPops[pop]*0.2) # reduce by 80%
@@ -623,7 +623,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
             pestPops[-pop]}
         }
       }
-      shpIndividuals$layer[remove] <- pestPops
+      shpIndividuals$rep0_year1[remove] <- pestPops
       
     }
     
@@ -643,7 +643,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
       remove <- sapply(st_intersects(shpIndividuals, mgmt_nat),function(x){length(x)>0})
       
       # reduce population by 37% if encouraging natural predation
-      natPops <- shpIndividuals$layer[remove]
+      natPops <- shpIndividuals$rep0_year1[remove]
       if (length(natPops)>1){
         for (pop in c(1:length(natPops))){
           natPops[pop]<-round(natPops[pop]*0.37) # reduce by 37%
@@ -652,7 +652,7 @@ foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
         }
       }
       
-      shpIndividuals$layer[remove] <- natPops
+      shpIndividuals$rep0_year1[remove] <- natPops
     }
     
     # ### Social network effects & predation ####
