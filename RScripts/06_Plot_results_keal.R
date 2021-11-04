@@ -104,6 +104,8 @@ for (pref_idx in c(1)) {
       
       dfRange <- dfRange %>% 
         filter(Year == 2) %>% # select just 2nd output "year" (RangeshiftR is run for 2 yrs per CRAFTY year - we take second yr as the result)
+        # probably don't need to group and summarise now we only have one rep per timestep
+        # so could comment out the next two lines?
         group_by(Year) %>% 
         summarise(NInds = mean(NInds)) %>% # average across reps
         #select(., Rep, NInds, Occup.Suit) %>% 
