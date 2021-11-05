@@ -358,7 +358,7 @@ foreach(pref = prefs, .errorhandling = "stop", .verbose = T) %do% {
                                       HabPercent=TRUE,
                                       K_or_DensDep=1000) # carrying capacity (individuals per hectare) when habitat at 100% quality
             
-            demo <- Demography(Rmax = 5,
+            demo <- Demography(Rmax = 5, # was 25 previously, could test this again
                                ReproductionType = 0) # 0 = asexual / only female; 1 = simple sexual; 2 = sexual model with explicit mating system
             
             ### ADD ANOTHER LOOP HERE TO RUN BOTH DISPERSAL KERNEL TYPES?
@@ -372,7 +372,7 @@ foreach(pref = prefs, .errorhandling = "stop", .verbose = T) %do% {
             # set up probability matrix - 95% prob dispersal will be 500m, some chance of long range dispersal
             dists <- matrix(c(500,7300,0.95),ncol = 3)
             
-            disp <-  Dispersal(Emigration = Emigration(EmigProb = 0.1),
+            disp <-  Dispersal(Emigration = Emigration(EmigProb = 0.1), # was 0.2 previously
                                Transfer = DispersalKernel(Distances = dists, DoubleKernel = TRUE), 
                                Settlement = Settlement())
             
