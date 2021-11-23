@@ -180,7 +180,7 @@ dfWorld <- sfCapitals_RAW %>%
 
 # points version for extracting RangeShiftR results in coupled set-up
 sfPoints <- st_as_sf(dfWorld[,1:3], coords = c("Long","Lat"), crs = 27700)
-st_write(sfPoints, dsn = paste0(dirData,"/01_Grid_points.shp"))
+st_write(sfPoints, dsn = paste0(dirData,"/01_Grid_points.shp"), delete_layer=T)
 
 # format coords for CRAFTY and save look-up
 # unique coordinates 
@@ -288,6 +288,8 @@ for (scenario in lstScenarios){
 
 # updater files
 
+n_years = 20
+
 updaterFiles <- dfWorld[1:10]
 head(updaterFiles)
 
@@ -296,7 +298,7 @@ head(updaterFiles)
 head(updaterFiles)
 summary(updaterFiles)
 
-ticks <- c(1,2,3,4,5,6,7,8,9,10)
+ticks <- c(1:n_years)  
 
 for (scenario in lstScenarios){
   
@@ -438,7 +440,7 @@ head(updaterFiles)
 head(updaterFiles)
 summary(updaterFiles)
 
-ticks <- c(1,2,3,4,5,6,7,8,9,10)
+ticks <- c(1:n_years)  
 
 for (i in ticks){
   
@@ -494,7 +496,7 @@ rec <- dfSupply$ServiceSupply.recreation[2]
 bio <- bio*1.2
 rec <- rec*1.2
 
-Year <- seq(1,10, by=1)
+Year <- seq(1,n_years, by=1)
 biodiversity <- rep(bio, length(Year))
 recreation <- rep(rec, length(Year))
 
@@ -517,7 +519,7 @@ for (scenario in lstScenarios){
 bio <- 0
 rec <- 0
 
-Year <- seq(1,10, by=1)
+Year <- seq(1,n_years, by=1)
 biodiversity <- rep(bio, length(Year))
 recreation <- rep(rec, length(Year))
 
