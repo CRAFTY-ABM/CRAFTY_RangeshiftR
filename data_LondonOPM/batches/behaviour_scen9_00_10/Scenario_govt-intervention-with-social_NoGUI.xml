@@ -1,5 +1,9 @@
 <scenario startTick="1" endTick="10" world="GreaterLondon" 
+<<<<<<< HEAD
 version = "behaviour_baseline"
+=======
+version = "behaviour_scen1_00_09"
+>>>>>>> dev2021
 scenario = "govt-intervention-with-social">
   <capitals class="org.volante.abm.serialization.CSVCapitalLoader" file="csv/Capitals.csv" indexed="true"/>
   <services class="org.volante.abm.serialization.CSVServiceLoader" file="csv/Services.csv" indexed="true"/>
