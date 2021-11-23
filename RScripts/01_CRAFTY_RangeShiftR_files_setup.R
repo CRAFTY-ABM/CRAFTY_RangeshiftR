@@ -15,9 +15,15 @@ library(tmap)
 
 ### paths ----------------------------------------------------------------------
 
-wd <- "~/eclipse-workspace/CRAFTY_RangeshiftR" # sandbox VM
+# wd <- "~/eclipse-workspace/CRAFTY_RangeshiftR" # sandbox VM
+wd <- "~/git/CRAFTY_RangeshiftR" # ABS Linux
+
 dirData <- file.path(wd, 'data-store')
 dirOut <- file.path(wd, 'data_LondonOPM')
+
+
+path_out = file.path("/DATA10TB/CRAFTY_RangeshiftR_21-22_outputs")
+
 
 ### CRAFTY set-up --------------------------------------------------------------
 
@@ -485,7 +491,7 @@ for (i in ticks){
 # once the models have been run, can use initial supply of services after 1 yr to set appropriate demand level
 
 # Step 2. Read in a results file to get supply after 1 yr
-dfSupply <- read.csv(paste0(wd,"/output/behaviour_baseline/baseline-with-social/baseline-with-social-0-99-GreaterLondon-AggregateServiceDemand.csv"))
+dfSupply <- read.csv(paste0(path_out,"/output/behaviour_scen9_00_10/baseline-with-social/baseline-with-social-0-99-GreaterLondon-AggregateServiceDemand.csv"))
 head(dfSupply)
 
 # get the values after 1 year

@@ -26,13 +26,11 @@ if (Sys.info()["user"] %in% c("alan", "seo-b")) {
   dirWorking <- "/pd/data/crafty/CRAFTY_RangeshiftR"
   path_crafty_batch_run <- "/pd/data/crafty/CRAFTY_RangeshiftR_21-22_outputs"
   dataDisk <- "/pd/data/crafty/CRAFTY_RangeshiftR_21-22_outputs"
-  
-  
-  # } else if (Sys.info()["user"] %in% c("alan", "seo-b")) { 
-  #     dirWorking <- "~/git/CRAFTY_RangeshiftR"
-  #     path_crafty_batch_run <- "~/Downloads/CRAFTY_RangeshiftR_21-22_outputs"
-  #     dataDisk <- "~/Downloads/CRAFTY_RangeshiftR_21-22_outputs"
-  #     
+
+  dirWorking <- "~/git/CRAFTY_RangeshiftR"
+  path_crafty_batch_run <- "/DATA10TB/CRAFTY_RangeshiftR_21-22_outputs"
+  dataDisk <- "/DATA10TB/CRAFTY_RangeshiftR_21-22_outputs"
+ 
 } else { 
   dirWorking <- "~/eclipse-workspace/CRAFTY_RangeshiftR"
   path_crafty_batch_run <- "D:/CRAFTY_RangeshiftR_21-22_outputs"
@@ -216,7 +214,7 @@ if (parallelize) {
   cl <- makeCluster(n_thread, outfile = "")
   registerDoSNOW(cl)
   
-  n_thread_crafty = 10 # set to 1 when parallelised
+  n_thread_crafty = 5 # n_thread * n_thread_crafty should be < n_cpus
 } else {
   
   n_thread <- 1
@@ -226,20 +224,24 @@ if (parallelize) {
 
 # pref = "behaviour_scen1_00_09"
 # pref = "behaviour_scen3_01_10"
-
-
+ 
 prefs = c(
   "behaviour_scen1_00_09", "behaviour_scen2_00_08"
 , "behaviour_scen3_01_10", "behaviour_scen4_01_09", "behaviour_scen5_01_08", "behaviour_scen6_02_10"
-,  "behaviour_scen7_02_09", "behaviour_scen8_02_08"
+,  "behaviour_scen7_02_09", "behaviour_scen8_02_08", "behaviour_scen9_00_10"
   )
 
-foreach(pref = prefs, .errorhandling = "stop", .verbose = T) %do% { 
+
+# scenarios_todo =  1:n.scenario
+scenarios_todo =  1 
+
+
+foreach(pref = prefs[9], .errorhandling = "stop", .verbose = T) %do% { 
   
   scen_pref = paste0("batches/", pref, "/")
   scenario.filenames <- paste0(scen_pref, "Scenario_", scen_names, "_NoGUI.xml") 
   
-  foreach(s.idx = 1:n.scenario, .errorhandling = "stop",
+  foreach(s.idx = scenarios_todo, .errorhandling = "stop",
           .packages = c("doSNOW","rJava", "raster","RangeShiftR","tidyverse","sf","tictoc","sp","ggplot2")
           , .verbose = T) %dopar% {
             
