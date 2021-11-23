@@ -152,7 +152,7 @@ random_seed_crafty <- 99
 
 # CRAFTY timesteps
 start_year_idx <- 1 # first year of the input data
-end_year_idx <- 10 # 10th year of the input data 
+end_year_idx <- 20 # 10th year of the input data 
 
 
 
@@ -236,7 +236,7 @@ prefs = c(
 scenarios_todo =  1 
 
 
-foreach(pref = prefs[9], .errorhandling = "stop", .verbose = T) %do% { 
+foreach(pref = prefs[], .errorhandling = "stop", .verbose = T) %do% { 
   
   scen_pref = paste0("batches/", pref, "/")
   scenario.filenames <- paste0(scen_pref, "Scenario_", scen_names, "_NoGUI.xml") 
