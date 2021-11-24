@@ -308,7 +308,7 @@ ticks <- c(1:n_years)
 
 for (scenario in lstScenarios){
   
-  scenario <- "un-coupled"
+  # scenario <- "un-coupled"
   
   for (paramset in lstParamsets){
     
