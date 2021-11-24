@@ -204,22 +204,22 @@ end_year_idx <- 20 # 10th year of the input data
 scen_names = c("baseline-with-social", "baseline-no-social", "de-regulation-with-social",
                "de-regulation-no-social", "govt-intervention-with-social", "govt-intervention-no-social",
                "un-coupled-with-social", "un-coupled-no-social")
-n.scenario <- length(scen_names)
+n_scenario <- length(scen_names)
 
 parallelize <- T # FR virtual machine has 8 cores and 32GB dynamic RAM
 
 if (parallelize) {
-  # 6 cores - 1 per scenario
-  n_thread <- n.scenario # detectCores() # consider the max heap size is java.mx
+  # 8 cores - 1 per scenario
+  n_thread <- n_scenario # detectCores() # consider the max heap size is java.mx
   cl <- makeCluster(n_thread, outfile = "")
   registerDoSNOW(cl)
-  
   n_thread_crafty = floor ((detectCores()-1) / n_thread) # n_thread * n_thread_crafty should be < n_cpus
+  
 } else {
   
   n_thread <- 1
   # number of threads CRAFTY uses in an invididual run (e.g. 1 for a single thread)
-  n_thread_crafty <- detectCores() - 2 # 8
+  n_thread_crafty <- detectCores() - 2 # used to run CRAFTY with parallelism
 }
 
 # pref = "behaviour_scen1_00_09"
@@ -232,11 +232,11 @@ prefs = c(
   )
 
 
-# scenarios_todo =  1:n.scenario
+# scenarios_todo =  1:n_scenario
 scenarios_todo =  1 
 
 
-foreach(pref = prefs[], .errorhandling = "stop", .verbose = T) %do% { 
+foreach(pref = prefs[5:9], .errorhandling = "stop", .verbose = T) %do% { 
   
   scen_pref = paste0("batches/", pref, "/")
   scenario.filenames <- paste0(scen_pref, "Scenario_", scen_names, "_NoGUI.xml") 
