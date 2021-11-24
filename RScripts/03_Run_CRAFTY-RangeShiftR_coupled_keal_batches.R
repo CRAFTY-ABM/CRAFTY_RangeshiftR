@@ -208,9 +208,16 @@ n_scenario <- length(scen_names)
 
 parallelize <- T # FR virtual machine has 8 cores and 32GB dynamic RAM
 
+
+
+
+scenarios_todo =  1:n_scenario
+# scenarios_todo =  1 
+
+
 if (parallelize) {
   # 8 cores - 1 per scenario
-  n_thread <- n_scenario # detectCores() # consider the max heap size is java.mx
+  n_thread <- length(scenarios_todo) # detectCores() # consider the max heap size is java.mx
   cl <- makeCluster(n_thread, outfile = "")
   registerDoSNOW(cl)
   n_thread_crafty = floor ((detectCores()-1) / n_thread) # n_thread * n_thread_crafty should be < n_cpus
@@ -224,20 +231,18 @@ if (parallelize) {
 
 # pref = "behaviour_scen1_00_09"
 # pref = "behaviour_scen3_01_10"
- 
+
 prefs = c(
   "behaviour_scen1_00_09", "behaviour_scen2_00_08"
-, "behaviour_scen3_01_10", "behaviour_scen4_01_09", "behaviour_scen5_01_08", "behaviour_scen6_02_10"
-,  "behaviour_scen7_02_09", "behaviour_scen8_02_08", "behaviour_scen9_00_10"
-  )
+  , "behaviour_scen3_01_10", "behaviour_scen4_01_09", "behaviour_scen5_01_08", "behaviour_scen6_02_10"
+  ,  "behaviour_scen7_02_09", "behaviour_scen8_02_08", "behaviour_scen9_00_10"
+)
 
 
-# scenarios_todo =  1:n_scenario
-scenarios_todo =  1 
 
 
-foreach(pref = prefs[5:9], .errorhandling = "stop", .verbose = T) %do% { 
-  
+foreach(pref = prefs[], .errorhandling = "stop", .verbose = T) %do% {
+   
   scen_pref = paste0("batches/", pref, "/")
   scenario.filenames <- paste0(scen_pref, "Scenario_", scen_names, "_NoGUI.xml") 
   
