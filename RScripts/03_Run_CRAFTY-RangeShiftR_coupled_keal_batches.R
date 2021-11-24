@@ -214,7 +214,7 @@ if (parallelize) {
   cl <- makeCluster(n_thread, outfile = "")
   registerDoSNOW(cl)
   
-  n_thread_crafty = 5 # n_thread * n_thread_crafty should be < n_cpus
+  n_thread_crafty = floor ((detectCores()-1) / n_thread) # n_thread * n_thread_crafty should be < n_cpus
 } else {
   
   n_thread <- 1
