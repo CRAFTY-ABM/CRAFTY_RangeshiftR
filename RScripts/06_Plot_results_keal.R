@@ -26,14 +26,21 @@ dataDrive <- "/pd/data/crafty/CRAFTY_RangeshiftR_21-22_outputs/"
 
 prefs = c(
   "behaviour_scen1_00_09", "behaviour_scen2_00_08", "behaviour_scen3_01_10", "behaviour_scen4_01_09", "behaviour_scen5_01_08", "behaviour_scen6_02_10",
-  "behaviour_scen7_02_09", "behaviour_scen8_02_08"
+  "behaviour_scen7_02_09", "behaviour_scen8_02_08",  "behaviour_scen9_00_10"
 )
 
-version = "_v2"
+lstScenarios <- c("baseline-with-social","baseline-no-social",
+                  "de-regulation-with-social","de-regulation-no-social",
+                  "govt-intervention-with-social","govt-intervention-no-social",
+                  "un-coupled-with-social","un-coupled-no-social")
+
+
+version = "_v8"
 
 # p_idx= 3 
 
-for (pref_idx in c(1)) { 
+for (pref_idx in c(1:4)) { 
+  
   pref = prefs[pref_idx]
   
   out_pref = paste0("/", pref, version, "/")
