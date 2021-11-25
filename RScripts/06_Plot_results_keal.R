@@ -39,6 +39,9 @@ version = "_v8"
 
 # p_idx= 3 
 
+
+n_years = 20
+
 for (pref_idx in c(1:4)) { 
   
   pref = prefs[pref_idx]
@@ -57,12 +60,8 @@ for (pref_idx in c(1:4)) {
   
   if (!dir.exists(dirFigs)) {dir.create(dirFigs, recursive = T)}
   
-  lstScenarios <- c("baseline-with-social","baseline-no-social",
-                    "de-regulation-with-social","de-regulation-no-social",
-                    "govt-intervention-with-social","govt-intervention-no-social",
-                    "un-coupled-with-social","un-coupled-no-social")
-  
-  lstRsftrYrs <- sprintf("Sim%s",seq(1:10))
+
+  lstRsftrYrs <- sprintf("Sim%s",seq(1:n_years))
   
   agent.pal <- c("no_mgmt" = "#839192",
                  "mgmt_remove" = "#7D3C98",
@@ -73,11 +72,11 @@ for (pref_idx in c(1:4)) {
   # read in greenspace types to plot % agents only by suitable habitat, not entire landscape area
   sfGrid <- st_read(paste0(dirCRAFTY,"/data-store/01_Grid_capitals_raw.shp"))
   sfGrid <- sfGrid %>% dplyr::select(GridID, type) %>% st_drop_geometry()
-  sfGrid_rep <- as.data.frame(sapply(sfGrid, rep.int, times=10))
+  sfGrid_rep <- as.data.frame(sapply(sfGrid, rep.int, times=n_years))
   
   # read in suitable habitat
   sfHabitat <- st_read(paste0(dirCRAFTY, "/data-store/01_Grid_RshiftR_habitat.shp")) %>% st_drop_geometry()
-  sfHabitat_rep <- as.data.frame(sapply(sfHabitat, rep.int, times=10))
+  sfHabitat_rep <- as.data.frame(sapply(sfHabitat, rep.int, times=n_years))
   
   
   ### RangeShiftR results 
@@ -230,7 +229,7 @@ for (pref_idx in c(1:4)) {
       scale_color_manual(values=agent.pal)+
       facet_wrap(~service)+
       ylim(c(0,1))+ylab("Service provision")+
-      scale_x_continuous("Year",n.breaks = 10)+
+      scale_x_continuous("Year",n.breaks = n_years)+
       theme_bw()
     
     png(paste0(dirFigs,"/servicesLinePlot_",scenario,".png"), units="cm", width = 12, height = 6, res=1000)
@@ -252,7 +251,7 @@ for (pref_idx in c(1:4)) {
       geom_line(aes(x=Tick,y=Competitiveness,col=Agent))+
       scale_color_manual(values=agent.pal)+
       ylim(c(0,1))+ylab("Competitiveness")+
-      scale_x_continuous("Year",n.breaks = 10)+
+      scale_x_continuous("Year",n.breaks = n_years)+
       theme_bw()
     
     print(p3)
@@ -287,7 +286,7 @@ for (pref_idx in c(1:4)) {
     scale_color_brewer(palette = "Paired")+
     facet_wrap(~Benefit)+
     ylim(c(0,1))+ylab("Service level")+
-    scale_x_continuous("Year",n.breaks = 10)+
+    scale_x_continuous("Year",n.breaks = n_years)+
     theme_bw()
   dev.off()
   
