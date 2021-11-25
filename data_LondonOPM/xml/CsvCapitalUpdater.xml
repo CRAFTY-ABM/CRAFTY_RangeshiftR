@@ -1,4 +1,4 @@
-<updater class="org.volante.abm.update.CSVCapitalUpdater" X_COL="x" Y_COL="y" yearInFilename="true" reapplyPreviousFile="true"> -->
+<updater class="org.volante.abm.update.CSVCapitalUpdater" X_COL="x" Y_COL="y" yearInFilename="true" reapplyPreviousFile="true"> 
  				<csvFile year="1">worlds/%r/%s/GreaterLondon_tstep_%y.csv</csvFile>
  				<csvFile year="2">worlds/%r/%s/GreaterLondon_tstep_%y.csv</csvFile> 
  				<csvFile year="3">worlds/%r/%s/GreaterLondon_tstep_%y.csv</csvFile> 
@@ -18,5 +18,15 @@
  				<csvFile year="17">worlds/%r/%s/GreaterLondon_tstep_%y.csv</csvFile> 
  				<csvFile year="18">worlds/%r/%s/GreaterLondon_tstep_%y.csv</csvFile> 
  				<csvFile year="19">worlds/%r/%s/GreaterLondon_tstep_%y.csv</csvFile> 
- 				<csvFile year="20">worlds/%r/%s/GreaterLondon_tstep_%y.csv</csvFile> 				 
+ 				<csvFile year="20">worlds/%r/%s/GreaterLondon_tstep_%y.csv</csvFile> 		
+ 				<csvFile year="21">worlds/%r/%s/GreaterLondon_tstep_%y.csv</csvFile>
+ 				<csvFile year="22">worlds/%r/%s/GreaterLondon_tstep_%y.csv</csvFile> 
+ 				<csvFile year="23">worlds/%r/%s/GreaterLondon_tstep_%y.csv</csvFile> 
+ 				<csvFile year="24">worlds/%r/%s/GreaterLondon_tstep_%y.csv</csvFile> 
+ 				<csvFile year="25">worlds/%r/%s/GreaterLondon_tstep_%y.csv</csvFile> 
+ 				<csvFile year="26">worlds/%r/%s/GreaterLondon_tstep_%y.csv</csvFile> 
+ 				<csvFile year="27">worlds/%r/%s/GreaterLondon_tstep_%y.csv</csvFile> 
+ 				<csvFile year="28">worlds/%r/%s/GreaterLondon_tstep_%y.csv</csvFile> 
+ 				<csvFile year="29">worlds/%r/%s/GreaterLondon_tstep_%y.csv</csvFile> 
+ 				<csvFile year="30">worlds/%r/%s/GreaterLondon_tstep_%y.csv</csvFile>  
 </updater>

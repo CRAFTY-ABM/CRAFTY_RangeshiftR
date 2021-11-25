@@ -152,7 +152,7 @@ random_seed_crafty <- 99
 
 # CRAFTY timesteps
 start_year_idx <- 1 # first year of the input data
-end_year_idx <- 20 # 10th year of the input data 
+end_year_idx <- 30 # 10th year of the input data 
 
 
 
