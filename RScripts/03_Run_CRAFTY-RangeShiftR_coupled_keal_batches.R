@@ -220,7 +220,7 @@ if (parallelize) {
   n_thread <- length(scenarios_todo) # detectCores() # consider the max heap size is java.mx
   cl <- makeCluster(n_thread, outfile = "")
   registerDoSNOW(cl)
-  n_thread_crafty = floor ((detectCores()-1) / n_thread) # n_thread * n_thread_crafty should be < n_cpus
+  n_thread_crafty = floor (detectCores() / n_thread ) # n_thread * n_thread_crafty should be < n_cpus
   
 } else {
   
