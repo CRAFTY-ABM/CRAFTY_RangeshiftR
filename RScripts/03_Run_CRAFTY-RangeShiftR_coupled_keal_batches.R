@@ -211,8 +211,8 @@ parallelize <- T # FR virtual machine has 8 cores and 32GB dynamic RAM
 
 
 
-scenarios_todo =  1:n_scenario
-# scenarios_todo =  1 
+# scenarios_todo =  1:n_scenario
+scenarios_todo =  c(1,3,5,7)
 
 
 if (parallelize) {
@@ -241,7 +241,7 @@ prefs = c(
 
 
 
-foreach(pref = prefs[], .errorhandling = "stop", .verbose = T) %do% {
+foreach(pref = prefs[c(2,6,8,9)], .errorhandling = "stop", .verbose = T) %do% {
    
   scen_pref = paste0("batches/", pref, "/")
   scenario.filenames <- paste0(scen_pref, "Scenario_", scen_names, "_NoGUI.xml") 
