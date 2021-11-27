@@ -22,6 +22,13 @@ library(viridis)
 
 dirCRAFTY <- "/pd/data/crafty/CRAFTY_RangeshiftR/"
 dataDrive <- "/pd/data/crafty/CRAFTY_RangeshiftR_21-22_outputs/"
+dirFig_root = dirCRAFTY
+
+dirCRAFTY <- "/home/alan/git/CRAFTY_RangeshiftR/"
+dataDrive <- "/DATA4TB/CRAFTY_Rangeshifter_output_v8_r5_0.1_20years/"
+dirFig_root = "~/Dropbox/"
+
+dirData <- file.path(dirCRAFTY, 'data-store')
 
 
 prefs = c(
@@ -32,7 +39,7 @@ prefs = c(
 lstScenarios <- c("baseline-with-social","baseline-no-social",
                   "de-regulation-with-social","de-regulation-no-social",
                   "govt-intervention-with-social","govt-intervention-no-social",
-                  "un-coupled-with-social","un-coupled-no-social")
+                  "un-coupled-with-social","un-coupled-no-social")[c(1,3,5)]
 
 
 version = "_v8"
@@ -42,7 +49,20 @@ version = "_v8"
 
 n_years = 20
 
-for (pref_idx in c(1:4)) { 
+
+# read in greenspace types to plot % agents only by suitable habitat, not entire landscape area
+sfGrid_geom <- st_read(paste0(dirCRAFTY,"/data-store/01_Grid_capitals_raw.shp"))
+sfGrid <- sfGrid_geom %>% dplyr::select(GridID, type) %>% st_drop_geometry()
+
+# read in suitable habitat
+sfHabitat <- st_read(paste0(dirCRAFTY, "/data-store/01_Grid_RshiftR_habitat.shp")) %>% st_drop_geometry()
+
+# read in coordinates
+
+dfCoords = read.csv(paste0(dirData,"/Cell_ID_XY_GreaterLondon.csv"))
+
+
+for (pref_idx in c(2,6,8,9)[1:4]) { 
   
   pref = prefs[pref_idx]
   
@@ -56,11 +76,11 @@ for (pref_idx in c(1:4)) {
   dirOut <- paste0(dataDrive, "output")
   
   # figure directory
-  dirFigs <- paste0(dirCRAFTY,"figures", "/", pref)
+  dirFigs <- paste0(dirFig_root,"figures", "/", pref)
   
   if (!dir.exists(dirFigs)) {dir.create(dirFigs, recursive = T)}
   
-
+  
   lstRsftrYrs <- sprintf("Sim%s",seq(1:n_years))
   
   agent.pal <- c("no_mgmt" = "#839192",
@@ -69,13 +89,8 @@ for (pref_idx in c(1:4)) {
                  "mgmt_fell" = "#A93226",
                  "mgmt_nat" = "#138D75")
   
-  # read in greenspace types to plot % agents only by suitable habitat, not entire landscape area
-  sfGrid <- st_read(paste0(dirCRAFTY,"/data-store/01_Grid_capitals_raw.shp"))
-  sfGrid <- sfGrid %>% dplyr::select(GridID, type) %>% st_drop_geometry()
   sfGrid_rep <- as.data.frame(sapply(sfGrid, rep.int, times=n_years))
   
-  # read in suitable habitat
-  sfHabitat <- st_read(paste0(dirCRAFTY, "/data-store/01_Grid_RshiftR_habitat.shp")) %>% st_drop_geometry()
   sfHabitat_rep <- as.data.frame(sapply(sfHabitat, rep.int, times=n_years))
   
   
@@ -120,6 +135,31 @@ for (pref_idx in c(1:4)) {
       
       dfPopsMaster <- rbind(dfPopsMaster, dfRange[,])
       
+      
+      fpath_nInd <- paste0(dirRsftr,"Batch1_",year,"_Land1_Rep0_Inds.txt")
+      fpath_nInd <- paste0(dirRsftr,"Batch1_",year,"_Land1_Pop.txt")
+      
+      dfInd <- read.delim2(fpath_nInd)
+      table(dfInd$Year)
+      # table(dfInd$RepSeason)
+      # table(dfInd$Status)
+      # sum(dfInd[dfInd$Year==2,]$NInd)
+      
+      dfInd_result = merge( dfInd[dfInd$Year==2,], dfCoords, by.x = c("x", "y"), by.y = c("X", "Y"))
+      
+      # nrow(sfGrid_geo)
+      sfInd_tmp = sfGrid_geom
+      sfInd_tmp$NInd = 0
+      sfInd_tmp[match( dfInd_result$GridID, sfInd_tmp$GridID),]$NInd =  dfInd_result$NInd
+      
+      print("plot maps")
+      gInd = ggplot(sfInd_tmp)+ 
+        ggtitle(paste0("Year", idx2)) + # for the main title
+        geom_sf(aes(fill=NInd),colour=NA)+
+        scale_fill_viridis()+
+        theme_bw()    
+      
+      ggsave(gInd, file=paste0(dirFigs, "/OPM_NInds_", pref, "_", scenario, "_", year, ".jpg"), width=12, height=8, dpi=300)
     }
   }
   
@@ -134,7 +174,7 @@ for (pref_idx in c(1:4)) {
   
   print(g1)
   
-  ggsave(g1, file=paste0(dirFigs, "/OPM_pops_per_scenario.jpg"), width=8, height=6, dpi=300)
+  ggsave(g1, file=paste0(dirFigs, "/OPM_pops_per_scenario.jpg"), width=16, height=8, dpi=300)
   
   
   ### CRAFTY results 
@@ -143,7 +183,6 @@ for (pref_idx in c(1:4)) {
   
   for (idx in 1:length(lstScenarios)){
     
-    #scenario <- lstScenarios[1]
     scenario <- lstScenarios[idx]
     
     dfResults <-
