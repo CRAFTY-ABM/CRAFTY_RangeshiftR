@@ -122,7 +122,7 @@ foreach (pref_idx = prefs_todo, .packages = c("dplyr", "ggplot2", "tidyverse", "
     # head(dfResults)
     # summary(dfResults)
     dfResults$Tick <- factor(dfResults$Tick)
-    dfResults$Agent <- factor(dfResults$Agent)
+    dfResults$Agent <- factor(dfResults$Agent, levels = names(agent.pal), labels = names(agent.pal))
     
     # inverted OPM presence capital 
     invert <- dfResults$Capital.OPM_presence - 1
