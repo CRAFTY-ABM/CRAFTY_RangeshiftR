@@ -7,9 +7,10 @@
 
 library(ggplot2)
 library(tidyverse)
-#library(foreach)
+library(doSNOW)
 library(sf)
 library(viridis)
+library(parallel)
 #library(RangeShiftR)
 
 ### file paths -----------------------------------------------------------------
@@ -25,8 +26,15 @@ dataDrive <- "/pd/data/crafty/CRAFTY_RangeshiftR_21-22_outputs/"
 dirFig_root = dirCRAFTY
 
 dirCRAFTY <- "/home/alan/git/CRAFTY_RangeshiftR/"
-dataDrive <- "/DATA4TB/CRAFTY_Rangeshifter_output_v8_r5_0.1_20years/"
+dataDrive <- "/DATA4TB/CRAFTY_Rangeshifter_output_v9_r5_0.1_30years/"
 dirFig_root = "~/Dropbox/"
+
+agent.pal <- c("no_mgmt" = "#839192",
+               "mgmt_remove" = "#7D3C98",
+               "mgmt_pesticide" = "#E0D30F",
+               "mgmt_fell" = "#A93226",
+               "mgmt_nat" = "#138D75")
+
 
 dirData <- file.path(dirCRAFTY, 'data-store')
 
@@ -35,19 +43,18 @@ prefs = c(
   "behaviour_scen1_00_09", "behaviour_scen2_00_08", "behaviour_scen3_01_10", "behaviour_scen4_01_09", "behaviour_scen5_01_08", "behaviour_scen6_02_10",
   "behaviour_scen7_02_09", "behaviour_scen8_02_08",  "behaviour_scen9_00_10"
 )
+prefs_todo = c(2,6,8,9) # Four behavioral experiments
 
 lstScenarios <- c("baseline-with-social","baseline-no-social",
                   "de-regulation-with-social","de-regulation-no-social",
                   "govt-intervention-with-social","govt-intervention-no-social",
-                  "un-coupled-with-social","un-coupled-no-social")[c(1,3,5)]
+                  "un-coupled-with-social","un-coupled-no-social")[c(1,3,5,7)] # ignore no-social scenarios
 
+# Version (behavioural params, Rangeshifter params) 
+version = "_v9"
 
-version = "_v8"
-
-# p_idx= 3 
-
-
-n_years = 20
+# Simulation period
+n_years = 30
 
 
 # read in greenspace types to plot % agents only by suitable habitat, not entire landscape area
@@ -62,7 +69,12 @@ sfHabitat <- st_read(paste0(dirCRAFTY, "/data-store/01_Grid_RshiftR_habitat.shp"
 dfCoords = read.csv(paste0(dirData,"/Cell_ID_XY_GreaterLondon.csv"))
 
 
-for (pref_idx in c(2,6,8,9)[1:4]) { 
+cl = makeCluster(length(prefs_todo))
+registerDoSNOW(cl)
+
+
+# for (pref_idx in pref_todo) { 
+foreach (pref_idx = prefs_todo, .packages = c("dplyr", "ggplot2", "tidyverse", "viridis", "sf", "doSNOW")) %dopar% {
   
   pref = prefs[pref_idx]
   
@@ -83,100 +95,14 @@ for (pref_idx in c(2,6,8,9)[1:4]) {
   
   lstRsftrYrs <- sprintf("Sim%s",seq(1:n_years))
   
-  agent.pal <- c("no_mgmt" = "#839192",
-                 "mgmt_remove" = "#7D3C98",
-                 "mgmt_pesticide" = "#E0D30F",
-                 "mgmt_fell" = "#A93226",
-                 "mgmt_nat" = "#138D75")
+
   
   sfGrid_rep <- as.data.frame(sapply(sfGrid, rep.int, times=n_years))
   
   sfHabitat_rep <- as.data.frame(sapply(sfHabitat, rep.int, times=n_years))
   
   
-  ### RangeShiftR results 
-  
-  dfPopsMaster <- data.frame()
-  
-  # read in RangeshiftR population results
-  for (idx in 1:length(lstScenarios)){
-    
-    #scenario <- lstScenarios[2]
-    scenario <- lstScenarios[idx]
-    
-    dirRsftr <- paste0(dirOut, out_pref, scenario,"/Outputs/")
-    
-    #?readRange # this requires the simulation object as well as the file path (s in coupled script). Use output txt files instead
-    
-    # read in Range txt files
-    for (idx2 in 1:length(lstRsftrYrs)){
-      
-      #year <- lstRsftrYrs[2]
-      year <- lstRsftrYrs[idx2]
-      
-      fpath <- paste0(dirRsftr,"Batch1_",year,"_Land1_Range.txt")
-      
-      if(!file.exists(fpath)) {
-        print(paste0(fpath, " does not exist."))
-        next
-      }
-      
-      dfRange <- read.delim2(fpath)
-      
-      dfRange <- dfRange %>% 
-        filter(Year == 2) %>% # select just 2nd output "year" (RangeshiftR is run for 2 yrs per CRAFTY year - we take second yr as the result)
-        # probably don't need to group and summarise now we only have one rep per timestep
-        # so could comment out the next two lines?
-        group_by(Year) %>% 
-        summarise(NInds = mean(NInds)) %>% # average across reps
-        #select(., Rep, NInds, Occup.Suit) %>% 
-        mutate(Year = year,
-               Scenario = scenario)
-      
-      dfPopsMaster <- rbind(dfPopsMaster, dfRange[,])
-      
-      
-      fpath_nInd <- paste0(dirRsftr,"Batch1_",year,"_Land1_Rep0_Inds.txt")
-      fpath_nInd <- paste0(dirRsftr,"Batch1_",year,"_Land1_Pop.txt")
-      
-      dfInd <- read.delim2(fpath_nInd)
-      table(dfInd$Year)
-      # table(dfInd$RepSeason)
-      # table(dfInd$Status)
-      # sum(dfInd[dfInd$Year==2,]$NInd)
-      
-      dfInd_result = merge( dfInd[dfInd$Year==2,], dfCoords, by.x = c("x", "y"), by.y = c("X", "Y"))
-      
-      # nrow(sfGrid_geo)
-      sfInd_tmp = sfGrid_geom
-      sfInd_tmp$NInd = 0
-      sfInd_tmp[match( dfInd_result$GridID, sfInd_tmp$GridID),]$NInd =  dfInd_result$NInd
-      
-      print("plot maps")
-      gInd = ggplot(sfInd_tmp)+ 
-        ggtitle(paste0("Year", idx2)) + # for the main title
-        geom_sf(aes(fill=NInd),colour=NA)+
-        scale_fill_viridis()+
-        theme_bw()    
-      
-      ggsave(gInd, file=paste0(dirFigs, "/OPM_NInds_", pref, "_", scenario, "_", year, ".jpg"), width=12, height=8, dpi=300)
-    }
-  }
-  
-  dfPopsMaster$Year <- factor(dfPopsMaster$Year, levels = lstRsftrYrs)
-  
-  g1 <- ggplot(data = dfPopsMaster, aes(x=Year,y=NInds, colour = Scenario, group = Scenario))+
-    geom_point()+
-    geom_line(position=position_dodge(width=0.2))+
-    scale_color_brewer(palette = "Paired")+
-    #facet_wrap(~Scenario)+
-    theme_bw()
-  
-  print(g1)
-  
-  ggsave(g1, file=paste0(dirFigs, "/OPM_pops_per_scenario.jpg"), width=16, height=8, dpi=300)
-  
-  
+
   ### CRAFTY results 
   
   dfMaster <- data.frame()
@@ -193,8 +119,8 @@ for (pref_idx in c(2,6,8,9)[1:4]) {
       #map_df(~read_csv(., col_types = cols(.default = "c")))
       map_df(~read.csv(.))
     
-    head(dfResults)
-    summary(dfResults)
+    # head(dfResults)
+    # summary(dfResults)
     dfResults$Tick <- factor(dfResults$Tick)
     dfResults$Agent <- factor(dfResults$Agent)
     
@@ -207,6 +133,45 @@ for (pref_idx in c(2,6,8,9)[1:4]) {
     # add greenspace type too
     dfResults$type <- sfGrid_rep$type
     dfResults$habSuit <- sfHabitat_rep$habSuit 
+    
+    # AFT map
+    # nrow(sfGrid_geom)
+    
+    foreach (idx2 = c(1, seq(5,n_years,5)),  .packages = c("dplyr", "ggplot2", "tidyverse", "viridis", "sf")) %dopar% { 
+      year <- lstRsftrYrs[idx2]
+      
+       dfResults_y_tmp = merge(dfResults[dfResults$Tick == idx2,], dfCoords, by.x = c("X", "Y"), by.y = c("X", "Y"))
+        
+      sfAFT_tmp = sfGrid_geom
+      sfAFT_tmp$AFT = 0
+      sfAFT_tmp[match( dfResults_y_tmp$GridID, sfAFT_tmp$GridID),]$AFT =  dfResults_y_tmp$Agent
+      
+      plotid = paste0( pref, "_", scenario, "_", year)
+      
+      
+      # https://stackoverflow.com/questions/60802808/why-does-geom-sf-is-not-allowing-fill-with-discrete-column-from-a-dataframe
+      # ggplot()+
+      #   geom_sf(data = subset(DF, !is.na(ClusterGroup)), aes(fill = factor(ClusterGroup)))+
+      #   theme_bw()+
+      #   scale_fill_manual(values = c("red", "grey", "seagreen3","gold", "green","orange"), name= "Cluster Group")+ 
+      #   theme(legend.position = "right")
+      
+      sfAFT_tmp$AFT = factor(sfAFT_tmp$AFT, levels = 1:length(agent.pal), labels = names(agent.pal))
+      
+      
+      
+      cat("plotting map: ",plotid)
+      gAFT = ggplot(sfAFT_tmp[,]) + 
+        labs(title= paste0("Year", idx2), caption = plotid) + # for the main title
+        geom_sf(aes(fill= AFT), colour=NA)+
+        theme_bw()+ 
+        scale_fill_manual(values =agent.pal,   labels = names(agent.pal), name= "AFT") #+
+        # scale_fill_viridis(discrete = F)+
+      
+      ggsave(gAFT, file=paste0(dirFigs, "/OPM_AFT_", pref, "_", scenario, "_", year, ".jpg"), width=14, height=10, dpi=300)
+    }
+    
+    
     
     
     # bar plot agents 
@@ -231,7 +196,7 @@ for (pref_idx in c(2,6,8,9)[1:4]) {
       ylab("Percentage of suitable habitat (%)")+xlab("Year")+
       theme_bw()
     
-    plot(p1a)
+    # plot(p1a)
     
     png(paste0(dirFigs,"/OPMcoverage_",scenario,".png"), units="cm", width = 12, height = 8, res=1000)
     print(p1a)
@@ -245,7 +210,7 @@ for (pref_idx in c(2,6,8,9)[1:4]) {
       ylab("Percentage of suitable habitat (%)")+xlab("Year")+
       theme_bw()
     
-    plot(p1b)
+    # plot(p1b)
     
     png(paste0(dirFigs,"/agentBarPlot_",scenario,".png"), units="cm", width = 12, height = 8, res=1000)
     print(p1b)
@@ -293,7 +258,7 @@ for (pref_idx in c(2,6,8,9)[1:4]) {
       scale_x_continuous("Year",n.breaks = n_years)+
       theme_bw()
     
-    print(p3)
+    # print(p3)
     
     png(paste0(dirFigs,"/compPlot_",scenario,".png"), units="cm", width = 12, height = 6, res=1000)
     print(p3)
@@ -329,4 +294,106 @@ for (pref_idx in c(2,6,8,9)[1:4]) {
     theme_bw()
   dev.off()
   
+  
+  
+  ### RangeShiftR results 
+  
+  dfPopsMaster <- data.frame()
+  
+  # read in RangeshiftR population results
+  for (idx in 1:length(lstScenarios)){
+    
+    #scenario <- lstScenarios[2]
+    scenario <- lstScenarios[idx]
+    
+    dirRsftr <- paste0(dirOut, out_pref, scenario,"/Outputs/")
+    
+    #?readRange # this requires the simulation object as well as the file path (s in coupled script). Use output txt files instead
+    
+    # read in Range txt files
+    for (idx2 in 1:length(lstRsftrYrs)){
+      
+      #year <- lstRsftrYrs[2]
+      year <- lstRsftrYrs[idx2]
+      
+      fpath <- paste0(dirRsftr,"Batch1_",year,"_Land1_Range.txt")
+      
+      if(!file.exists(fpath)) {
+        print(paste0(fpath, " does not exist."))
+        next
+      }
+      
+      dfRange <- read.delim2(fpath)
+      
+      dfRange <- dfRange %>% 
+        filter(Year == 2) %>% # select just 2nd output "year" (RangeshiftR is run for 2 yrs per CRAFTY year - we take second yr as the result)
+        # probably don't need to group and summarise now we only have one rep per timestep
+        # so could comment out the next two lines?
+        group_by(Year) %>% 
+        summarise(NInds = mean(NInds)) %>% # average across reps
+        #select(., Rep, NInds, Occup.Suit) %>% 
+        mutate(Year = year,
+               Scenario = scenario)
+      
+      dfPopsMaster <- rbind(dfPopsMaster, dfRange[,])
+      
+      
+      # fpath_IndIDs <- paste0(dirRsftr,"Batch1_",year,"_Land1_Rep0_Inds.txt")
+      fpath_nInd <- paste0(dirRsftr,"Batch1_",year,"_Land1_Pop.txt")
+      
+      dfInd <- read.delim2(fpath_nInd)
+      # table(dfInd$Year)
+      # table(dfInd$RepSeason)
+      # table(dfInd$Status)
+      # sum(dfInd[dfInd$Year==2,]$NInd)
+      
+      # use the second output year
+      dfInd_result = merge( dfInd[dfInd$Year==2,], dfCoords, by.x = c("x", "y"), by.y = c("X", "Y"))
+      
+      # nrow(sfGrid_geo)
+      sfInd_tmp = sfGrid_geom
+      sfInd_tmp$NInd = 0
+      sfInd_tmp[match( dfInd_result$GridID, sfInd_tmp$GridID),]$NInd =  dfInd_result$NInd
+      
+      plotid = paste0( pref, "_", scenario, "_", year)
+      
+      cat("plotting map: ",plotid)
+      gInd = ggplot(sfInd_tmp)+ 
+        labs(title= paste0("Year", idx2), subtitle = paste0("Total number of OPM individuals =", dfRange$NInds), caption = plotid) + # for the main title
+        
+        geom_sf(aes(fill=NInd),colour=NA)+
+        scale_fill_viridis()+
+        theme_bw()    
+      
+      ggsave(gInd, file=paste0(dirFigs, "/OPM_NInds_", pref, "_", scenario, "_", year, ".jpg"), width=14, height=10, dpi=300)
+      
+      
+      
+      
+      
+    }
+  }
+  
+  dfPopsMaster$Year <- factor(dfPopsMaster$Year, levels = lstRsftrYrs)
+  
+  g1 <- ggplot(data = dfPopsMaster, aes(x=Year,y=NInds, colour = Scenario, group = Scenario))+
+    geom_point()+
+    geom_line(position=position_dodge(width=0.2))+
+    scale_color_brewer(palette = "Paired")+
+    #facet_wrap(~Scenario)+
+    theme_bw()
+  
+  # print(g1)
+  
+  ggsave(g1, file=paste0(dirFigs, "/OPM_pops_per_scenario.jpg"), width=16, height=8, dpi=300)
+  
+  
+  
+  
+  
+  
+  
+  
 }
+
+stopCluster(cl)
