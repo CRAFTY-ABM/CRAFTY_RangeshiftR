@@ -165,7 +165,8 @@ foreach (pref_idx = prefs_todo, .packages = c("dplyr", "ggplot2", "tidyverse", "
         labs(title= paste0("Year", idx2), caption = plotid) + # for the main title
         geom_sf(aes(fill= AFT), colour=NA)+
         theme_bw()+ 
-        scale_fill_manual(values =agent.pal,   labels = names(agent.pal), name= "AFT") #+
+        scale_fill_manual(values =agent.pal,   labels = paste0(names(agent.pal), table(sfAFT_tmp$AFT)
+), name= "AFT") #+
         # scale_fill_viridis(discrete = F)+
       
       ggsave(gAFT, file=paste0(dirFigs, "/OPM_AFT_", pref, "_", scenario, "_", year, ".jpg"), width=14, height=10, dpi=300)
