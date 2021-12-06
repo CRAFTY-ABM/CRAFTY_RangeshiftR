@@ -1,5 +1,5 @@
 
-# date updated: 19/10/21
+# date updated: 1/12/21
 # authors: Vanessa Burton, Bumsuk Seo
 # description: script which runs coupled CRAFTY & RangeShiftR models
 
@@ -38,6 +38,7 @@ if (Sys.info()["user"] %in% c("alan", "seo-b")) {
   
   
 }
+
 dirData <- file.path(dirWorking, 'data-store')
 dirFigs <- "~/OPM-model-prep-21-22/figs"
 
