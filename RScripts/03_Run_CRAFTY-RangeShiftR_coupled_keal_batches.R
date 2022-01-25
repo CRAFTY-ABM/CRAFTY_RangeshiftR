@@ -239,10 +239,10 @@ prefs = c(
   ,  "behaviour_scen7_02_09", "behaviour_scen8_02_08", "behaviour_scen9_00_10"
 )
 
+prefs_todo =  prefs[c(9)] #2 6 8
 
 
-
-foreach(pref = prefs[c(2,6,8,9)], .errorhandling = "stop", .verbose = T) %do% {
+foreach(pref =prefs_todo, .errorhandling = "stop", .verbose = T) %do% {
    
   scen_pref = paste0("batches/", pref, "/")
   scenario.filenames <- paste0(scen_pref, "Scenario_", scen_names, "_NoGUI.xml") 
