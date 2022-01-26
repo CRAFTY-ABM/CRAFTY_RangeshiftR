@@ -318,6 +318,8 @@ for (scenario in lstScenarios){
       write.csv(updaterFiles, paste0(dirOut,"/worlds/GreaterLondon/",scenario,"-",paramset,"/GreaterLondon_tstep_",i,".csv") ,row.names = FALSE)
       
     }
+    # write zero time
+    write.csv(updaterFiles, paste0(dirOut,"/worlds/GreaterLondon/",scenario,"-",paramset,"/GreaterLondon_tstep_",0,".csv") ,row.names = FALSE)
     
   }
   
