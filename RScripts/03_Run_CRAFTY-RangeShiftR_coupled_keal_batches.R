@@ -327,7 +327,8 @@ foreach(pref =prefs_todo, .errorhandling = "stop", .verbose = T) %do% {
               print("folder exists")
             }else{
               dir.create(file.path(dirCRAFTYscenario))
-              print("folder created")}
+              print("folder created")
+            }
             
             
             
@@ -397,11 +398,10 @@ foreach(pref =prefs_todo, .errorhandling = "stop", .verbose = T) %do% {
             
             # loop through years for this scenario 
             
-            for (yr.idx in 1:length(timesteps)) {
+            for (CRAFTY_tick in 1:length(timesteps)) {
               
-              #yr.idx <- 1 #for testing
+              #CRAFTY_tick <- 1 #for testing
               
-              CRAFTY_tick <- timesteps[yr.idx]
               
               # before EXTtick() (line 438)
               # run RangeshiftR to get OPM capital
@@ -495,7 +495,12 @@ foreach(pref =prefs_todo, .errorhandling = "stop", .verbose = T) %do% {
               colnames(dfOPMinv)[1] <- "GridID"
               
               # update OPM inverted capital in updater files
-              capitals <- read.csv(paste0(dirCRAFTYInput,"worlds/GreaterLondon/",scenario.split,"/GreaterLondon_tstep_",CRAFTY_tick,".csv"))
+              
+              # read the immutable initial capitals
+              capitals <- read.csv(paste0(dirCRAFTYInput,"worlds/GreaterLondon/",scenario.split,"/GreaterLondon_tstep_0.csv"))
+              # I believe the below was the error caused all the confusion.. (26 Jan 2022 by ABS)
+              # capitals <- read.csv(paste0(dirCRAFTYInput,"worlds/GreaterLondon/",scenario.split,"/GreaterLondon_tstep_",CRAFTY_tick,".csv"))
+               
               # update OPM capital using lookUp
               lookUp$OPMinverted <- dfOPMinv$OPMinv[match(lookUp$GridID, dfOPMinv$GridID)]
               capitals$GridID <- lookUp$GridID
@@ -567,7 +572,7 @@ foreach(pref =prefs_todo, .errorhandling = "stop", .verbose = T) %do% {
               #####
               
               stopifnot(CRAFTY_nextTick == (CRAFTY_tick + 1 )) # assertion
-              print(paste0("============CRAFTY JAVA-R API: CRAFTY run complete = ", CRAFTY_tick))
+              print(paste0("============CRAFTY JAVA-R API: CRAFTY run complete tick = ", CRAFTY_tick))
               
               # after EXTtick()
               # extract agent locations and use them to edit RangeshiftR individuals
@@ -575,8 +580,8 @@ foreach(pref =prefs_todo, .errorhandling = "stop", .verbose = T) %do% {
               
               # extract agent locations, match to sf grid
               val_df <- read.csv(paste0(dirCRAFTYscenario,"/",scenario.split,"-0-", random_seed_crafty,"-GreaterLondon-Cell-",CRAFTY_tick,".csv"))
-              val_fr <- val_df[,"Agent"]
-              val_fr_fac <- factor(val_fr,  labels = aft_names_fromzero, levels = aft_names_fromzero)
+              # val_fr <- val_df[,"Agent"]
+              # val_fr_fac <- factor(val_fr,  labels = aft_names_fromzero, levels = aft_names_fromzero)
               
               # match back to sf Grid using GridID
               # val_xy <- data.frame(val_df$X,val_df$Y)
@@ -593,7 +598,7 @@ foreach(pref =prefs_todo, .errorhandling = "stop", .verbose = T) %do% {
               sfResult <- left_join(sfGrid, val_df, by="GridID")
               sfResult$Agent <- factor(sfResult$Agent, levels=aft_names_fromzero)
               
-              # print(paste0("============CRAFTY JAVA-R API: Show agents & OPM individuals = ", CRAFTY_tick)) 
+              print(paste0("============CRAFTY JAVA-R API: Show agents & OPM individuals = ", CRAFTY_tick))
               p1 <- ggplot() +
                 geom_sf(sfResult, mapping = aes(fill = Agent), col = NA)+
                 #geom_sf(data=shpIndividuals, color="black", pch=4)+
@@ -746,7 +751,7 @@ foreach(pref =prefs_todo, .errorhandling = "stop", .verbose = T) %do% {
               # #################
               
               
-              print(paste0("============CRAFTY JAVA-R API: Write new individuals file for RangeShiftR = ", CRAFTY_tick))
+              print(paste0("============CRAFTY JAVA-R API: Write new individuals file for RangeShiftR tick = ", CRAFTY_tick))
               
               # write new individuals file to be used by RangeShiftR on the next loop
               #dfNewIndsTable <- raster::extract(rasterize(shpIndividuals, ascHabitat, field='layer'), shpIndividuals, cellnumbers=T, df=TRUE) # for mean of replicates
