@@ -213,15 +213,18 @@ parallelize <- T # FR virtual machine has 8 cores and 32GB dynamic RAM
 
 
 # scenarios_todo =  1:n_scenario
-scenarios_todo =  c(1,3,5,7)
+scenarios_todo =  c(1) #,3,5,7)
 
 
+
+n_thread_crafty_maximum = 12
+  
 if (parallelize) {
   # 8 cores - 1 per scenario
   n_thread <- length(scenarios_todo) # detectCores() # consider the max heap size is java.mx
   cl <- makeCluster(n_thread, outfile = "")
   registerDoSNOW(cl)
-  n_thread_crafty = floor (detectCores() / n_thread ) # n_thread * n_thread_crafty should be < n_cpus
+  n_thread_crafty = min(n_thread_crafty_maximum, floor (detectCores() / n_thread )) # n_thread * n_thread_crafty should be < n_cpus
   
 } else {
   
@@ -648,7 +651,7 @@ foreach(pref =prefs_todo, .errorhandling = "stop", .verbose = T) %do% {
                       pestPops[-pop]}
                   }
                 }
-                shpIndividuals$rep0_year1[remove] <- pestPops
+                shpIndividuals$rep0_year1[pesticide] <- pestPops
                 
               }
               
