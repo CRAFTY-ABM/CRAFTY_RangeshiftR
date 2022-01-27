@@ -92,7 +92,7 @@
 		csvFile="${@(agents/%v/AftParams_mgmt_fell.csv, productionCsvFile)}" multiplyProductionNoise="true" />
 	</fRole>
 	
-	<fRole class="org.volante.abm.comi.fr.ComiVariantProductionFR" label="mgmt_nat" serialID="3"
+	<fRole class="org.volante.abm.comi.fr.ComiVariantProductionFR" label="mgmt_nat" serialID="4"
 	givingUpMean="${@(agents/%v/AftParams_mgmt_nat.csv, givingUpDistributionMean)}"
 	givingInMean="${@(agents/%v/AftParams_mgmt_nat.csv, givingInDistributionMean)}"
 	givingUpProbability = "${@(agents/%v/AftParams_mgmt_nat.csv, givingUpProb)}">
