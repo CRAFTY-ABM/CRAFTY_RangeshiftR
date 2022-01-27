@@ -213,15 +213,18 @@ parallelize <- T # FR virtual machine has 8 cores and 32GB dynamic RAM
 
 
 # scenarios_todo =  1:n_scenario
-scenarios_todo =  c(1,3,5,7)
+scenarios_todo =  c(1) #,3,5,7)
 
 
+
+n_thread_crafty_maximum = 12
+  
 if (parallelize) {
   # 8 cores - 1 per scenario
   n_thread <- length(scenarios_todo) # detectCores() # consider the max heap size is java.mx
   cl <- makeCluster(n_thread, outfile = "")
   registerDoSNOW(cl)
-  n_thread_crafty = floor (detectCores() / n_thread ) # n_thread * n_thread_crafty should be < n_cpus
+  n_thread_crafty = min(n_thread_crafty_maximum, floor (detectCores() / n_thread )) # n_thread * n_thread_crafty should be < n_cpus
   
 } else {
   
@@ -619,10 +622,10 @@ foreach(pref =prefs_todo, .errorhandling = "stop", .verbose = T) %do% {
               if (nrow(mgmt_remove)>0) { 
                 mgmt_remove <- st_transform(mgmt_remove, crs = st_crs(shpIndividuals))
                 
-                remove <- sapply(st_intersects(shpIndividuals, mgmt_remove),function(x){length(x)>0})
+                remove_idx <- sapply(st_intersects(shpIndividuals, mgmt_remove),function(x){length(x)>0})
                 
                 # reduce population by half if physical removal
-                remPops <- shpIndividuals$rep0_year1[remove]
+                remPops <- shpIndividuals$rep0_year1[remove_idx]
                 if (length(remPops)>1){
                   for (pop in c(1:length(remPops))){
                     remPops[pop]<-round(remPops[pop]*0.5) # reduce by 50%
@@ -631,16 +634,16 @@ foreach(pref =prefs_todo, .errorhandling = "stop", .verbose = T) %do% {
                   }
                 }
                 
-                shpIndividuals$rep0_year1[remove] <- remPops
+                shpIndividuals$rep0_year1[remove_idx] <- remPops
               }
               
               if (nrow(mgmt_pesticide)>0) { 
                 mgmt_pesticide <- st_transform(mgmt_pesticide, crs = st_crs(shpIndividuals))
                 
-                pesticide <- sapply(st_intersects(shpIndividuals, mgmt_pesticide),function(x){length(x)>0})
+                pesticide_idx <- sapply(st_intersects(shpIndividuals, mgmt_pesticide),function(x){length(x)>0})
                 
                 # reduce population by 80% if spraying pesticides
-                pestPops <- shpIndividuals$rep0_year1[pesticide]
+                pestPops <- shpIndividuals$rep0_year1[pesticide_idx]
                 if (length(pestPops)>1){
                   for (pop in c(1:length(pestPops))){
                     pestPops[pop]<-round(pestPops[pop]*0.2) # reduce by 80%
@@ -648,7 +651,7 @@ foreach(pref =prefs_todo, .errorhandling = "stop", .verbose = T) %do% {
                       pestPops[-pop]}
                   }
                 }
-                shpIndividuals$rep0_year1[remove] <- pestPops
+                shpIndividuals$rep0_year1[pesticide_idx] <- pestPops
                 
               }
               
@@ -656,19 +659,19 @@ foreach(pref =prefs_todo, .errorhandling = "stop", .verbose = T) %do% {
               if (nrow(mgmt_fell)>0) { 
                 mgmt_fell <- st_transform(mgmt_fell, crs = st_crs(shpIndividuals))
                 
-                fell <- sapply(st_intersects(shpIndividuals, mgmt_fell),function(x){length(x)>0})
+                fell_idx <- sapply(st_intersects(shpIndividuals, mgmt_fell),function(x){length(x)>0})
                 
                 # reduce pop completely if felling
-                shpIndividuals <- shpIndividuals[!fell,] 
+                shpIndividuals <- shpIndividuals[!fell_idx,] 
               }
               
               if (nrow(mgmt_nat)>0) {
                 mgmt_nat <- st_transform(mgmt_nat, crs = st_crs(shpIndividuals))
                 
-                remove <- sapply(st_intersects(shpIndividuals, mgmt_nat),function(x){length(x)>0})
+                nat_idx <- sapply(st_intersects(shpIndividuals, mgmt_nat),function(x){length(x)>0})
                 
                 # reduce population by 37% if encouraging natural predation
-                natPops <- shpIndividuals$rep0_year1[remove]
+                natPops <- shpIndividuals$rep0_year1[nat_idx]
                 if (length(natPops)>1){
                   for (pop in c(1:length(natPops))){
                     natPops[pop]<-round(natPops[pop]*0.37) # reduce by 37%
@@ -677,7 +680,7 @@ foreach(pref =prefs_todo, .errorhandling = "stop", .verbose = T) %do% {
                   }
                 }
                 
-                shpIndividuals$rep0_year1[remove] <- natPops
+                shpIndividuals$rep0_year1[nat_idx] <- natPops
               }
               
               # ### Social network effects & predation ####
