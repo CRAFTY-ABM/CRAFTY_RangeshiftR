@@ -26,8 +26,11 @@ dataDrive <- "/pd/data/crafty/CRAFTY_RangeshiftR_21-22_outputs/"
 dirFig_root = dirCRAFTY
 
 dirCRAFTY <- "/home/alan/git/CRAFTY_RangeshiftR/"
-dataDrive <- "/DATA4TB/CRAFTY_Rangeshifter_output_v9_r5_0.1_30years/"
+dataDrive <- "/DATA4TB/CRAFTY_Rangeshifter_output_v16/"
 dirFig_root = "~/Dropbox/"
+
+dirOut <- dataDrive
+
 
 agent.pal <- c("no_mgmt" = "#839192",
                "mgmt_remove" = "#7D3C98",
@@ -43,20 +46,20 @@ prefs = c(
   "behaviour_scen1_00_09", "behaviour_scen2_00_08", "behaviour_scen3_01_10", "behaviour_scen4_01_09", "behaviour_scen5_01_08", "behaviour_scen6_02_10",
   "behaviour_scen7_02_09", "behaviour_scen8_02_08",  "behaviour_scen9_00_10"
 )
-prefs_todo = c(2,6,8,9)[4] # Four behavioral experiments
+prefs_todo = c(2,6,8,9)[4] #4 # Four behavioral experiments
 
 lstScenarios <- c("baseline-with-social","baseline-no-social",
                   "de-regulation-with-social","de-regulation-no-social",
                   "govt-intervention-with-social","govt-intervention-no-social",
-                  "un-coupled-with-social","un-coupled-no-social")[c(1,3,5,7)][1] # ignore no-social scenarios
+                  "un-coupled-with-social","un-coupled-no-social")[c(1,3,5,7)][c(2,3)] # ignore no-social and un-coupled scenarios
 
 
 
 # Version (behavioural params, Rangeshifter params) 
 
-versions_todo = paste0(c(1,2,6,8,12), "new")
+versions_todo = c(1,2,4,5,7,11,12,14) #3, 6, 8, 10) # c(1:14))
 # n_thread = length(prefs_todo)
-n_thread = length(versions_todo)
+n_thread = min(6, length(versions_todo))
 
 cl = makeCluster(n_thread)
 
@@ -81,7 +84,7 @@ dfCoords = read.csv(paste0(dirData,"/Cell_ID_XY_GreaterLondon.csv"))
 # registerDoSNOW(cl)
 foreach(version_prefix = versions_todo) %do% { 
   
-  version = paste0("_batch", version_prefix)
+  version = paste0("Batch_", version_prefix)
   print(version)
   
   # for (pref_idx in pref_todo) { 
@@ -89,14 +92,12 @@ foreach(version_prefix = versions_todo) %do% {
     
     pref = prefs[pref_idx]
     
-    out_pref = paste0("/", pref, version, "/")
+    out_pref = paste0("/", pref, "/")
     # scen_names = c("baseline-with-social", "baseline-no-social", "de-regulation-with-social",
     #                "de-regulation-no-social", "govt-intervention-with-social", "govt-intervention-no-social",
     #                "un-coupled-with-social", "un-coupled-no-social")
     #  
     
-    #dirOut <- paste0(dataDrive, "from_KIT/output")
-    dirOut <- paste0(dataDrive, "output")
     
     # figure directory
     dirFigs <- paste0(dirFig_root,"figures", "/", version, "/", pref)
@@ -122,15 +123,15 @@ foreach(version_prefix = versions_todo) %do% {
       
       scenario <- lstScenarios[idx]
       
-      csv_names_tmp = list.files(path = paste0(dirOut, out_pref ,scenario,"/"),
+      csv_names_tmp = list.files(path = paste0(dirOut, "/", version, "/output/", out_pref,scenario,"/"),
                                  pattern = "*.csv", 
                                  full.names = T) %>% 
         grep("-Cell-", value=TRUE, .) 
       
-      
       # to extract first n-year data only
       year_tmp = str_extract(csv_names_tmp, pattern = "(?<=Cell\\-)[0-9]+") # extract years
       csv_names_tmp = csv_names_tmp[year_tmp %in% seq(1:n_years)] # exclude years of non-interst
+      
       
       
       dfResults <- csv_names_tmp %>% 
@@ -186,7 +187,7 @@ foreach(version_prefix = versions_todo) %do% {
           labs(title= paste0("Year", idx2), caption = plotid) + # for the main title
           geom_sf(aes(fill= AFT), colour=NA)+
           theme_bw()+ 
-          scale_fill_manual(values =agent.pal,   labels = paste0(names(agent.pal), table(sfAFT_tmp$AFT)
+          scale_fill_manual(values =agent.pal,   labels = paste0(names(agent.pal), " (", table(sfAFT_tmp$AFT), ")"
           ), name= "AFT") #+
         # scale_fill_viridis(discrete = F)+
         
@@ -328,7 +329,7 @@ foreach(version_prefix = versions_todo) %do% {
       #scenario <- lstScenarios[2]
       scenario <- lstScenarios[idx]
       
-      dirRsftr <- paste0(dirOut, out_pref, scenario,"/Outputs/")
+      dirRsftr <- paste0(dirOut, version, "/output/", out_pref, scenario,"/Outputs/")
       
       #?readRange # this requires the simulation object as well as the file path (s in coupled script). Use output txt files instead
       
