@@ -75,7 +75,7 @@ source("RScripts/02_Functions_CRAFTY_rJava.R")
 
 # CRAFTY timesteps
 start_year_idx <- 1 # first year of the input data
-end_year_idx <- 20 # 10th year of the input data 
+end_year_idx <- 30 # 10th year of the input data 
 
 
 
@@ -212,11 +212,11 @@ parallelize <- T # FR virtual machine has 8 cores and 32GB dynamic RAM
 
 
 # scenarios_todo =  1:n_scenario
-scenarios_todo =  c(5) # 1 3
+scenarios_todo =  c(1,3,5) # 1 3
 
 
 
-n_thread_crafty_maximum = 16
+n_thread_crafty_maximum = 6
 
 if (parallelize) {
   # 8 cores - 1 per scenario
@@ -241,10 +241,10 @@ prefs = c(
   ,  "behaviour_scen7_02_09", "behaviour_scen8_02_08", "behaviour_scen9_00_10"
 )
 
-prefs_todo =  prefs[c(9)] #  8 and 9 
+prefs_todo =  prefs[c(8,9)] #  8 and 9 
 
 # production function sets
-batches_todo = c(1:14) # (1,2,4,5,7,9,11,12,14) # 1:2, 4,5,7,9,11,12,14) # c(3, 6, 8, 10, 13)
+batches_todo = c(3) # (1,2,4,5,7,9,11,12,14) # 1:2, 4,5,7,9,11,12,14) # c(3, 6, 8, 10, 13)
 
 
 
